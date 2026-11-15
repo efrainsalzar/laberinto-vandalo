@@ -36,6 +36,7 @@ Escenario de referencia para medir: **mapa Gigante, Difícil, laberinto vivo Ca�
 | `pickups.populate` | Colocar los objetos iniciales | `game/pickup_factory.cpp` |
 | `pickups.remove` | Retirar objetos tapados por una pared | `game/pickup_factory.cpp` |
 | `trophy.update` | Reglas del trofeo por frame de física | `game/trophy_controller.cpp` |
+| `entities.update` | Índice espacial de entidades por frame de física | `game/entity_index.cpp` |
 
 **Agregar una medición** (C++): `#include "core/perf.h"` y al inicio del bloque `lv::core::PerfScope perf("sistema.tarea");`.
 Aparece sola en el panel F3 y en los monitores. Nombre: `<sistema>.<tarea>` en minúsculas.
@@ -43,7 +44,7 @@ Aparece sola en el panel F3 y en los monitores. Nombre: `<sistema>.<tarea>` en m
 ## Reglas de diseño para rendimiento
 
 1. **Ninguna vista que exista en cantidad se redibuja cada frame** (objetos, enemigos...). Se dibuja una vez.
-2. **Todo cambio del mapa pasa por la cola** (`Maze.queue_passage_change`): presupuesto de `changes_per_frame` órdenes
+2. **Todo cambio del mapa pasa por la cola** (`Maze.queue_passage_change`): presupuesto de **tiempo** `apply_budget_ms` (0,5 ms, incluye la reconstrucción de Godot) y tope `changes_per_frame` órdenes
    por frame. Ráfagas de cambios (jugadores, power-ups, Director) se reparten en varios frames.
 3. **Costo acotado**: los algoritmos que corren durante la partida tienen un límite de trabajo (p. ej. la búsqueda
    de conectividad local se corta a los 4096 pasos y responde de forma conservadora).
@@ -73,7 +74,7 @@ sistema nuevo que corra durante la partida.
 El panel F3 muestra el costo real de cada sistema; si un área supera su presupuesto, se optimiza antes de seguir.
 
 ### 2. Todo cambio en tiempo real es una orden y pasa por una cola con presupuesto
-- Cambios del mapa → `Maze.queue_passage_change` (ya existe). Futuras colas por dominio (efectos, apariciones) siguen el mismo modelo.
+- Cambios del mapa → `Maze.queue_passage_change(a, b, open, prioridad, fuente)` con `MapChangeQueue` (prioridades, reservas, tope 64). Futuras colas por dominio (efectos, apariciones) siguen el mismo modelo.
 - Una ráfaga (10 power-ups a la vez, el Director moviendo media mapa) **nunca** se procesa en un solo frame: se reparte.
 
 ### 3. Límites máximos y qué hacer al superarlos
@@ -102,6 +103,7 @@ Lo lejano o fuera de la vista se actualiza menos: un vándalo lejos piensa 4 vec
 Los efectos visuales fuera de pantalla no se dibujan.
 
 ### 7. Nunca recorrer todo en caliente
+> Lección (v0.0.14): un sistema barato por llamada pero que **recorre todo en cada frame** fue el más caro de la prueba de estrés (`pickups.spawner`, 21,9 ms/s). Mirar siempre `ms/s`, no solo `peor`. Contadores mantenidos en lugar de contar.
 Consultas como "¿quién está cerca?" o "¿qué hay en esta casilla?" usan **índices espaciales** (cuadrícula de cubetas),
 no recorridos de todas las entidades. Los datos que no cambian se precalculan.
 
@@ -113,6 +115,8 @@ Cálculos largos y puros (caminos de muchos bots, planificación del Director) v
 los datos de `core`; el hilo principal solo aplica resultados.
 
 ### 10. Cada etapa se cierra con una prueba de estrés
+Menú principal › **Prueba de estrés** (30 s, VSync apagado). Veredicto: **dentro del presupuesto** si p99 ≤ 16,7 ms y peor ≤ 33 ms.
+Al agregar entidades o sistemas nuevos, se suman a la carga de la prueba (`scripts/game/stress_test.gd`).
 Escenario de referencia (Gigante, Difícil, Caótico) **más la carga máxima de la etapa** (p. ej. 8 bots + 24 vándalos).
 El peor frame debe quedar dentro del presupuesto antes de dar la etapa por terminada.
 
@@ -132,3 +136,5 @@ El peor frame debe quedar dentro del presupuesto antes de dar la etapa por termi
 |---|---|---|
 | v0.0.11 | Gigante Difícil, sin VSync | ~70 FPS → **~450 FPS** al dejar de redibujar los objetos cada frame |
 | v0.0.13 | Gigante Difícil, laberinto Caótico, en movimiento | **Sin tirones** (prueba en vivo del dueño del proyecto) tras la cola de órdenes y la búsqueda local acotada |
+| v0.0.14 | **Prueba de estrés** (40 entidades + ráfagas) | **FUERA**: promedio 8,0 ms, p99 14,3, peor 134,6 ms. Más caro: `pickups.spawner` 21,9 ms/s (contaba los 468 objetos cada frame), `maze.apply`+`maze.rebuild` ~1,5 ms en picos. |
+| v0.0.14 (arreglos) | Prueba de estrés | Contador O(1) de objetos y separación por índice espacial; aplicación de cambios con presupuesto de **tiempo** (0,5 ms) que incluye la reconstrucción de Godot; bloques de paredes 8×8; calentamiento de 2 s excluido e instante del peor frame. *Pendiente: nueva medición en vivo.* |

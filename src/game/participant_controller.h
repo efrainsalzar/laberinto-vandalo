@@ -1,6 +1,9 @@
 #pragma once
 
 #include "core/participant_command.h"
+#include "core/random.h"
+
+#include <memory>
 
 #include <godot_cpp/classes/ref_counted.hpp>
 
@@ -33,4 +36,24 @@ public:
 
 protected:
 	static void _bind_methods() {}
+};
+
+// Deambula al azar: cambia de dirección cada 0,4-1,6 s o al quedar trabado contra una pared.
+// Otra estrategia (Strategy) más: se usa en la prueba de estrés y anticipa a los bots (etapa 3).
+class WanderController : public ParticipantController {
+	GDCLASS(WanderController, ParticipantController)
+
+public:
+	lv::core::ParticipantCommand compute_command(const Participant &p_participant, double p_delta) override;
+
+protected:
+	static void _bind_methods() {}
+
+private:
+	std::unique_ptr<lv::core::Rng> rng_;
+	float timer_ = 0.0f;
+	float dir_x_ = 0.0f;
+	float dir_y_ = 0.0f;
+
+	void pick_direction();
 };

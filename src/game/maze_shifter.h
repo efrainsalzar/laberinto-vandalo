@@ -81,6 +81,7 @@ private:
 	float max_block_wait_ = 3.0f;
 	float block_margin_ = 14.0f; // px alrededor de cada casilla que se cierra
 
+	int source_id() const { return static_cast<int>(get_instance_id() & 0x7FFFFFFF); }
 	void begin_warning();
 	void begin_applying();
 	void update_closures(double p_delta);

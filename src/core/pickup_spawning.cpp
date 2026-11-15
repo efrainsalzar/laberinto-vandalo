@@ -5,6 +5,21 @@ namespace lv::core {
 std::optional<Cell> pick_spawn_cell(const MazeGrid &p_grid, const std::vector<Cell> &p_occupied,
 		const std::vector<Cell> &p_bases, const std::vector<SpawnObserver> &p_observers,
 		const SpawnCellOptions &p_options, Rng &r_rng) {
+	// Versión con lista (tests y pocos objetos): se adapta a la versión con índice.
+	const HasPickupAt has_pickup = [&p_occupied](const Cell &p_cell) {
+		for (const Cell &c : p_occupied) {
+			if (c == p_cell) {
+				return true;
+			}
+		}
+		return false;
+	};
+	return pick_spawn_cell_indexed(p_grid, has_pickup, p_bases, p_observers, p_options, r_rng);
+}
+
+std::optional<Cell> pick_spawn_cell_indexed(const MazeGrid &p_grid, const HasPickupAt &p_has_pickup_at,
+		const std::vector<Cell> &p_bases, const std::vector<SpawnObserver> &p_observers,
+		const SpawnCellOptions &p_options, Rng &r_rng) {
 	if (p_grid.width() <= 2 || p_grid.height() <= 2) {
 		return std::nullopt;
 	}
@@ -21,8 +36,12 @@ std::optional<Cell> pick_spawn_cell(const MazeGrid &p_grid, const std::vector<Ce
 				break;
 			}
 		}
-		for (size_t i = 0; i < p_occupied.size() && !rejected; i++) {
-			rejected = chebyshev_distance(cell, p_occupied[i]) < p_options.min_spacing;
+		// Separación: solo la ventana alrededor de la candidata (distancia de Chebyshev < min_spacing).
+		const int reach = p_options.min_spacing - 1;
+		for (int dy = -reach; dy <= reach && !rejected; dy++) {
+			for (int dx = -reach; dx <= reach && !rejected; dx++) {
+				rejected = p_has_pickup_at({ cell.x + dx, cell.y + dy });
+			}
 		}
 		const GridPoint center{ cell.x + 0.5f, cell.y + 0.5f };
 		for (size_t i = 0; i < p_observers.size() && !rejected; i++) {

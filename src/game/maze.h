@@ -1,11 +1,12 @@
 #pragma once
 
 #include "core/line_of_sight.h"
+#include "core/map_change_queue.h"
 #include "core/maze_grid.h"
 #include "core/maze_shift.h"
 #include "game/maze_profile.h"
 
-#include <deque>
+#include <memory>
 
 #include <godot_cpp/classes/image.hpp>
 #include <godot_cpp/classes/tile_map_layer.hpp>
@@ -28,6 +29,11 @@ public:
 	static inline const Vector2i FLOOR_TILE = Vector2i(1, 0);
 	// Máscara de luz de la capa de paredes: la luz de visión las ilumina sin sombrearlas.
 	static constexpr int WALLS_LIGHT_MASK = 2;
+	// Prioridades de las fuentes de cambios del mapa (igual que lv::core::ChangePriority).
+	static constexpr int PRIORITY_AMBIENT = 0;
+	static constexpr int PRIORITY_DIRECTOR = 1;
+	static constexpr int PRIORITY_PLAYER = 2;
+	static constexpr int PRIORITY_SAFETY = 3;
 
 	void _ready() override;
 
@@ -77,10 +83,22 @@ public:
 	// Patrón Command: TODO cambio del mapa (laberinto vivo, jugadores, power-ups, Director) es una
 	// orden que entra a esta cola. Se aplican como máximo `changes_per_frame` órdenes por frame:
 	// muchos cambios a la vez se reparten en varios frames en lugar de producir un pico.
-	void queue_passage_change(int p_a, int p_b, bool p_open);
-	int get_pending_changes() const { return static_cast<int>(change_queue_.size()); }
+	// Prioridad de la fuente (ver lv::core::ChangePriority): 0 automático, 1 Director, 2 jugador, 3 seguridad.
+	// Devuelve false si se rechazó (pasaje reservado por alguien igual o más prioritario, o ya hay una orden mejor).
+	bool queue_passage_change(int p_a, int p_b, bool p_open, int p_priority = 0, int p_source = 0);
+	// Reserva un pasaje mientras se anuncia un cambio (§17). Otra fuente solo puede tocarlo con mayor prioridad.
+	bool reserve_passage(int p_a, int p_b, int p_source, int p_priority);
+	void release_passage(int p_a, int p_b, int p_source);
+	bool is_passage_reserved_by(int p_a, int p_b, int p_source) const;
+	int get_pending_changes() const { return change_queue_.size(); }
+	int get_dropped_changes() const { return change_queue_.dropped_count() + rejected_at_apply_; }
+	// Pide `p_pairs` aperturas+cierres al azar como una fuente cualquiera (pruebas de estrés, Director simple).
+	int request_random_shift(int p_pairs, int p_priority, int p_source);
 	void set_changes_per_frame(int p_value) { changes_per_frame_ = p_value < 1 ? 1 : p_value; }
 	int get_changes_per_frame() const { return changes_per_frame_; }
+	// Se aplican órdenes hasta gastar este tiempo en el frame (siempre al menos una). El resto, al siguiente.
+	void set_apply_budget_ms(float p_value) { apply_budget_ms_ = p_value; }
+	float get_apply_budget_ms() const { return apply_budget_ms_; }
 	// Aplica un cambio YA (sin cola): actualiza la lógica, las casillas (colisión y sombras) y emite
 	// `map_changed(tiles, now_wall)` (Observer). Preferir queue_passage_change.
 	void set_passage(int p_a, int p_b, bool p_open);
@@ -98,8 +116,11 @@ protected:
 private:
 	lv::core::MazeGrid grid_;
 	Ref<MazeProfile> profile_;
-	std::deque<lv::core::PassageChange> change_queue_;
-	int changes_per_frame_ = 2;
+	lv::core::MapChangeQueue change_queue_{ 64 };
+	int changes_per_frame_ = 8; // tope de órdenes por frame
+	float apply_budget_ms_ = 0.5f; // presupuesto de TIEMPO por frame para aplicar órdenes
+	int rejected_at_apply_ = 0;
+	std::unique_ptr<lv::core::Rng> debug_rng_;
 	lv::core::MazeGrid::Options options_ = default_options();
 
 	static lv::core::MazeGrid::Options default_options() {

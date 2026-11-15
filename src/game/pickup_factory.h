@@ -35,7 +35,10 @@ public:
 	int remove_pickups_at(Maze *p_maze, const TypedArray<Vector2i> &p_tiles);
 	// Objetos en el nivel que todavía no se recogieron.
 	std::vector<Pickup *> get_active_pickups() const;
-	int get_active_count() const { return static_cast<int>(get_active_pickups().size()); }
+	// O(1): contador mantenido al crear, recoger y retirar (antes recorría todos los objetos cada frame).
+	int get_active_count() const { return active_count_; }
+	// O(1) con el índice espacial.
+	bool has_pickup_at(const Vector2i &p_cell) const;
 
 	void set_pickup_scene(const Ref<PackedScene> &p_value) { pickup_scene_ = p_value; }
 	Ref<PackedScene> get_pickup_scene() const { return pickup_scene_; }
@@ -64,6 +67,7 @@ private:
 	// recorrer todos los objetos (cientos en mapas gigantes). Se mantiene al crear/recoger/retirar.
 	Maze *maze_ = nullptr;
 	std::unordered_map<int64_t, Pickup *> by_cell_;
+	int active_count_ = 0;
 	static int64_t cell_key(const Vector2i &p_cell) { return (static_cast<int64_t>(p_cell.x) << 32) ^ static_cast<uint32_t>(p_cell.y); }
 	void index_add(Pickup *p_pickup);
 	void index_remove(Pickup *p_pickup);

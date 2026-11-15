@@ -82,6 +82,11 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 - [x] Cola de cambios del mapa (Command + presupuesto por frame); conectividad local acotada; caché de protegidos; muestreo; índice espacial de objetos.
 - [x] `docs/RENDIMIENTO.md`: presupuesto, cómo medir, reglas. 62 tests.
 
+### v0.0.14 — Escalabilidad: prioridades, índice espacial y prueba de estrés ✅
+- [x] `MapChangeQueue`: prioridades (seguridad > jugador > Director > automático), reservas, tope 64, validación al aplicar.
+- [x] `SpatialHash` + `EntityIndex`; `WanderController`.
+- [x] Prueba de estrés en el menú principal con informe y veredicto. 7 tests (69 en total).
+
 ## Plan acordado (etapas, una pieza a la vez)
 
 Bloques de interfaz ya hechos: ~~objetos infinitos~~ ✅ · ~~HUD limpio + textos flotantes~~ ✅.
@@ -90,7 +95,7 @@ Ideas del mapa en detalle: [`DISENO_MAPA.md`](DISENO_MAPA.md).
 
 ### Etapa 1 — Jugable de principio a fin
 1. ~~Bases + trofeo + ganar~~ ✅
-2. Partida: reloj, fases (State: Preparación → Asalto → Golpe de los vándalos), victoria y fin por tiempo.
+2. **Partida**: reloj, fases (State: Preparación → Asalto → Golpe de los vándalos), victoria y fin por tiempo. ← siguiente
 3. ~~Pantallas: inicio, configurar, pausa, resultados, opciones~~ ✅
 
 ~~Mapas que cambian en tiempo real~~ ✅ (v0.0.12, en prueba en vivo).

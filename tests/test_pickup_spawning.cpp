@@ -2,6 +2,8 @@
 
 #include "core/pickup_spawning.h"
 
+#include <algorithm>
+
 using lv::core::Cell;
 using lv::core::chebyshev_distance;
 using lv::core::GridPoint;
@@ -80,6 +82,34 @@ TEST_SUITE("pick_spawn_cell") {
 	}
 }
 
+TEST_SUITE("pick_spawn_cell_indexed") {
+	TEST_CASE("Con índice elige exactamente lo mismo que con la lista de objetos") {
+		const MazeGrid grid = game_maze();
+		const auto bases = grid.base_cells(4);
+		std::vector<Cell> occupied;
+		Rng placer(9);
+		for (int i = 0; i < 60; i++) {
+			const auto c = pick_spawn_cell(grid, occupied, bases, {}, {}, placer);
+			if (c) {
+				occupied.push_back(*c);
+			}
+		}
+		const lv::core::HasPickupAt has = [&occupied](const Cell &p_cell) {
+			return std::find(occupied.begin(), occupied.end(), p_cell) != occupied.end();
+		};
+		const std::vector<SpawnObserver> observers = { { { 2.5f, 2.5f }, 5.0f } };
+		Rng a(31);
+		Rng b(31);
+		for (int i = 0; i < 50; i++) {
+			const auto with_list = pick_spawn_cell(grid, occupied, bases, observers, {}, a);
+			const auto with_index = lv::core::pick_spawn_cell_indexed(grid, has, bases, observers, {}, b);
+			REQUIRE(with_list.has_value() == with_index.has_value());
+			if (with_list) {
+				CHECK(*with_list == *with_index);
+			}
+		}
+	}
+}
 TEST_SUITE("KeepDensityRule") {
 	TEST_CASE("Si está lleno no aparece nada") {
 		KeepDensityRule rule;

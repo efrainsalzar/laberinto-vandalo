@@ -36,6 +36,7 @@ var _overview := false
 var _elapsed := 0.0
 var _finished := false
 var _pause_menu: CanvasLayer
+var _stress: Node
 
 
 func _ready() -> void:
@@ -118,6 +119,11 @@ func _on_maze_generated(seed_value: int) -> void:
 	_trophy.start(_maze, participants)
 	_participant.set_controller(HumanController.new())
 	_configure_live_maze(seed_value)
+	if App.match_config.stress_test and _stress == null:
+		_stress = preload("res://scripts/game/stress_test.gd").new()
+		add_child(_stress)
+		_stress.setup(self, _maze, _hud, App.match_config)
+		_stress.start()
 	_elapsed = 0.0
 	_finished = false
 	_camera.position = _participant.position

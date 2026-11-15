@@ -10,6 +10,9 @@ extends CanvasLayer
 ## Además publica todo como monitores del depurador de Godot (pestaña Depurador › Monitores).
 ## Ver docs/RENDIMIENTO.md.
 
+## Cada segundo: {sistema: {calls, total_ms, max_ms, last_ms}} (lo usa la prueba de estrés).
+signal window_closed(snapshot: Dictionary)
+
 const HISTORY := 180  # frames en el gráfico
 const GOOD_MS := 1000.0 / 60.0
 const BAD_MS := 1000.0 / 30.0
@@ -70,6 +73,7 @@ func _close_window() -> void:
 	_window_count = 0
 	PerfStats.roll_window()
 	_snapshot = PerfStats.snapshot()
+	window_closed.emit(_snapshot)
 	_register_monitors()
 	if _panel.visible:
 		_update_text()

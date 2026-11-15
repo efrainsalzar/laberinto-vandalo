@@ -21,6 +21,8 @@ script = ExtResource("1_sbx")
 profile = ExtResource("12_map")
 generate_on_ready = false
 
+[node name="EntityIndex" type="EntityIndex" parent="."]
+
 [node name="MazeShifter" type="MazeShifter" parent="."]
 
 [node name="ShiftView" type="Node2D" parent="."]

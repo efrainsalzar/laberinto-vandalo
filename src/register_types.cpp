@@ -2,6 +2,7 @@
 
 #include "version.h"
 
+#include "game/entity_index.h"
 #include "game/maze.h"
 #include "game/maze_profile.h"
 #include "game/maze_shifter.h"
@@ -33,6 +34,7 @@ void initialize_laberinto_module(ModuleInitializationLevel p_level) {
 	}
 	// Rendimiento
 	GDREGISTER_CLASS(PerfStats);
+	GDREGISTER_CLASS(EntityIndex);
 
 	// Laberinto
 	GDREGISTER_CLASS(MazeProfile);
@@ -46,6 +48,7 @@ void initialize_laberinto_module(ModuleInitializationLevel p_level) {
 	// Participantes (la clase base va antes que sus derivadas)
 	GDREGISTER_ABSTRACT_CLASS(ParticipantController);
 	GDREGISTER_CLASS(HumanController);
+	GDREGISTER_CLASS(WanderController);
 	GDREGISTER_CLASS(Participant);
 
 	// Visión

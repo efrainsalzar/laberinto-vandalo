@@ -55,6 +55,7 @@ Pickup *PickupFactory::create(const Ref<PickupType> &p_type, const Vector2 &p_po
 	pickup->connect("collected", callable_mp(this, &PickupFactory::on_pickup_collected).bind(pickup));
 	add_child(pickup);
 	index_add(pickup);
+	active_count_++;
 	return pickup;
 }
 
@@ -108,8 +109,14 @@ void PickupFactory::index_remove(Pickup *p_pickup) {
 	}
 }
 
+bool PickupFactory::has_pickup_at(const Vector2i &p_cell) const {
+	const auto it = by_cell_.find(cell_key(p_cell));
+	return it != by_cell_.end() && it->second != nullptr && !it->second->is_consumed();
+}
+
 void PickupFactory::clear_pickups() {
 	by_cell_.clear();
+	active_count_ = 0;
 	for (int i = get_child_count() - 1; i >= 0; i--) {
 		if (Pickup *pickup = Object::cast_to<Pickup>(get_child(i))) {
 			remove_child(pickup);
@@ -135,6 +142,7 @@ int PickupFactory::remove_pickups_at(Maze *p_maze, const TypedArray<Vector2i> &p
 		if (pickup != nullptr && !pickup->is_consumed()) {
 			remove_child(pickup);
 			pickup->queue_free();
+			active_count_--;
 			removed++;
 		}
 	}
@@ -154,5 +162,6 @@ std::vector<Pickup *> PickupFactory::get_active_pickups() const {
 
 void PickupFactory::on_pickup_collected(Object *p_participant, Pickup *p_pickup) {
 	index_remove(p_pickup);
+	active_count_--;
 	emit_signal("pickup_collected", p_pickup, p_participant);
 }

@@ -13,6 +13,22 @@ extends Resource
 const LIVE_MAZE_LEVELS := [[0.0, 0], [25.0, 1], [15.0, 2], [7.0, 4]]
 
 
+## Prueba de estrés (ver scripts/game/stress_test.gd): carga extra para medir rendimiento.
+@export var stress_test := false
+@export var stress_entities := 40
+@export var stress_seconds := 30.0
+
+
+## Peor caso de referencia (docs/RENDIMIENTO.md): Gigante + Difícil + laberinto Caótico + carga extra.
+static func create_stress() -> MatchConfig:
+	var config := MatchConfig.new()
+	config.profile = load("res://data/maps/dificil.tres").duplicate()
+	config.profile.size_scale = 3.0
+	config.live_maze = 3
+	config.stress_test = true
+	return config
+
+
 static func create_default() -> MatchConfig:
 	var config := MatchConfig.new()
 	config.profile = load("res://data/maps/normal.tres").duplicate()

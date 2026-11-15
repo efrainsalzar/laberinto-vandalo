@@ -11,6 +11,7 @@
 #include <godot_cpp/classes/tile_data.hpp>
 #include <godot_cpp/classes/tile_set.hpp>
 #include <godot_cpp/classes/tile_set_atlas_source.hpp>
+#include <godot_cpp/classes/time.hpp>
 #include <godot_cpp/core/class_db.hpp>
 
 namespace {
@@ -92,11 +93,24 @@ void Maze::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "generate_on_ready"), "set_generate_on_ready", "get_generate_on_ready");
 
 	ClassDB::bind_method(D_METHOD("set_passage", "a", "b", "open"), &Maze::set_passage);
-	ClassDB::bind_method(D_METHOD("queue_passage_change", "a", "b", "open"), &Maze::queue_passage_change);
+	ClassDB::bind_method(D_METHOD("queue_passage_change", "a", "b", "open", "priority", "source"), &Maze::queue_passage_change, DEFVAL(0), DEFVAL(0));
+	ClassDB::bind_method(D_METHOD("reserve_passage", "a", "b", "source", "priority"), &Maze::reserve_passage);
+	ClassDB::bind_method(D_METHOD("release_passage", "a", "b", "source"), &Maze::release_passage);
+	ClassDB::bind_method(D_METHOD("is_passage_reserved_by", "a", "b", "source"), &Maze::is_passage_reserved_by);
 	ClassDB::bind_method(D_METHOD("get_pending_changes"), &Maze::get_pending_changes);
+	ClassDB::bind_method(D_METHOD("get_dropped_changes"), &Maze::get_dropped_changes);
+	ClassDB::bind_method(D_METHOD("request_random_shift", "pairs", "priority", "source"), &Maze::request_random_shift);
+	BIND_CONSTANT(PRIORITY_AMBIENT);
+	BIND_CONSTANT(PRIORITY_DIRECTOR);
+	BIND_CONSTANT(PRIORITY_PLAYER);
+	BIND_CONSTANT(PRIORITY_SAFETY);
+	ADD_SIGNAL(MethodInfo("change_rejected", PropertyInfo(Variant::INT, "a"), PropertyInfo(Variant::INT, "b"), PropertyInfo(Variant::BOOL, "open")));
 	ClassDB::bind_method(D_METHOD("set_changes_per_frame", "value"), &Maze::set_changes_per_frame);
 	ClassDB::bind_method(D_METHOD("get_changes_per_frame"), &Maze::get_changes_per_frame);
+	ClassDB::bind_method(D_METHOD("set_apply_budget_ms", "value"), &Maze::set_apply_budget_ms);
+	ClassDB::bind_method(D_METHOD("get_apply_budget_ms"), &Maze::get_apply_budget_ms);
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "changes_per_frame", PROPERTY_HINT_RANGE, "1,64,1"), "set_changes_per_frame", "get_changes_per_frame");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "apply_budget_ms", PROPERTY_HINT_RANGE, "0.05,8,0.05,suffix:ms"), "set_apply_budget_ms", "get_apply_budget_ms");
 	ClassDB::bind_method(D_METHOD("nearest_floor_world", "world_position"), &Maze::nearest_floor_world);
 
 	ADD_SIGNAL(MethodInfo("generated", PropertyInfo(Variant::INT, "seed")));
@@ -122,6 +136,8 @@ void Maze::generate() {
 	ensure_tile_set();
 	ensure_walls_layer();
 	change_queue_.clear();
+	rejected_at_apply_ = 0;
+	debug_rng_.reset();
 	clear();
 	walls_->clear();
 	for (int y = 0; y < grid_.height(); y++) {
@@ -145,6 +161,10 @@ void Maze::ensure_walls_layer() {
 	}
 	walls_ = memnew(TileMapLayer);
 	walls_->set_name("Walls");
+	// Bloques chicos: al cambiar una casilla, Godot reconstruye colisión/sombras de su bloque. Con 8×8
+	// (en lugar de 16×16) se reconstruye 4 veces menos; cuesta pocas llamadas de dibujo más (solo lo visible).
+	walls_->set_rendering_quadrant_size(8);
+	walls_->set("physics_quadrant_size", 8); // existe desde Godot 4.4 (los bindings son de 4.3)
 	walls_->set_tile_set(get_tile_set());
 	walls_->set_light_mask(WALLS_LIGHT_MASK);
 	add_child(walls_);
@@ -277,9 +297,36 @@ Dictionary Maze::build_preview(const Ref<MazeProfile> &p_profile, int p_seed) {
 	result["size"] = Vector2i(grid.width(), grid.height());
 	return result;
 }
-void Maze::queue_passage_change(int p_a, int p_b, bool p_open) {
-	change_queue_.push_back({ p_a, p_b, p_open });
-	set_process(true);
+bool Maze::queue_passage_change(int p_a, int p_b, bool p_open, int p_priority, int p_source) {
+	const lv::core::MapChangeOrder order{ { p_a, p_b, p_open }, static_cast<lv::core::ChangePriority>(p_priority), p_source };
+	const bool accepted = change_queue_.push(order);
+	if (accepted) {
+		set_process(true);
+	}
+	return accepted;
+}
+
+bool Maze::reserve_passage(int p_a, int p_b, int p_source, int p_priority) {
+	return change_queue_.reserve(p_a, p_b, p_source, static_cast<lv::core::ChangePriority>(p_priority));
+}
+
+void Maze::release_passage(int p_a, int p_b, int p_source) {
+	change_queue_.release(p_a, p_b, p_source);
+}
+
+bool Maze::is_passage_reserved_by(int p_a, int p_b, int p_source) const {
+	return change_queue_.is_reserved_by(p_a, p_b, p_source);
+}
+
+int Maze::request_random_shift(int p_pairs, int p_priority, int p_source) {
+	if (!debug_rng_) {
+		debug_rng_ = std::make_unique<lv::core::Rng>(last_seed_ ^ 0xA5A5A5A5u);
+	}
+	int queued = 0;
+	for (const lv::core::PassageChange &change : lv::core::plan_maze_shift(grid_, p_pairs, *debug_rng_)) {
+		queued += queue_passage_change(change.a, change.b, change.open, p_priority, p_source) ? 1 : 0;
+	}
+	return queued;
 }
 
 void Maze::_process(double) {
@@ -288,15 +335,30 @@ void Maze::_process(double) {
 		return;
 	}
 	lv::core::PerfScope perf("maze.apply");
-	for (int i = 0; i < changes_per_frame_ && !change_queue_.empty(); i++) {
-		const lv::core::PassageChange change = change_queue_.front();
-		change_queue_.pop_front();
+	// Presupuesto por TIEMPO: se aplican órdenes (de una en una, la más prioritaria primero) hasta gastar
+	// apply_budget_ms; siempre al menos una para que la cola avance. Tope: changes_per_frame.
+	const uint64_t start_us = Time::get_singleton()->get_ticks_usec();
+	const uint64_t budget_us = static_cast<uint64_t>(apply_budget_ms_ * 1000.0f);
+	for (int applied = 0; applied < changes_per_frame_ && !change_queue_.empty(); applied++) {
+		if (applied > 0 && Time::get_singleton()->get_ticks_usec() - start_us >= budget_us) {
+			break;
+		}
+		const lv::core::MapChangeOrder order = change_queue_.take(1)[0];
+		const lv::core::PassageChange &change = order.change;
+		// Las garantías se verifican AL APLICAR: otras órdenes pudieron cambiar el mapa desde que se pidió.
+		const bool valid = change.open ? grid_.can_open_passage(change.a, change.b) : grid_.can_close_passage(change.a, change.b);
+		if (!valid) {
+			rejected_at_apply_++;
+			emit_signal("change_rejected", change.a, change.b, change.open);
+			continue;
+		}
 		set_passage(change.a, change.b, change.open);
-	}
-	{
-		// Forzar ahora la reconstrucción de colisión/sombras de Godot para poder medirla aparte.
-		lv::core::PerfScope rebuild("maze.rebuild");
-		walls_->update_internals();
+		{
+			// Reconstrucción de colisión/sombras de Godot DENTRO del bucle: así el presupuesto de tiempo
+			// incluye el costo real de cada cambio (y se mide aparte como maze.rebuild).
+			lv::core::PerfScope rebuild("maze.rebuild");
+			walls_->update_internals();
+		}
 	}
 }
 

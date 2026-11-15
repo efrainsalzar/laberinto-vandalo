@@ -16,6 +16,8 @@ func _ready() -> void:
 	%QuickPlay.pressed.connect(func() -> void: App.start_match(MatchConfig.create_default()))
 	%Options.pressed.connect(_open_settings)
 	%Quit.pressed.connect(App.quit_game)
+	%Stress.pressed.connect(func() -> void: App.start_match(MatchConfig.create_stress()))
+	UiFx.hint(%Stress, "Mide el rendimiento en el peor caso: mapa Gigante, laberinto Caótico, 40 entidades y cambios de varias fuentes a la vez. Al terminar (30 s) muestra un informe.")
 	UiFx.hint(%Play, "Elige la dificultad y el tamaño del mapa, con vista previa, y empieza.")
 	UiFx.hint(%QuickPlay, "Empieza ya en un mapa Normal al azar.")
 	UiFx.hint(%Options, "Pantalla, rendimiento, cámara y teclas de prueba.")

@@ -2,6 +2,7 @@
 
 #include "core/perf.h"
 
+#include "game/entity_index.h"
 #include "game/maze.h"
 #include "game/participant.h"
 
@@ -100,7 +101,14 @@ void MazeShifter::_process(double p_delta) {
 }
 
 void MazeShifter::begin_warning() {
-	planned_ = lv::core::plan_maze_shift(maze_->get_grid(), pairs_, *rng_);
+	// Planificar y RESERVAR cada pasaje durante el aviso: otra fuente igual o menos prioritaria no
+	// puede tocarlo; una más prioritaria (jugador, power-up) sí, y entonces este cambio se descarta.
+	planned_.clear();
+	for (const lv::core::PassageChange &change : lv::core::plan_maze_shift(maze_->get_grid(), pairs_, *rng_)) {
+		if (maze_->reserve_passage(change.a, change.b, source_id(), Maze::PRIORITY_AMBIENT)) {
+			planned_.push_back(change);
+		}
+	}
 	if (planned_.empty()) {
 		timer_ = interval_;
 		return;
@@ -118,8 +126,12 @@ void MazeShifter::begin_warning() {
 void MazeShifter::begin_applying() {
 	closures_.clear();
 	for (const lv::core::PassageChange &change : planned_) {
+		if (!maze_->is_passage_reserved_by(change.a, change.b, source_id())) {
+			continue; // una fuente más prioritaria tomó este pasaje durante el aviso: se cede
+		}
 		if (change.open) {
-			maze_->queue_passage_change(change.a, change.b, true);
+			maze_->queue_passage_change(change.a, change.b, true, Maze::PRIORITY_AMBIENT, source_id());
+			maze_->release_passage(change.a, change.b, source_id());
 		} else {
 			closures_.push_back({ change, 0.0f });
 		}
@@ -131,8 +143,13 @@ void MazeShifter::begin_applying() {
 
 void MazeShifter::update_closures(double p_delta) {
 	for (auto it = closures_.begin(); it != closures_.end();) {
+		if (!maze_->is_passage_reserved_by(it->change.a, it->change.b, source_id())) {
+			it = closures_.erase(it); // otra fuente más prioritaria lo tomó mientras esperaba
+			continue;
+		}
 		if (!is_occupied(it->change)) {
-			maze_->queue_passage_change(it->change.a, it->change.b, false);
+			maze_->queue_passage_change(it->change.a, it->change.b, false, Maze::PRIORITY_AMBIENT, source_id());
+			maze_->release_passage(it->change.a, it->change.b, source_id());
 			it = closures_.erase(it);
 			continue;
 		}
@@ -142,6 +159,7 @@ void MazeShifter::update_closures(double p_delta) {
 		it->waited += static_cast<float>(p_delta);
 		if (it->waited >= max_block_wait_) {
 			emit_signal("closure_cancelled", tiles_of(it->change)); // nunca se aplasta a nadie
+			maze_->release_passage(it->change.a, it->change.b, source_id());
 			it = closures_.erase(it);
 			continue;
 		}
@@ -156,6 +174,21 @@ void MazeShifter::update_closures(double p_delta) {
 
 bool MazeShifter::is_occupied(const lv::core::PassageChange &p_change) const {
 	const float half = maze_->get_tile_px() / 2.0f + block_margin_;
+	// Con índice espacial: solo se revisan las entidades cercanas a cada casilla (no todas).
+	if (EntityIndex *index = EntityIndex::find(get_tree())) {
+		for (const lv::core::Cell &tile : maze_->get_grid().passage_tiles(p_change.a, p_change.b)) {
+			const Vector2 center = maze_->cell_to_world(Vector2i(tile.x, tile.y));
+			const TypedArray<Node2D> near = index->query_radius(center, half * 1.5f);
+			for (int i = 0; i < near.size(); i++) {
+				const Node2D *n = Object::cast_to<Node2D>(near[i]);
+				const Vector2 d = (n->get_global_position() - center).abs();
+				if (d.x <= half && d.y <= half) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 	const TypedArray<Node> participants = get_tree()->get_nodes_in_group("participants");
 	for (const lv::core::Cell &tile : maze_->get_grid().passage_tiles(p_change.a, p_change.b)) {
 		const Vector2 center = maze_->cell_to_world(Vector2i(tile.x, tile.y));

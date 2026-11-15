@@ -5,6 +5,7 @@
 #include "core/maze_grid.h"
 #include "core/random.h"
 
+#include <functional>
 #include <optional>
 #include <vector>
 
@@ -29,6 +30,14 @@ struct SpawnCellOptions {
 // la esté viendo (fuera de su radio + margen, o tapada por paredes).
 // Devuelve nullopt si no encuentra lugar (se reintenta más tarde).
 std::optional<Cell> pick_spawn_cell(const MazeGrid &p_grid, const std::vector<Cell> &p_occupied,
+		const std::vector<Cell> &p_bases, const std::vector<SpawnObserver> &p_observers,
+		const SpawnCellOptions &p_options, Rng &r_rng);
+
+// Igual, pero "¿hay un objeto en esta casilla?" se pregunta a un índice (p. ej. espacial): la separación
+// mínima se comprueba solo en la ventana alrededor de cada candidata, no contra todos los objetos.
+// Costo: O(intentos × min_spacing²) sin importar cuántos objetos haya. (RENDIMIENTO.md, regla 7)
+using HasPickupAt = std::function<bool(const Cell &)>;
+std::optional<Cell> pick_spawn_cell_indexed(const MazeGrid &p_grid, const HasPickupAt &p_has_pickup_at,
 		const std::vector<Cell> &p_bases, const std::vector<SpawnObserver> &p_observers,
 		const SpawnCellOptions &p_options, Rng &r_rng);
 

@@ -86,11 +86,10 @@ Pickup *PickupSpawner::spawn_one() {
 		return nullptr;
 	}
 
-	std::vector<lv::core::Cell> occupied;
-	for (Pickup *pickup : factory_->get_active_pickups()) {
-		const Vector2i cell = maze_->world_to_cell(pickup->get_global_position());
-		occupied.push_back({ cell.x, cell.y });
-	}
+	PickupFactory *factory = factory_;
+	const lv::core::HasPickupAt has_pickup = [factory](const lv::core::Cell &p_cell) {
+		return factory->has_pickup_at(Vector2i(p_cell.x, p_cell.y));
+	};
 	std::vector<lv::core::SpawnObserver> observers;
 	const TypedArray<Node> participants = get_tree()->get_nodes_in_group("participants");
 	for (int i = 0; i < participants.size(); i++) {
@@ -104,7 +103,7 @@ Pickup *PickupSpawner::spawn_one() {
 		observers.push_back(observer);
 	}
 
-	const std::optional<lv::core::Cell> cell = lv::core::pick_spawn_cell(maze_->get_grid(), occupied, bases_, observers, cell_options_, *rng_);
+	const std::optional<lv::core::Cell> cell = lv::core::pick_spawn_cell_indexed(maze_->get_grid(), has_pickup, bases_, observers, cell_options_, *rng_);
 	if (!cell) {
 		return nullptr; // sin lugar ahora; la política lo volverá a pedir
 	}
