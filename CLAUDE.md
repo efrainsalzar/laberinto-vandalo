@@ -33,7 +33,7 @@ Gana quien lleva el trofeo a su zona de resguardo antes de que acabe el tiempo.
 - **Idea central: el participante no sabe quién lo controla** (humano, bot o red).
 - Sin sobreingeniería: no se diseña para "cambiar de motor". Se aplica un patrón cuando resuelve un problema real.
 - **Todo módulo nuevo se documenta en `docs/ARQUITECTURA.md`**: problema, patrón elegido y por qué,
-  diagrama de clases (Mermaid), archivos y decisiones pendientes. Y se agrega al índice de patrones (§7).
+  diagrama de clases (Mermaid), archivos y decisiones pendientes. Y se agrega al índice de patrones (§8).
 - Lógica y vista separadas: los nodos C++ no dibujan; la vista (escena/GDScript) no decide.
 
 ## Estructura de carpetas

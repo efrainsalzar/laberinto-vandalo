@@ -32,9 +32,15 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 - [x] `StatsComponent` (hijo del participante) + `StatsProfile` (datos .tres). El participante toma su velocidad de ahí.
 - [x] Panel de stats arriba a la izquierda (Observer de las señales). Teclas 1/2/3/0 para probar efectos.
 
-## Siguiente paso: Pieza 4 — Visión limitada (niebla de guerra)
+### v0.0.5 — Pieza 4: Visión limitada ✅
+- [x] `lv::core::can_see` / `has_line_of_sight` (radio + línea de visión por casillas). 6 tests.
+- [x] `Vision` (`PointLight2D` con sombras) como hijo del participante; el radio sigue a la stat `vision`.
+- [x] Paredes con oclusores en su propia capa: se ven las cercanas, lo de detrás queda oculto.
+- [x] Sandbox con oscuridad (tecla V la apaga).
 
-Diseñar y aprobar antes de programar. Usa la stat `vision`.
+## Siguiente paso: Pieza 5 — Puntos recolectables
+
+Diseñar y aprobar antes de programar (Factory + datos; aplican modificadores de Stats).
 
 ## Después (fase 1 — prototipo), un módulo a la vez
 
@@ -45,4 +51,5 @@ Diseñar y aprobar antes de programar. Usa la stat `vision`.
 
 ## Ideas anotadas (no implementar todavía)
 
-_(vacío)_
+- **Multijugador local y visión:** solo hay una luz/oscuridad por pantalla; con varios humanos en la misma máquina hará falta pantalla dividida u otra solución.
+

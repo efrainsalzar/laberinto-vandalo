@@ -1,7 +1,7 @@
 extends Node2D
-## Escena de prueba de las piezas 2 y 3 (participante + stats). No es parte del juego final.
+## Escena de prueba de las piezas 2, 3 y 4 (participante + stats + visión). No es parte del juego final.
 ## WASD/flechas = moverse · 1/2/3 = efectos de prueba · 0 = quitar efectos
-## Tab = ver mapa completo · R = otro laberinto · Esc = salir
+## V = niebla on/off · Tab = ver mapa completo · R = otro laberinto · Esc = salir
 
 const FOLLOW_ZOOM := Vector2(2.0, 2.0)
 const DEBUG_SOURCE := "prueba"
@@ -10,6 +10,7 @@ const DEBUG_SOURCE := "prueba"
 @onready var _participant: Participant = $Participant
 @onready var _camera: Camera2D = $Camera
 @onready var _help: Label = $UI/Help
+@onready var _darkness: CanvasModulate = $Darkness
 
 var _overview := false
 
@@ -20,7 +21,7 @@ func _ready() -> void:
 	_maze.generated.connect(_on_maze_generated)
 	if _maze.get_last_seed() != 0:
 		_on_maze_generated(_maze.get_last_seed())
-	_help.text = "[WASD/flechas] moverse   [1] power-up ×1.5 vel 5s   [2] punto +10 vel   [3] +2 visión 5s   [0] quitar efectos   [Tab] mapa   [R] otro laberinto   [Esc] salir"
+	_help.text = "[WASD/flechas] moverse   [1] power-up ×1.5 vel 5s   [2] punto +10 vel   [3] +2 visión 5s   [0] quitar efectos   [V] niebla   [Tab] mapa   [R] otro laberinto   [Esc] salir"
 
 
 func _process(_delta: float) -> void:
@@ -41,6 +42,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			stats.add_modifier(StatsComponent.STAT_VISION, StatsComponent.OP_ADD, 2.0, 5.0, DEBUG_SOURCE)
 		KEY_0:
 			stats.remove_modifiers_from(DEBUG_SOURCE)
+		KEY_V:
+			_darkness.visible = not _darkness.visible
 		KEY_R:
 			_maze.generate()
 		KEY_TAB:

@@ -1,8 +1,11 @@
 #include "game/maze.h"
 
+#include "core/line_of_sight.h"
+
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/classes/image.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
+#include <godot_cpp/classes/occluder_polygon2d.hpp>
 #include <godot_cpp/classes/random_number_generator.hpp>
 #include <godot_cpp/classes/tile_data.hpp>
 #include <godot_cpp/classes/tile_set.hpp>
@@ -22,6 +25,7 @@ Vector2i to_vector(const lv::core::Cell &p_c) {
 } // namespace
 
 void Maze::_bind_methods() {
+	BIND_CONSTANT(WALLS_LIGHT_MASK);
 	ClassDB::bind_method(D_METHOD("generate"), &Maze::generate);
 	ClassDB::bind_method(D_METHOD("is_wall", "cell"), &Maze::is_wall);
 	ClassDB::bind_method(D_METHOD("get_center_cell"), &Maze::get_center_cell);
@@ -30,6 +34,9 @@ void Maze::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("cell_to_world", "cell"), &Maze::cell_to_world);
 	ClassDB::bind_method(D_METHOD("world_to_cell", "world_position"), &Maze::world_to_cell);
 	ClassDB::bind_method(D_METHOD("get_last_seed"), &Maze::get_last_seed);
+	ClassDB::bind_method(D_METHOD("get_tile_px"), &Maze::get_tile_px);
+	ClassDB::bind_method(D_METHOD("has_line_of_sight", "from", "to"), &Maze::has_line_of_sight);
+	ClassDB::bind_method(D_METHOD("can_see", "from", "to", "radius_tiles"), &Maze::can_see);
 
 	ClassDB::bind_method(D_METHOD("set_cells_width", "value"), &Maze::set_cells_width);
 	ClassDB::bind_method(D_METHOD("get_cells_width"), &Maze::get_cells_width);
@@ -82,14 +89,33 @@ void Maze::generate() {
 	grid_.generate(options);
 
 	ensure_tile_set();
+	ensure_walls_layer();
 	clear();
+	walls_->clear();
 	for (int y = 0; y < grid_.height(); y++) {
 		for (int x = 0; x < grid_.width(); x++) {
-			const bool wall = grid_.is_wall({ x, y });
-			set_cell(Vector2i(x, y), SOURCE_ID, wall ? WALL_TILE : FLOOR_TILE);
+			// El suelo va debajo de todo; las paredes, en su propia capa (ver ensure_walls_layer).
+			set_cell(Vector2i(x, y), SOURCE_ID, FLOOR_TILE);
+			if (grid_.is_wall({ x, y })) {
+				walls_->set_cell(Vector2i(x, y), SOURCE_ID, WALL_TILE);
+			}
 		}
 	}
 	emit_signal("generated", static_cast<int>(last_seed_));
+}
+
+// Las paredes se dibujan en una capa hija con su propia máscara de luz (WALLS_LIGHT_MASK).
+// La luz de visión las ilumina pero no les aplica sombras: se ven las paredes cercanas
+// y lo que hay detrás de ellas (suelo, objetos, otros participantes) queda oculto.
+void Maze::ensure_walls_layer() {
+	if (walls_ != nullptr) {
+		return;
+	}
+	walls_ = memnew(TileMapLayer);
+	walls_->set_name("Walls");
+	walls_->set_tile_set(get_tile_set());
+	walls_->set_light_mask(WALLS_LIGHT_MASK);
+	add_child(walls_);
 }
 
 // TileSet provisional (dos colores, colisión en las paredes) para no depender de arte todavía.
@@ -99,14 +125,15 @@ void Maze::ensure_tile_set() {
 		return;
 	}
 	Ref<Image> image = Image::create_empty(TILE_PX * 2, TILE_PX, false, Image::FORMAT_RGBA8);
-	image->fill_rect(Rect2i(0, 0, TILE_PX, TILE_PX), Color(0.20f, 0.18f, 0.28f)); // pared
-	image->fill_rect(Rect2i(1, 1, TILE_PX - 2, TILE_PX - 2), Color(0.27f, 0.24f, 0.37f));
-	image->fill_rect(Rect2i(TILE_PX, 0, TILE_PX, TILE_PX), Color(0.09f, 0.08f, 0.12f)); // suelo
+	image->fill_rect(Rect2i(0, 0, TILE_PX, TILE_PX), Color(0.30f, 0.26f, 0.42f)); // pared
+	image->fill_rect(Rect2i(1, 1, TILE_PX - 2, TILE_PX - 2), Color(0.40f, 0.35f, 0.55f));
+	image->fill_rect(Rect2i(TILE_PX, 0, TILE_PX, TILE_PX), Color(0.17f, 0.16f, 0.22f)); // suelo
 
 	Ref<TileSet> tile_set;
 	tile_set.instantiate();
 	tile_set->set_tile_size(Vector2i(TILE_PX, TILE_PX));
 	tile_set->add_physics_layer();
+	tile_set->add_occlusion_layer(); // las paredes proyectan sombra (visión limitada)
 
 	Ref<TileSetAtlasSource> source;
 	source.instantiate();
@@ -125,6 +152,10 @@ void Maze::ensure_tile_set() {
 	TileData *wall_data = source->get_tile_data(WALL_TILE, 0);
 	wall_data->add_collision_polygon(0);
 	wall_data->set_collision_polygon_points(0, 0, square);
+	Ref<OccluderPolygon2D> occluder;
+	occluder.instantiate();
+	occluder->set_polygon(square);
+	wall_data->set_occluder(0, occluder);
 
 	set_tile_set(tile_set);
 }
@@ -155,4 +186,23 @@ Vector2 Maze::cell_to_world(const Vector2i &p_cell) const {
 
 Vector2i Maze::world_to_cell(const Vector2 &p_world) const {
 	return local_to_map(to_local(p_world));
+}
+
+float Maze::get_tile_px() const {
+	return get_tile_set().is_valid() ? static_cast<float>(get_tile_set()->get_tile_size().x) : static_cast<float>(TILE_PX);
+}
+
+namespace {
+lv::core::GridPoint to_grid_point(const Maze &p_maze, const Vector2 &p_world) {
+	const Vector2 local = p_maze.to_local(p_world) / p_maze.get_tile_px();
+	return { local.x, local.y };
+}
+} // namespace
+
+bool Maze::has_line_of_sight(const Vector2 &p_from, const Vector2 &p_to) const {
+	return lv::core::has_line_of_sight(grid_, to_grid_point(*this, p_from), to_grid_point(*this, p_to));
+}
+
+bool Maze::can_see(const Vector2 &p_from, const Vector2 &p_to, float p_radius_tiles) const {
+	return lv::core::can_see(grid_, to_grid_point(*this, p_from), to_grid_point(*this, p_to), p_radius_tiles);
 }

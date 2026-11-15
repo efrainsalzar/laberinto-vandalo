@@ -19,6 +19,8 @@ public:
 	static constexpr int SOURCE_ID = 0;
 	static inline const Vector2i WALL_TILE = Vector2i(0, 0);
 	static inline const Vector2i FLOOR_TILE = Vector2i(1, 0);
+	// Máscara de luz de la capa de paredes: la luz de visión las ilumina sin sombrearlas.
+	static constexpr int WALLS_LIGHT_MASK = 2;
 
 	void _ready() override;
 
@@ -30,6 +32,12 @@ public:
 	Vector2i get_grid_size() const;
 	Vector2 cell_to_world(const Vector2i &p_cell) const;
 	Vector2i world_to_cell(const Vector2 &p_world) const;
+	float get_tile_px() const;
+
+	// Visión (lógica en core/line_of_sight): ¿se ve `p_to` desde `p_from`? Posiciones globales;
+	// radio en casillas. Lo usarán los bots para reaccionar solo a lo que realmente ven.
+	bool has_line_of_sight(const Vector2 &p_from, const Vector2 &p_to) const;
+	bool can_see(const Vector2 &p_from, const Vector2 &p_to, float p_radius_tiles) const;
 
 	const lv::core::MazeGrid &get_grid() const { return grid_; }
 
@@ -69,5 +77,8 @@ private:
 	uint32_t last_seed_ = 0;
 	bool generate_on_ready_ = true;
 
+	TileMapLayer *walls_ = nullptr; // capa hija con las paredes (colisión + sombras)
+
 	void ensure_tile_set();
+	void ensure_walls_layer();
 };

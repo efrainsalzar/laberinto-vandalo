@@ -7,6 +7,7 @@
 #include "game/participant_controller.h"
 #include "game/stats_component.h"
 #include "game/stats_profile.h"
+#include "game/vision.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
@@ -32,6 +33,9 @@ void initialize_laberinto_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_ABSTRACT_CLASS(ParticipantController);
 	GDREGISTER_CLASS(HumanController);
 	GDREGISTER_CLASS(Participant);
+
+	// Visión
+	GDREGISTER_CLASS(Vision);
 
 	UtilityFunctions::print("[laberinto] Extension C++ cargada (v", LV_VERSION, ")");
 }
