@@ -35,6 +35,8 @@ void Maze::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_cells_width"), &Maze::get_cells_width);
 	ClassDB::bind_method(D_METHOD("set_cells_height", "value"), &Maze::set_cells_height);
 	ClassDB::bind_method(D_METHOD("get_cells_height"), &Maze::get_cells_height);
+	ClassDB::bind_method(D_METHOD("set_corridor_width", "value"), &Maze::set_corridor_width);
+	ClassDB::bind_method(D_METHOD("get_corridor_width"), &Maze::get_corridor_width);
 	ClassDB::bind_method(D_METHOD("set_seed", "value"), &Maze::set_seed);
 	ClassDB::bind_method(D_METHOD("get_seed"), &Maze::get_seed);
 	ClassDB::bind_method(D_METHOD("set_loop_chance", "value"), &Maze::set_loop_chance);
@@ -47,6 +49,7 @@ void Maze::_bind_methods() {
 	ADD_GROUP("Generación", "");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "cells_width", PROPERTY_HINT_RANGE, "2,100,1"), "set_cells_width", "get_cells_width");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "cells_height", PROPERTY_HINT_RANGE, "2,100,1"), "set_cells_height", "get_cells_height");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "corridor_width", PROPERTY_HINT_RANGE, "1,8,1"), "set_corridor_width", "get_corridor_width");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "seed"), "set_seed", "get_seed");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "loop_chance", PROPERTY_HINT_RANGE, "0,1,0.01"), "set_loop_chance", "get_loop_chance");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "vault_radius", PROPERTY_HINT_RANGE, "0,10,1"), "set_vault_radius", "get_vault_radius");

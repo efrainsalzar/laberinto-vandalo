@@ -99,4 +99,30 @@ TEST_SUITE("MazeGrid") {
 		}
 		CHECK(grid.base_cells(20).size() == 8);
 	}
+
+	TEST_CASE("Pasillos anchos: dimensiones, paredes de 1 casilla y conectividad") {
+		for (int corridor = 2; corridor <= 4; corridor++) {
+			CAPTURE(corridor);
+			MazeGrid grid;
+			MazeGrid::Options options;
+			options.cells_w = 10;
+			options.cells_h = 7;
+			options.corridor_width = corridor;
+			options.vault_radius = corridor + 1;
+			options.seed = 11;
+			grid.generate(options);
+			CHECK(grid.width() == 10 * (corridor + 1) + 1);
+			CHECK(grid.height() == 7 * (corridor + 1) + 1);
+			CHECK(grid.is_fully_connected());
+			// La primera celda es un bloque abierto de corridor x corridor.
+			for (int y = 1; y <= corridor; y++) {
+				for (int x = 1; x <= corridor; x++) {
+					CHECK_FALSE(grid.is_wall({ x, y }));
+				}
+			}
+			for (const Cell &base : grid.base_cells(8)) {
+				CHECK_FALSE(grid.is_wall(base));
+			}
+		}
+	}
 }

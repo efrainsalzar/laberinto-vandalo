@@ -38,6 +38,8 @@ public:
 	int get_cells_width() const { return options_.cells_w; }
 	void set_cells_height(int p_value) { options_.cells_h = p_value; }
 	int get_cells_height() const { return options_.cells_h; }
+	void set_corridor_width(int p_value) { options_.corridor_width = p_value; }
+	int get_corridor_width() const { return options_.corridor_width; }
 	void set_seed(int p_value) { seed_ = p_value; }
 	int get_seed() const { return seed_; }
 	void set_loop_chance(float p_value) { options_.loop_chance = p_value; }
@@ -53,7 +55,16 @@ protected:
 
 private:
 	lv::core::MazeGrid grid_;
-	lv::core::MazeGrid::Options options_;
+	lv::core::MazeGrid::Options options_ = default_options();
+
+	static lv::core::MazeGrid::Options default_options() {
+		lv::core::MazeGrid::Options options;
+		options.cells_w = 20;
+		options.cells_h = 14;
+		options.corridor_width = 3;
+		options.vault_radius = 4;
+		return options;
+	}
 	int seed_ = 0; // 0 = aleatoria en cada generación
 	uint32_t last_seed_ = 0;
 	bool generate_on_ready_ = true;

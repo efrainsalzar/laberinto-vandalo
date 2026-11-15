@@ -18,10 +18,48 @@ void MazeGrid::generate(const Options &p_options) {
 	vault_radius_ = std::max(0, p_options.vault_radius);
 	walls_.assign(static_cast<size_t>(width_) * height_, 1);
 
+	corridor_width_ = std::max(1, p_options.corridor_width);
+
 	std::mt19937 rng(p_options.seed);
 	carve_perfect_maze(cells_w, cells_h, rng);
 	open_loops(p_options.loop_chance, rng);
+	widen_corridors(corridor_width_);
 	open_vault();
+}
+
+// Paso 3: escala la cuadrícula compacta. Cada celda (coordenada impar) pasa a medir
+// corridor_width casillas y cada pared (coordenada par) sigue midiendo 1.
+void MazeGrid::widen_corridors(int p_corridor_width) {
+	if (p_corridor_width == 1) {
+		return;
+	}
+	const int compact_w = width_;
+	const int compact_h = height_;
+	const std::vector<uint8_t> compact = walls_;
+	const int step = p_corridor_width + 1;
+	auto start = [step](int p_i) { return (p_i / 2) * step + (p_i % 2); };
+	auto span = [p_corridor_width](int p_i) { return (p_i % 2) ? p_corridor_width : 1; };
+
+	width_ = (compact_w / 2) * step + 1;
+	height_ = (compact_h / 2) * step + 1;
+	walls_.assign(static_cast<size_t>(width_) * height_, 1);
+	for (int sy = 0; sy < compact_h; sy++) {
+		for (int sx = 0; sx < compact_w; sx++) {
+			if (compact[sy * compact_w + sx] != 0) {
+				continue;
+			}
+			for (int y = start(sy); y < start(sy) + span(sy); y++) {
+				for (int x = start(sx); x < start(sx) + span(sx); x++) {
+					set_wall({ x, y }, false);
+				}
+			}
+		}
+	}
+}
+
+int MazeGrid::compact_to_final(int p_compact) const {
+	const int step = corridor_width_ + 1;
+	return (p_compact / 2) * step + 1 + corridor_width_ / 2;
 }
 
 // Paso 1: backtracking iterativo. Recorre las celdas al azar abriendo paredes;
@@ -75,7 +113,7 @@ void MazeGrid::open_loops(float p_chance, std::mt19937 &r_rng) {
 	}
 }
 
-// Paso 3: sala abierta en el centro (la bóveda del trofeo). Nunca toca el borde exterior.
+// Paso 4: sala abierta en el centro (la bóveda del trofeo). Nunca toca el borde exterior.
 void MazeGrid::open_vault() {
 	const Cell c = center();
 	for (int y = c.y - vault_radius_; y <= c.y + vault_radius_; y++) {
@@ -122,17 +160,27 @@ bool MazeGrid::is_in_vault(const Cell &p_cell) const {
 }
 
 std::vector<Cell> MazeGrid::base_cells(int p_count) const {
-	// Las celdas lógicas están en coordenadas impares: los puntos medios se ajustan a ellas.
+	// Se eligen celdas lógicas (coordenadas impares de la cuadrícula compacta) y se devuelve
+	// el centro de su pasillo en la cuadrícula final.
 	auto odd = [](int p_v) { return (p_v % 2 == 0) ? p_v - 1 : p_v; };
-	const int left = 1;
-	const int top = 1;
-	const int right = width_ - 2;
-	const int bottom = height_ - 2;
-	const int mid_x = odd(width_ / 2);
-	const int mid_y = odd(height_ / 2);
+	const int step = corridor_width_ + 1;
+	const int compact_w = ((width_ - 1) / step) * 2 + 1;
+	const int compact_h = ((height_ - 1) / step) * 2 + 1;
+	const int left = compact_to_final(1);
+	const int top = compact_to_final(1);
+	const int right = compact_to_final(compact_w - 2);
+	const int bottom = compact_to_final(compact_h - 2);
+	const int mid_x = compact_to_final(odd(compact_w / 2));
+	const int mid_y = compact_to_final(odd(compact_h / 2));
 	const std::array<Cell, 8> spots = {
-		Cell{ left, top }, Cell{ right, bottom }, Cell{ right, top }, Cell{ left, bottom },
-		Cell{ mid_x, top }, Cell{ mid_x, bottom }, Cell{ left, mid_y }, Cell{ right, mid_y },
+		Cell{ left, top },
+		Cell{ right, bottom },
+		Cell{ right, top },
+		Cell{ left, bottom },
+		Cell{ mid_x, top },
+		Cell{ mid_x, bottom },
+		Cell{ left, mid_y },
+		Cell{ right, mid_y },
 	};
 	std::vector<Cell> result;
 	for (int i = 0; i < p_count && i < static_cast<int>(spots.size()); i++) {
