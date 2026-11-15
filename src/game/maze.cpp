@@ -35,6 +35,9 @@ void Maze::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("world_to_cell", "world_position"), &Maze::world_to_cell);
 	ClassDB::bind_method(D_METHOD("get_last_seed"), &Maze::get_last_seed);
 	ClassDB::bind_method(D_METHOD("get_tile_px"), &Maze::get_tile_px);
+	ClassDB::bind_method(D_METHOD("set_profile", "value"), &Maze::set_profile);
+	ClassDB::bind_method(D_METHOD("get_profile"), &Maze::get_profile);
+	ClassDB::bind_method(D_METHOD("get_metrics"), &Maze::get_metrics);
 	ClassDB::bind_method(D_METHOD("has_line_of_sight", "from", "to"), &Maze::has_line_of_sight);
 	ClassDB::bind_method(D_METHOD("can_see", "from", "to", "radius_tiles"), &Maze::can_see);
 
@@ -53,7 +56,8 @@ void Maze::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_generate_on_ready", "value"), &Maze::set_generate_on_ready);
 	ClassDB::bind_method(D_METHOD("get_generate_on_ready"), &Maze::get_generate_on_ready);
 
-	ADD_GROUP("Generación", "");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "profile", PROPERTY_HINT_RESOURCE_TYPE, "MazeProfile"), "set_profile", "get_profile");
+	ADD_GROUP("Generación (sin perfil)", "");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "cells_width", PROPERTY_HINT_RANGE, "2,100,1"), "set_cells_width", "get_cells_width");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "cells_height", PROPERTY_HINT_RANGE, "2,100,1"), "set_cells_height", "get_cells_height");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "corridor_width", PROPERTY_HINT_RANGE, "1,8,1"), "set_corridor_width", "get_corridor_width");
@@ -84,7 +88,7 @@ void Maze::generate() {
 		last_seed_ = rng->randi_range(1, 2147483647);
 	}
 
-	lv::core::MazeGrid::Options options = options_;
+	lv::core::MazeGrid::Options options = profile_.is_valid() ? profile_->to_options() : options_;
 	options.seed = last_seed_;
 	grid_.generate(options);
 
@@ -203,4 +207,15 @@ bool Maze::has_line_of_sight(const Vector2 &p_from, const Vector2 &p_to) const {
 
 bool Maze::can_see(const Vector2 &p_from, const Vector2 &p_to, float p_radius_tiles) const {
 	return lv::core::can_see(grid_, world_to_grid_point(p_from), world_to_grid_point(p_to), p_radius_tiles);
+}
+Dictionary Maze::get_metrics() const {
+	const lv::core::MazeGrid::Metrics &m = grid_.metrics();
+	Dictionary d;
+	d["algorithm"] = String::utf8(lv::core::maze_algorithm_name(m.algorithm));
+	d["cells"] = m.cells;
+	d["dead_ends"] = m.dead_ends;
+	d["junctions"] = m.junctions;
+	d["dead_end_ratio"] = m.dead_end_ratio;
+	d["route_length"] = m.route_length;
+	return d;
 }

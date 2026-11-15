@@ -28,6 +28,7 @@ const HINT_SECONDS := 5.0
 @onready var _banner: PanelContainer = $Banner
 @onready var _banner_title: Label = $Banner/Rows/Title
 @onready var _banner_subtitle: Label = $Banner/Rows/Subtitle
+@onready var _map_info: Label = $MapInfo
 
 var _participant: Participant
 var _stats: StatsComponent
@@ -84,6 +85,13 @@ func show_banner(title: String, subtitle: String, color: Color) -> void:
 	var t := create_tween().set_parallel(true)
 	t.tween_property(_banner, "modulate:a", 1.0, 0.25)
 	t.tween_property(_banner, "scale", Vector2.ONE, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+## Información del mapa (abajo a la izquierda, discreta). Destella al cambiar.
+func set_map_info(text: String) -> void:
+	_map_info.text = text
+	_map_info.modulate = Color(1.6, 1.5, 1.0)
+	create_tween().tween_property(_map_info, "modulate", Color.WHITE, 0.8)
 
 
 func hide_banner() -> void:

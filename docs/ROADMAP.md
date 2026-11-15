@@ -60,6 +60,12 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 - [x] `TrophyController`: lentitud ×0.6 al portador, eventos al Event Bus, vistas de trofeo (con luz) y bases.
 - [x] Flecha de objetivo en el borde (trofeo / tu base) con distancia; aviso "LLEVAS EL TROFEO"; cartel de victoria.
 
+### v0.0.10 — Algoritmos de generación y dificultad ✅ (adelanto de la etapa 2.1)
+- [x] 6 algoritmos clásicos (Backtracking, Hunt-and-Kill, Growing Tree, Kruskal, Wilson, Prim) sobre `PassageGrid` (topología).
+- [x] Bucles y *braid* (eliminar callejones); métricas: % de callejones, cruces, ruta base → centro.
+- [x] 4 niveles (Fácil, Normal, Difícil, Extremo) + personalizado como datos (`MazeProfile`). Tecla M en el sandbox.
+- [x] 6 tests (52 en total), incluido uno que verifica que los niveles están ordenados por dificultad.
+
 ## Plan acordado (etapas, una pieza a la vez)
 
 Bloques de interfaz ya hechos: ~~objetos infinitos~~ ✅ · ~~HUD limpio + textos flotantes~~ ✅.
@@ -72,7 +78,7 @@ Ideas del mapa en detalle: [`DISENO_MAPA.md`](DISENO_MAPA.md).
 3. Pantallas mínimas: inicio, pausa, fin de partida (flujo del juego con State).
 
 ### Etapa 2 — El mundo
-1. `MapConfig` + mapa más grande + formas de contorno (cuadrado, círculo, hexágono...).
+1. `MapConfig` + formas de contorno (cuadrado, círculo, hexágono...). (Algoritmos, dificultad y tamaños ✅ en v0.0.10.)
 2. Áreas conectadas por puertas → **la bóveda como mini-mapa propio**; las puertas sirven para portales.
 3. Terrenos como datos: agua, barro, hielo (inercia), ríos con puentes, árboles/rocas.
 4. Mapa que cambia: paredes rompibles, atajos, pasadizos secretos, paredes móviles.

@@ -2,8 +2,10 @@
 
 #include "core/line_of_sight.h"
 #include "core/maze_grid.h"
+#include "game/maze_profile.h"
 
 #include <godot_cpp/classes/tile_map_layer.hpp>
+#include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/variant/typed_array.hpp>
 #include <godot_cpp/variant/vector2i.hpp>
 
@@ -61,11 +63,18 @@ public:
 	bool get_generate_on_ready() const { return generate_on_ready_; }
 	int get_last_seed() const { return static_cast<int>(last_seed_); }
 
+	// Perfil de generación (nivel o personalizado). Si hay perfil, manda sobre las propiedades sueltas.
+	void set_profile(const Ref<MazeProfile> &p_value) { profile_ = p_value; }
+	Ref<MazeProfile> get_profile() const { return profile_; }
+	// {algorithm, cells, dead_ends, junctions, dead_end_ratio, route_length} del último laberinto.
+	Dictionary get_metrics() const;
+
 protected:
 	static void _bind_methods();
 
 private:
 	lv::core::MazeGrid grid_;
+	Ref<MazeProfile> profile_;
 	lv::core::MazeGrid::Options options_ = default_options();
 
 	static lv::core::MazeGrid::Options default_options() {

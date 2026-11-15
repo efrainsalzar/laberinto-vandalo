@@ -3,6 +3,7 @@
 #include "version.h"
 
 #include "game/maze.h"
+#include "game/maze_profile.h"
 #include "game/participant.h"
 #include "game/participant_controller.h"
 #include "game/pickup.h"
@@ -29,6 +30,7 @@ void initialize_laberinto_module(ModuleInitializationLevel p_level) {
 		return;
 	}
 	// Laberinto
+	GDREGISTER_CLASS(MazeProfile);
 	GDREGISTER_CLASS(Maze);
 
 	// Stats

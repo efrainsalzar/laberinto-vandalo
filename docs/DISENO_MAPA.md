@@ -16,6 +16,8 @@ centro (la bóveda) por el trofeo y lo llevan a su base. El mapa no tiene por qu
 ---
 
 ## 1. Configuración del mapa — Etapa 2.1
+
+> **Avance (v0.0.10):** ya existen MazeProfile (4 niveles + personalizado), 6 algoritmos clásicos, métricas de dificultad y la topología separada del dibujo (PassageGrid). Ver ARQUITECTURA §12.
 - Un recurso `MapConfig` (`.tres`): tamaño, ancho de pasillo, bucles, tamaño de bóveda, cantidad de objetos,
   forma, terrenos habilitados. Varios mapas = varios archivos.
 - **Mapa más grande** que el actual (20×14 celdas): por ejemplo 30×20 o más, según rendimiento medido.

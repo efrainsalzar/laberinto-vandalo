@@ -4,6 +4,12 @@ extends Node2D
 ## Las teclas están en el panel de controles (F1).
 
 const FOLLOW_ZOOM := Vector2(2.0, 2.0)
+const MAP_PROFILES: Array[MazeProfile] = [
+	preload("res://data/maps/facil.tres"),
+	preload("res://data/maps/normal.tres"),
+	preload("res://data/maps/dificil.tres"),
+	preload("res://data/maps/extremo.tres"),
+]
 const DEBUG_SOURCE := "prueba"
 const CONTROLS := """Objetivo: toma el TROFEO del centro y llévalo a TU BASE.
 La flecha del borde te indica a dónde ir.
@@ -20,6 +26,7 @@ T · soltar el trofeo
 V · niebla sí / no
 Tab · ver el mapa completo
 R · otro laberinto (nueva partida)
+M · cambiar dificultad del mapa
 Esc · salir"""
 
 @onready var _maze: Maze = $Maze
@@ -34,6 +41,7 @@ Esc · salir"""
 var _overview := false
 var _elapsed := 0.0
 var _finished := false
+var _profile_index := 1  # Normal
 
 
 func _ready() -> void:
@@ -80,6 +88,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			_darkness.visible = not _darkness.visible
 		KEY_R:
 			_maze.generate()
+		KEY_M:
+			_profile_index = (_profile_index + 1) % MAP_PROFILES.size()
+			_maze.profile = MAP_PROFILES[_profile_index]
+			_maze.generate()
 		KEY_TAB:
 			_overview = not _overview
 			_update_camera()
@@ -88,6 +100,15 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _on_maze_generated(seed_value: int) -> void:
+	# La cantidad de objetos depende del tamaño del mapa (perfil).
+	var pickup_count: int = _maze.profile.get_pickup_count() if _maze.profile else 30
+	_pickups.count = pickup_count
+	(_spawner.policy as KeepDensityPolicy).target_count = pickup_count
+	var m: Dictionary = _maze.get_metrics()
+	var size: Vector2i = _maze.get_grid_size()
+	_hud.set_map_info("MAPA %s · %s · %d×%d · callejones %d%% · ruta %d · [M] cambiar" % [
+		_maze.profile.get_display_name().to_upper() if _maze.profile else "?", m.algorithm, size.x, size.y,
+		roundi(m.dead_end_ratio * 100.0), m.route_length])
 	# Objetos infinitos: el spawner coloca los iniciales y repone los recogidos (fuera de la vista).
 	# Misma semilla que el laberinto (determinista). Se dejan libres las 4 esquinas (bases).
 	_spawner.start(_maze, _maze.get_base_cells(4), seed_value)

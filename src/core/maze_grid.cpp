@@ -13,20 +13,51 @@ const std::array<Cell, 4> DIRECTIONS = { Cell{ 1, 0 }, Cell{ -1, 0 }, Cell{ 0, 1
 void MazeGrid::generate(const Options &p_options) {
 	const int cells_w = std::max(2, p_options.cells_w);
 	const int cells_h = std::max(2, p_options.cells_h);
-	width_ = cells_w * 2 + 1;
-	height_ = cells_h * 2 + 1;
 	vault_radius_ = std::max(0, p_options.vault_radius);
-	walls_.assign(static_cast<size_t>(width_) * height_, 1);
-
 	corridor_width_ = std::max(1, p_options.corridor_width);
 
+	// Paso 1: topología con el algoritmo elegido (Strategy), bucles y eliminación de callejones.
 	Rng rng(p_options.seed);
-	carve_perfect_maze(cells_w, cells_h, rng);
-	open_loops(p_options.loop_chance, rng);
+	PassageGrid passages(cells_w, cells_h);
+	carve_maze(p_options.algorithm, passages, rng, p_options.growing_tree_bias);
+	add_loops(passages, p_options.loop_chance, rng);
+	braid(passages, p_options.braid_chance, rng);
+
+	metrics_ = Metrics();
+	metrics_.algorithm = p_options.algorithm;
+	metrics_.cells = passages.cell_count();
+	for (int i = 0; i < passages.cell_count(); i++) {
+		const int degree = passages.degree(i);
+		metrics_.dead_ends += degree == 1 ? 1 : 0;
+		metrics_.junctions += degree >= 3 ? 1 : 0;
+	}
+	metrics_.dead_end_ratio = static_cast<float>(metrics_.dead_ends) / static_cast<float>(metrics_.cells);
+
+	// Pasos 2-4: dibujar en casillas, ensanchar y abrir la bóveda.
+	rasterize(passages);
 	widen_corridors(corridor_width_);
 	open_vault();
+
+	const std::vector<Cell> bases = base_cells(1);
+	metrics_.route_length = bases.empty() ? 0 : path_length(bases[0], center());
 }
 
+// Paso 2: cuadrícula compacta: celda (x, y) -> casilla (2x+1, 2y+1); un pasaje abre la casilla entre ambas.
+void MazeGrid::rasterize(const PassageGrid &p_passages) {
+	width_ = p_passages.width() * 2 + 1;
+	height_ = p_passages.height() * 2 + 1;
+	walls_.assign(static_cast<size_t>(width_) * height_, 1);
+	for (int i = 0; i < p_passages.cell_count(); i++) {
+		const Cell c = p_passages.cell(i);
+		set_wall({ c.x * 2 + 1, c.y * 2 + 1 }, false);
+		if (c.x + 1 < p_passages.width() && p_passages.is_open(i, i + 1)) {
+			set_wall({ c.x * 2 + 2, c.y * 2 + 1 }, false);
+		}
+		if (c.y + 1 < p_passages.height() && p_passages.is_open(i, i + p_passages.width())) {
+			set_wall({ c.x * 2 + 1, c.y * 2 + 2 }, false);
+		}
+	}
+}
 // Paso 3: escala la cuadrícula compacta. Cada celda (coordenada impar) pasa a medir
 // corridor_width casillas y cada pared (coordenada par) sigue midiendo 1.
 void MazeGrid::widen_corridors(int p_corridor_width) {
@@ -60,57 +91,6 @@ void MazeGrid::widen_corridors(int p_corridor_width) {
 int MazeGrid::compact_to_final(int p_compact) const {
 	const int step = corridor_width_ + 1;
 	return (p_compact / 2) * step + 1 + corridor_width_ / 2;
-}
-
-// Paso 1: backtracking iterativo. Recorre las celdas al azar abriendo paredes;
-// el resultado tiene exactamente un camino entre cualquier par de celdas.
-void MazeGrid::carve_perfect_maze(int p_cells_w, int p_cells_h, Rng &r_rng) {
-	std::vector<uint8_t> visited(static_cast<size_t>(p_cells_w) * p_cells_h, 0);
-	std::vector<Cell> stack;
-	stack.push_back({ 0, 0 });
-	visited[0] = 1;
-	set_wall({ 1, 1 }, false);
-
-	while (!stack.empty()) {
-		const Cell current = stack.back();
-		std::array<Cell, 4> options{};
-		int option_count = 0;
-		for (const Cell &d : DIRECTIONS) {
-			const Cell next{ current.x + d.x, current.y + d.y };
-			if (next.x >= 0 && next.y >= 0 && next.x < p_cells_w && next.y < p_cells_h && !visited[next.y * p_cells_w + next.x]) {
-				options[option_count++] = next;
-			}
-		}
-		if (option_count == 0) {
-			stack.pop_back();
-			continue;
-		}
-		const Cell next = options[r_rng.range(option_count)];
-		visited[next.y * p_cells_w + next.x] = 1;
-		set_wall({ next.x * 2 + 1, next.y * 2 + 1 }, false); // celda destino
-		set_wall({ current.x + next.x + 1, current.y + next.y + 1 }, false); // pared entre ambas
-		stack.push_back(next);
-	}
-}
-
-// Paso 2: abre algunas paredes que separan dos pasillos, creando rutas alternativas.
-void MazeGrid::open_loops(float p_chance, Rng &r_rng) {
-	if (p_chance <= 0.0f) {
-		return;
-	}
-
-	for (int y = 1; y < height_ - 1; y++) {
-		for (int x = 1; x < width_ - 1; x++) {
-			if (!is_wall({ x, y })) {
-				continue;
-			}
-			const bool between_horizontal = !is_wall({ x - 1, y }) && !is_wall({ x + 1, y }) && is_wall({ x, y - 1 }) && is_wall({ x, y + 1 });
-			const bool between_vertical = !is_wall({ x, y - 1 }) && !is_wall({ x, y + 1 }) && is_wall({ x - 1, y }) && is_wall({ x + 1, y });
-			if ((between_horizontal || between_vertical) && r_rng.chance(p_chance)) {
-				set_wall({ x, y }, false);
-			}
-		}
-	}
 }
 
 // Paso 4: sala abierta en el centro (la bóveda del trofeo). Nunca toca el borde exterior.
@@ -212,6 +192,91 @@ bool MazeGrid::is_fully_connected() const {
 		}
 	}
 	return reached == floors.size();
+}
+
+int MazeGrid::path_length(const Cell &p_from, const Cell &p_to) const {
+	if (is_wall(p_from) || is_wall(p_to)) {
+		return -1;
+	}
+	std::vector<int> distance(walls_.size(), -1);
+	std::queue<Cell> open;
+	open.push(p_from);
+	distance[index(p_from)] = 0;
+	while (!open.empty()) {
+		const Cell c = open.front();
+		open.pop();
+		if (c == p_to) {
+			return distance[index(c)];
+		}
+		for (const Cell &d : DIRECTIONS) {
+			const Cell n{ c.x + d.x, c.y + d.y };
+			if (!is_wall(n) && distance[index(n)] < 0) {
+				distance[index(n)] = distance[index(c)] + 1;
+				open.push(n);
+			}
+		}
+	}
+	return -1;
+}
+
+const char *maze_difficulty_name(MazeDifficulty p_difficulty) {
+	switch (p_difficulty) {
+		case MazeDifficulty::Easy:
+			return "Fácil";
+		case MazeDifficulty::Normal:
+			return "Normal";
+		case MazeDifficulty::Hard:
+			return "Difícil";
+		case MazeDifficulty::Extreme:
+			return "Extremo";
+		default:
+			return "?";
+	}
+}
+
+MazeGrid::Options maze_preset(MazeDifficulty p_difficulty) {
+	MazeGrid::Options o;
+	o.corridor_width = 3;
+	o.vault_radius = 4;
+	switch (p_difficulty) {
+		case MazeDifficulty::Easy:
+			// Pasillos largos, pocos callejones y muchas rutas: difícil perderse.
+			o.cells_w = 16;
+			o.cells_h = 11;
+			o.algorithm = MazeAlgorithm::HuntAndKill;
+			o.loop_chance = 0.15f;
+			o.braid_chance = 0.6f;
+			break;
+		case MazeDifficulty::Hard:
+			// Uniforme y grande: muchos cruces y callejones, pocas rutas alternativas.
+			o.cells_w = 26;
+			o.cells_h = 18;
+			o.algorithm = MazeAlgorithm::Wilson;
+			o.loop_chance = 0.03f;
+			o.braid_chance = 0.05f;
+			break;
+		case MazeDifficulty::Extreme:
+			// Muy ramificado, enorme, pasillos estrechos y sin bucles: confunde al máximo.
+			o.cells_w = 32;
+			o.cells_h = 22;
+			o.corridor_width = 2;
+			o.vault_radius = 3;
+			o.algorithm = MazeAlgorithm::Prim;
+			o.loop_chance = 0.0f;
+			o.braid_chance = 0.0f;
+			break;
+		case MazeDifficulty::Normal:
+		default:
+			// Mezcla equilibrada entre pasillos largos y ramificaciones.
+			o.cells_w = 20;
+			o.cells_h = 14;
+			o.algorithm = MazeAlgorithm::GrowingTree;
+			o.growing_tree_bias = 0.5f;
+			o.loop_chance = 0.08f;
+			o.braid_chance = 0.25f;
+			break;
+	}
+	return o;
 }
 
 } // namespace lv::core

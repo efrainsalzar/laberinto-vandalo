@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/sandbox/participant_sandbox.gd" id="1_sbx"]
 [ext_resource type="PackedScene" path="res://scenes/participant/participant.tscn" id="2_part"]
@@ -11,11 +11,13 @@
 [ext_resource type="Script" path="res://scripts/ui/floating_text_layer.gd" id="9_ft"]
 [ext_resource type="PackedScene" path="res://scenes/trophy/trophy.tscn" id="10_trophy"]
 [ext_resource type="PackedScene" path="res://scenes/trophy/base.tscn" id="11_base"]
+[ext_resource type="MazeProfile" path="res://data/maps/normal.tres" id="12_map"]
 
 [node name="ParticipantSandbox" type="Node2D"]
 script = ExtResource("1_sbx")
 
 [node name="Maze" type="Maze" parent="."]
+profile = ExtResource("12_map")
 
 [node name="Trophy" type="TrophyController" parent="."]
 trophy_scene = ExtResource("10_trophy")
