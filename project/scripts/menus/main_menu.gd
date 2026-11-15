@@ -23,6 +23,10 @@ func _ready() -> void:
 	UiFx.hint(%Options, "Pantalla, rendimiento, cámara y teclas de prueba.")
 	UiFx.hint(%Quit, "Cerrar el juego.")
 	_make_background()
+	# Ejecución automática: godot --path project -- --stress [--quit-after-stress]
+	if "--stress" in OS.get_cmdline_user_args() and not App.has_meta("stress_started"):
+		App.set_meta("stress_started", true)
+		App.start_match.call_deferred(MatchConfig.create_stress())
 	_intro()
 	%Play.grab_focus.call_deferred()
 

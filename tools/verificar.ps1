@@ -19,6 +19,10 @@
 .PARAMETER Captura
   Carpeta donde guardar una captura (PNG) del juego tras unos segundos. Abre una ventana.
 
+.PARAMETER Estres
+  Ejecuta además la prueba de estrés (~40 s, abre una ventana) y resume su informe
+  (user://stress/latest.json). Falla si el veredicto es FUERA del presupuesto.
+
 .PARAMETER Escena
   Escena a ejecutar (por defecto la principal del proyecto). Ej: res://scenes/sandbox/maze_sandbox.tscn
 
@@ -31,7 +35,8 @@ param(
 	[switch]$SinCompilar,
 	[switch]$SinGodot,
 	[string]$Captura = "",
-	[string]$Escena = ""
+	[string]$Escena = "",
+	[switch]$Estres
 )
 
 $ErrorActionPreference = 'Stop'
@@ -94,6 +99,26 @@ try {
 			$ultima = Get-ChildItem $Captura -Filter 'captura*.png' | Sort-Object Name | Select-Object -Last 1
 			if ($ultima) { Write-Host "Captura: $($ultima.FullName)" }
 			[bool]$ultima
+		}
+	}
+	if ($Estres) {
+		Paso 'Prueba de estrés' {
+			$job = Start-Job { param($g, $p) & $g --path $p -- --stress --quit-after-stress 2>&1 } -ArgumentList $godot, (Join-Path $raiz 'project')
+			if (-not (Wait-Job $job -Timeout 180)) {
+				Stop-Job $job
+				Write-Host 'La prueba de estrés no terminó en 180 s' -ForegroundColor Red
+				return $false
+			}
+			Receive-Job $job | Select-String -Pattern 'ERROR|SCRIPT ERROR' | ForEach-Object { Write-Host $_ -ForegroundColor Yellow }
+			$informe = Get-ChildItem (Join-Path $env:APPDATA 'Godot\app_userdata\*\stress\latest.json') -ErrorAction SilentlyContinue | Select-Object -First 1
+			if (-not $informe) { Write-Host 'No se encontró latest.json' -ForegroundColor Red; return $false }
+			$r = Get-Content $informe.FullName -Raw -Encoding utf8 | ConvertFrom-Json
+			$f = $r.frames
+			Write-Host ("{0} · promedio {1} ms ({2} FPS) · p95 {3} · p99 {4} · peor {5} ms · frames >33 ms: {6} · tirones: {7}" -f `
+				$r.verdict, $f.avg_ms, $f.avg_fps, $f.p95_ms, $f.p99_ms, $f.worst_ms, $f.over_33_ms, $r.spikes.Count)
+			$r.systems | Select-Object -First 4 | ForEach-Object { Write-Host ("  {0,-18} {1,8} ms/s  peor {2} ms" -f $_.name, $_.avg_ms_per_s, $_.worst_ms) }
+			Write-Host "  Informe: $($informe.FullName)"
+			$r.verdict -eq 'DENTRO'
 		}
 	}
 } finally {

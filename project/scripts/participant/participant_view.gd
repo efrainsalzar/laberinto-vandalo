@@ -1,6 +1,7 @@
 extends Node2D
 ## Parte visual provisional de un participante: círculo de su color + punto hacia donde mira.
 ## Solo dibuja; no tiene lógica. Se reemplazará por un sprite en la pieza 8 (arte).
+## Rendimiento (patrón Dirty flag): se redibuja SOLO cuando cambia la dirección o el color, no cada frame.
 
 const RADIUS := 11.0
 
@@ -11,8 +12,14 @@ func _ready() -> void:
 	_participant.color_changed.connect(func(_c: Color) -> void: queue_redraw())
 
 
+var _last_facing := Vector2.ZERO
+
+
 func _process(_delta: float) -> void:
-	queue_redraw()
+	var facing := _participant.get_facing()
+	if not facing.is_equal_approx(_last_facing):
+		_last_facing = facing
+		queue_redraw()
 
 
 func _draw() -> void:

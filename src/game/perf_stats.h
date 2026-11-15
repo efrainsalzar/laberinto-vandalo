@@ -15,6 +15,8 @@ class PerfStats : public Object {
 public:
 	static Dictionary snapshot();
 	static void roll_window();
+	// {sistema: ms} acumulado desde la última llamada (≈ último frame) y reinicia. Para capturar tirones.
+	static Dictionary take_frame();
 	static void clear();
 
 protected:

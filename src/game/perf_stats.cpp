@@ -8,6 +8,7 @@ void PerfStats::_bind_methods() {
 	ClassDB::bind_static_method("PerfStats", D_METHOD("snapshot"), &PerfStats::snapshot);
 	ClassDB::bind_static_method("PerfStats", D_METHOD("roll_window"), &PerfStats::roll_window);
 	ClassDB::bind_static_method("PerfStats", D_METHOD("clear"), &PerfStats::clear);
+	ClassDB::bind_static_method("PerfStats", D_METHOD("take_frame"), &PerfStats::take_frame);
 }
 
 Dictionary PerfStats::snapshot() {
@@ -30,4 +31,12 @@ void PerfStats::roll_window() {
 
 void PerfStats::clear() {
 	lv::core::Perf::instance().clear();
+}
+
+Dictionary PerfStats::take_frame() {
+	Dictionary result;
+	for (const auto &entry : lv::core::Perf::instance().take_frame()) {
+		result[String(entry.first.c_str())] = entry.second;
+	}
+	return result;
 }

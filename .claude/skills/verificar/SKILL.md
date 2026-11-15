@@ -22,7 +22,8 @@ pwsh -NoProfile -ExecutionPolicy Bypass -Command ". D:\Github\gamedev\env.ps1 | 
 | `-SinCompilar` | Solo cambió lógica de `core/` o tests |
 | `-SinGodot` | Solo cambió `core/` y no hace falta abrir el motor |
 | `-Captura <carpeta>` | Además guarda un PNG del juego (abre una ventana unos segundos). Usar la carpeta scratchpad y luego **mirar la imagen** con Read |
-| `-Escena res://...` | Ejecutar una escena concreta (p. ej. un sandbox) |
+| `-Escena res://...` | Ejecutar una escena concreta |
+| `-Estres` | Además, la **prueba de estrés** (~40 s, abre una ventana): resume `latest.json` (veredicto, percentiles, sistemas más caros, tirones). Usarla al cerrar cada etapa o tras cambios de rendimiento. Para el detalle de un tirón, leer `spikes` en el JSON. |
 
 Si el entorno no está en `D:\Github\gamedev` (otra máquina), basta con tener `scons` y `godot` en el PATH
 o definir `SCONS` y `GODOT_CONSOLE`.

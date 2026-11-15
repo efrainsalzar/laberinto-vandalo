@@ -79,7 +79,8 @@ Entorno local (Windows): activar con `. D:\Github\gamedev\env.ps1` (scons, clang
 | Ejecutar la partida directamente | `godot --path project res://scenes/game/match.tscn` |
 | Ejecutar sin ventana (verificación) | `godot --headless --path project --quit-after 5` |
 | Formatear C++ | `clang-format -i src/**/*.cpp src/**/*.h tests/*.cpp` |
-| **Verificar todo** (compilar + tests + Godot) | `./tools/verificar.ps1` (opciones: `-SinCompilar`, `-SinGodot`, `-Captura <carpeta>`, `-Escena res://...`) |
+| **Verificar todo** (compilar + tests + Godot) | `./tools/verificar.ps1` (opciones: `-SinCompilar`, `-SinGodot`, `-Captura <carpeta>`, `-Escena res://...`, `-Estres`) |
+| **Prueba de estrés** + resumen del informe | `./tools/verificar.ps1 -SinCompilar -Estres` (registro: `%APPDATA%\Godot\app_userdata\Laberinto Vándalo\stress\latest.json`) |
 
 Después de cambiar C++ hay que **recompilar y reabrir el editor de Godot** (la extensión no se recarga sola).
 

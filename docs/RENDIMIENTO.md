@@ -130,6 +130,37 @@ El peor frame debe quedar dentro del presupuesto antes de dar la etapa por termi
 - [ ] ¿Evita recorrer todo (usa índice espacial)?
 - [ ] ¿Pasó la prueba de estrés dentro del presupuesto?
 
+## Prueba de estrés automática y registro
+
+| Cómo | Comando |
+|---|---|
+| Desde el menú | Menú principal › **Prueba de estrés** (muestra el informe en pantalla) |
+| Automática + resumen | `./tools/verificar.ps1 -SinCompilar -Estres` (falla si el veredicto es FUERA) |
+| Solo el juego | `godot --path project -- --stress --quit-after-stress` |
+
+Registros (en `user://stress/`; en Windows: `%APPDATA%\Godot\app_userdata\Laberinto Vándalo\stress\`):
+- `latest.json` y `stress_<fecha>.json`: informe completo: veredicto, carga, percentiles (p50/p95/p99), peor frame y
+  **en qué segundo**, sistemas (ms/s, peor, llamadas/s) y **tirones**: cada frame > 33 ms se captura en el momento con
+  el tiempo de cada sistema en ese frame (`PerfStats.take_frame`) y los tiempos de Godot (proceso, física, dibujos, nodos,
+  cambios pendientes del mapa). Así se sabe **quién** causó cada tirón.
+- `history.csv`: una línea por ejecución para comparar versiones.
+- 2 s de calentamiento excluidos. VSync apagado durante la prueba. Las ejecuciones varían: repetir 2-3 veces antes de concluir.
+
+## Estrategias y patrones de rendimiento aplicados
+
+| Estrategia / patrón | Dónde | Efecto medido |
+|---|---|---|
+| **Dirty flag** (redibujar solo si algo cambió) | Objetos (se dibujan una vez), participantes (solo al cambiar la dirección) | Gigante: 70 → 450 FPS (objetos); prueba de estrés: 5,2 → 1,2 ms por frame (participantes) |
+| **Agregado incremental** (contador mantenido en vez de contar) | `PickupFactory.get_active_count` | `pickups.spawner`: 21,9 → 0,16 ms/s |
+| **Índice espacial** | Objetos por casilla; `SpatialHash`/`EntityIndex` | Separación de objetos y ocupación sin recorrer todo |
+| **Command + cola con prioridades y presupuesto de tiempo** (amortización) | `MapChangeQueue` en `Maze` | Ráfagas repartidas; peor `maze.apply` ≈ 1,2 ms |
+| **Algoritmo local y acotado** | `has_alternative_path` | Costo de cerrar una pared independiente del tamaño del mapa |
+| **Caché de datos inmutables** | Pasajes protegidos | O(1) |
+| **Muestreo** | `plan_maze_shift`, `pick_spawn_cell` | Costo según lo pedido, no según el mapa |
+| **Object Pool** | Textos flotantes | Sin tirones al aparecer muchos |
+| **Instrumentación + registro estructurado** | `PerfScope`, panel F3, JSON/CSV de la prueba | Diagnóstico con datos, no a ojo |
+| **Benchmark reproducible con calentamiento** | Prueba de estrés | Veredicto objetivo contra el presupuesto |
+
 ## Historial de mediciones
 
 | Fecha / versión | Escenario | Resultado |
@@ -137,4 +168,5 @@ El peor frame debe quedar dentro del presupuesto antes de dar la etapa por termi
 | v0.0.11 | Gigante Difícil, sin VSync | ~70 FPS → **~450 FPS** al dejar de redibujar los objetos cada frame |
 | v0.0.13 | Gigante Difícil, laberinto Caótico, en movimiento | **Sin tirones** (prueba en vivo del dueño del proyecto) tras la cola de órdenes y la búsqueda local acotada |
 | v0.0.14 | **Prueba de estrés** (40 entidades + ráfagas) | **FUERA**: promedio 8,0 ms, p99 14,3, peor 134,6 ms. Más caro: `pickups.spawner` 21,9 ms/s (contaba los 468 objetos cada frame), `maze.apply`+`maze.rebuild` ~1,5 ms en picos. |
-| v0.0.14 (arreglos) | Prueba de estrés | Contador O(1) de objetos y separación por índice espacial; aplicación de cambios con presupuesto de **tiempo** (0,5 ms) que incluye la reconstrucción de Godot; bloques de paredes 8×8; calentamiento de 2 s excluido e instante del peor frame. *Pendiente: nueva medición en vivo.* |
+| v0.0.14 (arreglos) | Prueba de estrés | **DENTRO**: promedio 2,7-5,2 ms, p99 5,0-14,1, peor 6,4-17,4, 0 frames > 33 ms. `pickups.spawner` 0,16 ms/s. |
+| v0.0.15 | Prueba de estrés (3 ejecuciones automáticas) | **DENTRO**: promedio **1,2 ms (~820 FPS)**, p95 1,85, p99 2,1-2,4, peor 4,7-8,2 ms, 0 tirones. Dirty flag en participantes. Lo más caro: `maze.apply` 4,3 ms/s (peor 1,2 ms), del cual `maze.rebuild` (Godot) 3,9 ms/s. |

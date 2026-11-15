@@ -15,6 +15,13 @@ void Perf::record(const std::string &p_name, double p_ms) {
 	s.total_ms += p_ms;
 	s.max_ms = std::max(s.max_ms, p_ms);
 	s.last_ms = p_ms;
+	frame_[p_name] += p_ms;
+}
+
+std::map<std::string, double> Perf::take_frame() {
+	std::map<std::string, double> result;
+	result.swap(frame_);
+	return result;
 }
 
 void Perf::roll_window() {
@@ -31,6 +38,7 @@ void Perf::roll_window() {
 
 void Perf::clear() {
 	stats_.clear();
+	frame_.clear();
 }
 
 } // namespace lv::core

@@ -87,6 +87,11 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 - [x] `SpatialHash` + `EntityIndex`; `WanderController`.
 - [x] Prueba de estrés en el menú principal con informe y veredicto. 7 tests (69 en total).
 
+### v0.0.15 — Prueba de estrés automática con registro ✅
+- [x] Informe JSON + historial CSV; captura de cada tirón con el costo de cada sistema en ese frame (`PerfStats.take_frame`).
+- [x] Ejecución automática (`-- --stress --quit-after-stress`) y `verificar.ps1 -Estres`.
+- [x] Dirty flag en participantes: prueba de estrés 5,2 → **1,2 ms** por frame (p99 ≈ 2,3 ms). DENTRO del presupuesto.
+
 ## Plan acordado (etapas, una pieza a la vez)
 
 Bloques de interfaz ya hechos: ~~objetos infinitos~~ ✅ · ~~HUD limpio + textos flotantes~~ ✅.

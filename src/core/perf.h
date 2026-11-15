@@ -29,6 +29,9 @@ public:
 	static Perf &instance();
 
 	void record(const std::string &p_name, double p_ms);
+	// Tiempo acumulado por sistema desde la última llamada (≈ el último frame) y reinicia el acumulador.
+	// Permite saber QUÉ sistema causó un tirón en el frame exacto en que ocurrió.
+	std::map<std::string, double> take_frame();
 	// Cierra la ventana actual (llamar una vez por segundo): los valores pasan a window_*.
 	void roll_window();
 	void clear();
@@ -36,6 +39,7 @@ public:
 
 private:
 	std::map<std::string, Stat> stats_;
+	std::map<std::string, double> frame_;
 };
 
 // Mide el tiempo de un bloque: { PerfScope s("maze.plan"); ... }.
