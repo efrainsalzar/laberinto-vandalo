@@ -1,0 +1,12 @@
+[gd_resource type="TrophyRules" format=3]
+
+[resource]
+carrier_speed_multiplier = 0.6
+steal_enabled = true
+steal_immunity = 3.0
+steal_margin = 2.0
+thief_boost_multiplier = 1.5
+thief_boost_seconds = 2.0
+victim_stun_multiplier = 0.2
+victim_stun_seconds = 1.0
+max_chasers = 2

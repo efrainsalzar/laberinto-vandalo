@@ -12,6 +12,7 @@
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
+#include <algorithm>
 #include <cmath>
 
 void BotCoordinator::_bind_methods() {
@@ -53,6 +54,7 @@ Ref<BotController> BotCoordinator::add_bot(Participant *p_participant, const Ref
 	bot.instantiate();
 	bot->setup(this, p_profile, p_base_zone, static_cast<uint32_t>(p_seed));
 	bots_.push_back(bot);
+	bot_bodies_.push_back(p_participant);
 	p_participant->set_controller(bot);
 	return bot;
 }
@@ -62,15 +64,26 @@ void BotCoordinator::clear() {
 		bot->detach();
 	}
 	bots_.clear();
+	bot_bodies_.clear();
 	requests_.clear();
+	chase_tokens_.clear();
+	ambush_cache_.clear();
 }
 
 void BotCoordinator::request_path(const Ref<BotController> &p_bot, const Vector2i &p_from_tile, const Vector2i &p_to_tile) {
 	requests_.push_back({ p_bot, p_from_tile, p_to_tile });
 }
 
-void BotCoordinator::_physics_process(double) {
-	if (Engine::get_singleton()->is_editor_hint() || maze_ == nullptr || requests_.empty()) {
+void BotCoordinator::_physics_process(double p_delta) {
+	if (Engine::get_singleton()->is_editor_hint() || maze_ == nullptr) {
+		return;
+	}
+	token_timer_ -= static_cast<float>(p_delta);
+	if (token_timer_ <= 0.0f) {
+		token_timer_ = TOKEN_INTERVAL;
+		update_chase_tokens();
+	}
+	if (requests_.empty()) {
 		return;
 	}
 	lv::core::PerfScope perf("bots.path");
@@ -89,6 +102,7 @@ void BotCoordinator::_physics_process(double) {
 }
 
 void BotCoordinator::on_map_changed(const TypedArray<Vector2i> &, bool p_now_wall) {
+	ambush_cache_.clear(); // los caminos a las bases pueden haber cambiado
 	if (!p_now_wall) {
 		return; // abrir pasajes no rompe ningún camino (a lo sumo deja de ser el más corto)
 	}
@@ -108,6 +122,8 @@ void BotCoordinator::build_world(const Participant &p_participant, lv::core::Bot
 		r_world.carrying_trophy = carrier == &p_participant;
 		r_world.trophy_available = !trophy_->is_finished() && carrier == nullptr;
 		r_world.trophy_carried_by_other = !trophy_->is_finished() && carrier != nullptr && carrier != &p_participant;
+		r_world.may_chase = r_world.trophy_carried_by_other && chase_tokens_.has(bot_index(&p_participant));
+		r_world.has_ambush = r_world.trophy_carried_by_other && ambush_for(carrier, r_world.ambush);
 		const Vector2i trophy_tile = maze_->world_to_cell(trophy_->get_trophy_position());
 		r_world.trophy = { trophy_tile.x, trophy_tile.y };
 	}
@@ -132,4 +148,57 @@ void BotCoordinator::build_world(const Participant &p_participant, lv::core::Bot
 			}
 		}
 	}
+}
+
+int BotCoordinator::bot_index(const Participant *p_participant) const {
+	for (size_t i = 0; i < bot_bodies_.size(); i++) {
+		if (bot_bodies_[i] == p_participant) {
+			return static_cast<int>(i);
+		}
+	}
+	return -1;
+}
+
+// Fichas de ataque: candidatos = bots que no llevan el trofeo, por distancia al portador.
+void BotCoordinator::update_chase_tokens() {
+	lv::core::PerfScope perf("bots.tokens");
+	const Participant *carrier = trophy_ != nullptr ? trophy_->get_carrier() : nullptr;
+	if (carrier == nullptr) {
+		chase_tokens_.clear();
+		return;
+	}
+	chase_tokens_.set_max(trophy_->rules().max_chasers);
+	const Vector2 at = carrier->get_global_position();
+	std::vector<lv::core::TokenPool::Candidate> candidates;
+	for (size_t i = 0; i < bot_bodies_.size(); i++) {
+		if (bot_bodies_[i] != nullptr && bot_bodies_[i] != carrier) {
+			candidates.push_back({ static_cast<int>(i), bot_bodies_[i]->get_global_position().distance_to(at) });
+		}
+	}
+	chase_tokens_.assign(candidates);
+}
+
+// Punto de emboscada: AMBUSH_CELLS_FROM_BASE celdas desde la base del portador hacia el centro (por donde
+// tiene que pasar). Fuera de la zona: así se lo pueden quitar antes de que entregue.
+bool BotCoordinator::ambush_for(const Participant *p_carrier, lv::core::Cell &r_cell) const {
+	if (p_carrier == nullptr || trophy_ == nullptr) {
+		return false;
+	}
+	const auto cached = ambush_cache_.find(p_carrier);
+	if (cached != ambush_cache_.end()) {
+		r_cell = cached->second;
+		return true;
+	}
+	const lv::core::MazeGrid &grid = maze_->get_grid();
+	const Vector2i base_tile = maze_->world_to_cell(trophy_->get_base_position(const_cast<Participant *>(p_carrier)));
+	const int from = grid.cell_index_of({ base_tile.x, base_tile.y });
+	const int to = grid.cell_index_of(grid.center());
+	const std::vector<int> path = lv::core::find_path(grid.passages(), from, to);
+	if (path.empty()) {
+		return false;
+	}
+	const size_t index = std::min(path.size() - 1, static_cast<size_t>(AMBUSH_CELLS_FROM_BASE));
+	r_cell = grid.cell_center(path[index]);
+	ambush_cache_[p_carrier] = r_cell;
+	return true;
 }

@@ -11,6 +11,44 @@
 
 using lv::core::TrophyTracker;
 
+void TrophyRules::_bind_methods() {
+#define LV_BIND(name, variant, hint)                                                 \
+	ClassDB::bind_method(D_METHOD("set_" #name, "value"), &TrophyRules::set_##name); \
+	ClassDB::bind_method(D_METHOD("get_" #name), &TrophyRules::get_##name);          \
+	ADD_PROPERTY(PropertyInfo(Variant::variant, #name, PROPERTY_HINT_RANGE, hint), "set_" #name, "get_" #name);
+	ADD_GROUP("Portador", "");
+	LV_BIND(carrier_speed_multiplier, FLOAT, "0.1,1,0.05")
+	ADD_GROUP("Robo", "");
+	ClassDB::bind_method(D_METHOD("set_steal_enabled", "value"), &TrophyRules::set_steal_enabled);
+	ClassDB::bind_method(D_METHOD("get_steal_enabled"), &TrophyRules::get_steal_enabled);
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "steal_enabled"), "set_steal_enabled", "get_steal_enabled");
+	LV_BIND(steal_immunity, FLOAT, "0,10,0.1,suffix:s")
+	LV_BIND(steal_margin, FLOAT, "0,32,0.5,suffix:px")
+	ADD_GROUP("Anti-bucle al robar", "");
+	LV_BIND(thief_boost_multiplier, FLOAT, "1,3,0.05")
+	LV_BIND(thief_boost_seconds, FLOAT, "0,10,0.1,suffix:s")
+	LV_BIND(victim_stun_multiplier, FLOAT, "0,1,0.05")
+	LV_BIND(victim_stun_seconds, FLOAT, "0,10,0.1,suffix:s")
+	ADD_GROUP("IA", "");
+	LV_BIND(max_chasers, INT, "0,7,1")
+#undef LV_BIND
+}
+
+void TrophyController::set_rules(const Ref<TrophyRules> &p_value) {
+	rules_ = p_value;
+	tracker_.set_steal_immunity(rules().steal_immunity);
+}
+
+const TrophyRules &TrophyController::rules() const {
+	if (rules_.is_valid()) {
+		return **rules_;
+	}
+	if (default_rules_.is_null()) {
+		const_cast<TrophyController *>(this)->default_rules_.instantiate();
+	}
+	return **default_rules_;
+}
+
 void TrophyController::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("start", "maze", "participants"), &TrophyController::start);
 	ClassDB::bind_method(D_METHOD("drop_trophy"), &TrophyController::drop_trophy);
@@ -21,28 +59,19 @@ void TrophyController::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_base_position", "participant"), &TrophyController::get_base_position);
 	ClassDB::bind_method(D_METHOD("set_trophy_scene", "value"), &TrophyController::set_trophy_scene);
 	ClassDB::bind_method(D_METHOD("get_trophy_scene"), &TrophyController::get_trophy_scene);
-	ClassDB::bind_method(D_METHOD("set_steal_enabled", "value"), &TrophyController::set_steal_enabled);
-	ClassDB::bind_method(D_METHOD("is_steal_enabled"), &TrophyController::is_steal_enabled);
-	ClassDB::bind_method(D_METHOD("set_steal_immunity", "value"), &TrophyController::set_steal_immunity);
-	ClassDB::bind_method(D_METHOD("get_steal_immunity"), &TrophyController::get_steal_immunity);
-	ClassDB::bind_method(D_METHOD("set_steal_margin", "value"), &TrophyController::set_steal_margin);
-	ClassDB::bind_method(D_METHOD("get_steal_margin"), &TrophyController::get_steal_margin);
 	ClassDB::bind_method(D_METHOD("get_immunity_left"), &TrophyController::get_immunity_left);
 	ClassDB::bind_method(D_METHOD("set_base_scene", "value"), &TrophyController::set_base_scene);
 	ClassDB::bind_method(D_METHOD("get_base_scene"), &TrophyController::get_base_scene);
-	ClassDB::bind_method(D_METHOD("set_carrier_speed_multiplier", "value"), &TrophyController::set_carrier_speed_multiplier);
-	ClassDB::bind_method(D_METHOD("get_carrier_speed_multiplier"), &TrophyController::get_carrier_speed_multiplier);
+	ClassDB::bind_method(D_METHOD("set_rules", "value"), &TrophyController::set_rules);
+	ClassDB::bind_method(D_METHOD("get_rules"), &TrophyController::get_rules);
+	ClassDB::bind_method(D_METHOD("get_steal_immunity"), &TrophyController::get_steal_immunity);
 
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "trophy_scene", PROPERTY_HINT_RESOURCE_TYPE, "PackedScene"), "set_trophy_scene", "get_trophy_scene");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "base_scene", PROPERTY_HINT_RESOURCE_TYPE, "PackedScene"), "set_base_scene", "get_base_scene");
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "carrier_speed_multiplier", PROPERTY_HINT_RANGE, "0.1,1,0.05"), "set_carrier_speed_multiplier", "get_carrier_speed_multiplier");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "rules", PROPERTY_HINT_RESOURCE_TYPE, "TrophyRules"), "set_rules", "get_rules");
 
 	ADD_SIGNAL(MethodInfo("trophy_taken", PropertyInfo(Variant::OBJECT, "participant", PROPERTY_HINT_NODE_TYPE, "Participant")));
 	ADD_SIGNAL(MethodInfo("trophy_dropped", PropertyInfo(Variant::OBJECT, "participant", PROPERTY_HINT_NODE_TYPE, "Participant"), PropertyInfo(Variant::VECTOR2, "world_position")));
-	ADD_GROUP("Robo", "steal_");
-	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "steal_enabled"), "set_steal_enabled", "is_steal_enabled");
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "steal_immunity", PROPERTY_HINT_RANGE, "0,10,0.1,suffix:s"), "set_steal_immunity", "get_steal_immunity");
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "steal_margin", PROPERTY_HINT_RANGE, "0,32,0.5,suffix:px"), "set_steal_margin", "get_steal_margin");
 	ADD_SIGNAL(MethodInfo("trophy_stolen", PropertyInfo(Variant::OBJECT, "thief", PROPERTY_HINT_NODE_TYPE, "Participant"), PropertyInfo(Variant::OBJECT, "victim", PROPERTY_HINT_NODE_TYPE, "Participant")));
 	ADD_SIGNAL(MethodInfo("trophy_delivered", PropertyInfo(Variant::OBJECT, "participant", PROPERTY_HINT_NODE_TYPE, "Participant")));
 }
@@ -52,6 +81,8 @@ void TrophyController::start(Maze *p_maze, const TypedArray<Participant> &p_part
 	for (Participant *p : participants_) {
 		if (p != nullptr && p->get_stats() != nullptr) {
 			p->get_stats()->remove_modifiers_from(CARRIER_SOURCE);
+			p->get_stats()->remove_modifiers_from(BOOST_SOURCE);
+			p->get_stats()->remove_modifiers_from(STUN_SOURCE);
 		}
 	}
 	participants_.clear();
@@ -77,6 +108,7 @@ void TrophyController::start(Maze *p_maze, const TypedArray<Participant> &p_part
 	maze_->connect("map_changed", callable_mp(this, &TrophyController::on_map_changed));
 	const Vector2i center = maze_->get_center_cell();
 	tracker_.setup({ center.x, center.y }, zones, 1);
+	tracker_.set_steal_immunity(rules().steal_immunity);
 
 	// Vistas: una base por participante (con su color, del tamaño exacto de su zona) y el trofeo.
 	for (size_t i = 0; i < zones.size(); i++) {
@@ -131,7 +163,7 @@ void TrophyController::_physics_process(double p_delta) {
 // Robo por contacto. Solo hay un portador, así que basta con comparar contra los demás (máx. 7).
 void TrophyController::check_steal() {
 	Participant *carrier = get_carrier();
-	if (!steal_enabled_ || carrier == nullptr || tracker_.immunity_left() > 0.0f) {
+	if (!rules().steal_enabled || carrier == nullptr || tracker_.immunity_left() > 0.0f) {
 		return;
 	}
 	const Vector2 at = carrier->get_global_position();
@@ -140,7 +172,7 @@ void TrophyController::check_steal() {
 		if (p == nullptr || p == carrier || !tracker_.can_steal(static_cast<int>(i))) {
 			continue;
 		}
-		const float reach = carrier->get_body_radius() + p->get_body_radius() + steal_margin_;
+		const float reach = carrier->get_body_radius() + p->get_body_radius() + rules().steal_margin;
 		if (p->get_global_position().distance_squared_to(at) <= reach * reach) {
 			const Vector2i cell = maze_->world_to_cell(at);
 			handle(tracker_.steal(static_cast<int>(i), { cell.x, cell.y }));
@@ -166,7 +198,7 @@ void TrophyController::handle(const std::vector<TrophyTracker::Event> &p_events)
 		switch (event.type) {
 			case TrophyTracker::Event::Type::Taken:
 				if (stats != nullptr) {
-					stats->add_modifier(StatsComponent::STAT_SPEED, StatsComponent::OP_MULTIPLY, carrier_speed_multiplier_, -1.0, CARRIER_SOURCE);
+					stats->add_modifier(StatsComponent::STAT_SPEED, StatsComponent::OP_MULTIPLY, rules().carrier_speed_multiplier, -1.0, CARRIER_SOURCE);
 				}
 				emit_signal("trophy_taken", p);
 				break;
@@ -183,7 +215,17 @@ void TrophyController::handle(const std::vector<TrophyTracker::Event> &p_events)
 					victim->get_stats()->remove_modifiers_from(CARRIER_SOURCE);
 				}
 				if (stats != nullptr) {
-					stats->add_modifier(StatsComponent::STAT_SPEED, StatsComponent::OP_MULTIPLY, carrier_speed_multiplier_, -1.0, CARRIER_SOURCE);
+					stats->add_modifier(StatsComponent::STAT_SPEED, StatsComponent::OP_MULTIPLY, rules().carrier_speed_multiplier, -1.0, CARRIER_SOURCE);
+				}
+				// Anti-bucle: el ladrón escapa (impulso) y la víctima queda aturdida un momento.
+				const TrophyRules &r = rules();
+				if (stats != nullptr && r.thief_boost_seconds > 0.0f) {
+					stats->remove_modifiers_from(STUN_SOURCE); // si lo habían aturdido antes, ya no
+					stats->add_modifier(StatsComponent::STAT_SPEED, StatsComponent::OP_MULTIPLY, r.thief_boost_multiplier, r.thief_boost_seconds, BOOST_SOURCE);
+				}
+				if (victim != nullptr && victim->get_stats() != nullptr && r.victim_stun_seconds > 0.0f) {
+					victim->get_stats()->remove_modifiers_from(BOOST_SOURCE);
+					victim->get_stats()->add_modifier(StatsComponent::STAT_SPEED, StatsComponent::OP_MULTIPLY, r.victim_stun_multiplier, r.victim_stun_seconds, STUN_SOURCE);
 				}
 				emit_signal("trophy_stolen", p, victim);
 				break;

@@ -99,6 +99,11 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 - [x] Arreglo: la base mide el pasillo completo (antes 3×3 fijo, se metía en las paredes); el cuerpo del participante cabe en pasillos de 1. 2 tests (82 en total).
 - [x] Tecla de prueba N: saltar a la siguiente fase.
 
+### v0.0.19 — Anti-bucle del robo ✅
+- [x] `TrophyRules` (.tres): todas las reglas del trofeo como datos; impulso al ladrón (×1,5, 2 s) y aturdimiento a la víctima (×0,2, 1 s).
+- [x] Fichas de ataque (`TokenPool`): solo 2 bots persiguen al portador; los demás **emboscan** antes de su base.
+- [x] 4 tests (103 en total).
+
 ### v0.0.18 — Quitar el trofeo (robo básico) y velocidad inicial pareja ✅
 - [x] Robo por contacto: tocar al portador le quita el trofeo; inmunidad de 3 s al tomarlo o robarlo. Evento `trophy_stolen`.
 - [x] Bots: nueva acción "quitar el trofeo" (persiguen al portador). Flecha "QUÍTASELO" y avisos en el HUD.
@@ -168,4 +173,5 @@ Demo en itch.io · aliados · torneo con rondas · multijugador local · en lín
   (puertas de la Etapa 2.2); objetos que al comerlos cambian el mapa y los caminos (usan `Maze.queue_passage_change`).
   Cada mecánica trae su `BotAction` para que los bots también la usen.
 - **Choques entre participantes:** con el combate (Etapa 4). Hoy se atraviesan. El robo básico por contacto ya existe (v0.0.18).
-- **Bots que huyen con el trofeo** (esquivar a quien los persigue): una `BotAction` más cuando haga falta.
+- **Bots que huyen con el trofeo** (esquivar a quien los persigue / evitar emboscadas): una `BotAction` más cuando haga falta.
+- **Forcejeo** (mantener contacto para robar): con el combate, como otra forma de robo en `TrophyRules`.

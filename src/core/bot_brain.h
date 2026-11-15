@@ -34,6 +34,9 @@ struct BotWorld {
 	bool carrying_trophy = false; // lo lleva él
 	bool trophy_available = false; // está en la bóveda o en el piso (se puede tomar)
 	bool trophy_carried_by_other = false; // lo lleva otro participante (se le puede quitar)
+	bool may_chase = false; // tiene ficha de ataque: puede perseguir al portador (TokenPool)
+	bool has_ambush = false; // hay punto de emboscada (camino a la base del portador)
+	Cell ambush; // dónde esperar al portador si no tiene ficha
 	Cell trophy; // dónde está (en la bóveda, en el piso o sobre su portador)
 	std::vector<Cell> seen_pickups; // objetos que VE ahora (juego limpio: solo con línea de visión)
 	Cell explore_target; // a dónde ir si no hay nada mejor (lo elige el controlador al azar)
@@ -47,6 +50,7 @@ enum class BotGoal {
 	CollectPickup,
 	Explore,
 	StealTrophy,
+	Ambush,
 };
 
 struct BotDecision {
@@ -72,13 +76,22 @@ public:
 	Cell target(const BotWorld &p_world) const override { return p_world.trophy; }
 };
 
-// Persigue al portador para quitarle el trofeo (robo por contacto). El destino se mueve: el bot replantea
-// el camino cada vez que piensa.
+// Persigue al portador para quitarle el trofeo (robo por contacto). Solo con ficha de ataque (TokenPool):
+// así no lo persiguen todos a la vez. El destino se mueve: el bot replantea el camino cada vez que piensa.
 class StealTrophyAction : public BotAction {
 public:
 	BotGoal goal() const override { return BotGoal::StealTrophy; }
 	float score(const BotWorld &p_world, const BotTuning &p_tuning) const override;
 	Cell target(const BotWorld &p_world) const override { return p_world.trophy; }
+};
+
+// Sin ficha de ataque: espera al portador en el camino a SU base (fuera de la zona, para poder tocarlo
+// antes de que entregue). Llega y se queda ahí.
+class AmbushAction : public BotAction {
+public:
+	BotGoal goal() const override { return BotGoal::Ambush; }
+	float score(const BotWorld &p_world, const BotTuning &p_tuning) const override;
+	Cell target(const BotWorld &p_world) const override { return p_world.ambush; }
 };
 
 class DeliverTrophyAction : public BotAction {
@@ -110,7 +123,7 @@ public:
 	static constexpr float KEEP_BONUS = 0.05f; // inercia: no cambia de idea por diferencias mínimas
 
 	explicit BotBrain(const BotTuning &p_tuning);
-	// Crea un cerebro con las acciones de hoy (trofeo, entregar, quitarlo, objetos, explorar).
+	// Crea un cerebro con las acciones de hoy (trofeo, entregar, quitarlo, emboscar, objetos, explorar).
 	static std::unique_ptr<BotBrain> make_default(const BotTuning &p_tuning);
 
 	void add_action(std::unique_ptr<BotAction> p_action);

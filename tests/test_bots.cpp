@@ -3,6 +3,7 @@
 #include "core/bot_brain.h"
 #include "core/maze_grid.h"
 #include "core/nav_path.h"
+#include "core/token_pool.h"
 
 using lv::core::BotBrain;
 using lv::core::BotGoal;
@@ -252,6 +253,7 @@ TEST_SUITE("Bots: cerebro (Utility AI)") {
 		BotWorld w = world_at({ 5, 5 });
 		w.trophy_available = false;
 		w.trophy_carried_by_other = true;
+		w.may_chase = true; // tiene ficha de ataque
 		w.trophy = { 12, 7 }; // sobre el portador
 		const auto d = brain->evaluate(w, rng);
 		CHECK(d.goal == BotGoal::StealTrophy);
@@ -259,5 +261,57 @@ TEST_SUITE("Bots: cerebro (Utility AI)") {
 		w.carrying_trophy = true; // si lo lleva él, no se persigue a sí mismo
 		w.trophy_carried_by_other = false;
 		CHECK(brain->evaluate(w, rng).goal == BotGoal::DeliverTrophy);
+	}
+
+	TEST_CASE("Sin ficha de ataque no persigue: embosca en el camino a la base del portador") {
+		auto brain = BotBrain::make_default(no_noise());
+		Rng rng(1);
+		BotWorld w = world_at({ 5, 5 });
+		w.trophy_available = false;
+		w.trophy_carried_by_other = true;
+		w.trophy = { 12, 7 };
+		w.may_chase = false;
+		w.has_ambush = true;
+		w.ambush = { 30, 4 };
+		const auto d = brain->evaluate(w, rng);
+		CHECK(d.goal == BotGoal::Ambush);
+		CHECK(d.target == Cell{ 30, 4 });
+		w.may_chase = true; // al recibir ficha, persigue
+		CHECK(brain->evaluate(w, rng).goal == BotGoal::StealTrophy);
+	}
+}
+
+TEST_SUITE("Bots: fichas de ataque (TokenPool)") {
+	using lv::core::TokenPool;
+
+	TEST_CASE("Las fichas van a los más cercanos y nunca más que el máximo") {
+		TokenPool pool(2);
+		const auto &holders = pool.assign({ { 1, 50.0f }, { 2, 10.0f }, { 3, 30.0f }, { 4, 90.0f } });
+		REQUIRE(holders.size() == 2);
+		CHECK(holders[0] == 2);
+		CHECK(holders[1] == 3);
+		CHECK(pool.has(2));
+		CHECK_FALSE(pool.has(1));
+	}
+
+	TEST_CASE("Inercia: quien tiene ficha la conserva ante un rival apenas más cercano") {
+		TokenPool pool(1, 0.8f);
+		pool.assign({ { 1, 20.0f }, { 2, 30.0f } });
+		CHECK(pool.has(1));
+		pool.assign({ { 1, 22.0f }, { 2, 20.0f } }); // 22 × 0,8 = 17,6 < 20: se queda
+		CHECK(pool.has(1));
+		pool.assign({ { 1, 40.0f }, { 2, 20.0f } }); // 32 > 20: la pierde
+		CHECK(pool.has(2));
+		CHECK_FALSE(pool.has(1));
+	}
+
+	TEST_CASE("Quien deja de ser candidato pierde su ficha; máximo 0 = nadie ataca") {
+		TokenPool pool(2);
+		pool.assign({ { 1, 5.0f }, { 2, 6.0f } });
+		pool.assign({ { 2, 6.0f } });
+		CHECK_FALSE(pool.has(1));
+		CHECK(pool.has(2));
+		pool.set_max(0);
+		CHECK(pool.assign({ { 2, 1.0f } }).empty());
 	}
 }

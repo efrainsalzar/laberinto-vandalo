@@ -4,12 +4,49 @@
 
 #include <godot_cpp/classes/node2d.hpp>
 #include <godot_cpp/classes/packed_scene.hpp>
+#include <godot_cpp/classes/resource.hpp>
 #include <godot_cpp/variant/typed_array.hpp>
 
 using namespace godot;
 
 class Maze;
 class Participant;
+
+// Reglas del trofeo y del robo como datos (.tres): se ajustan sin recompilar.
+// Ejemplo: project/data/trophy/default_rules.tres. Ver docs/ARQUITECTURA.md §11.
+class TrophyRules : public Resource {
+	GDCLASS(TrophyRules, Resource)
+
+public:
+	float carrier_speed_multiplier = 0.6f; // lentitud del portador
+	bool steal_enabled = true;
+	float steal_immunity = 3.0f; // s sin que se lo quiten tras tomarlo o robarlo
+	float steal_margin = 2.0f; // px extra de alcance al tocar
+	// Anti-bucle (al robar): el ladrón escapa y la víctima queda aturdida.
+	float thief_boost_multiplier = 1.5f;
+	float thief_boost_seconds = 2.0f;
+	float victim_stun_multiplier = 0.2f;
+	float victim_stun_seconds = 1.0f;
+	// IA: cuántos bots pueden perseguir al portador a la vez (fichas de ataque); el resto embosca.
+	int max_chasers = 2;
+
+#define LV_RULE(type, name)                           \
+	void set_##name(type p_value) { name = p_value; } \
+	type get_##name() const { return name; }
+	LV_RULE(float, carrier_speed_multiplier)
+	LV_RULE(bool, steal_enabled)
+	LV_RULE(float, steal_immunity)
+	LV_RULE(float, steal_margin)
+	LV_RULE(float, thief_boost_multiplier)
+	LV_RULE(float, thief_boost_seconds)
+	LV_RULE(float, victim_stun_multiplier)
+	LV_RULE(float, victim_stun_seconds)
+	LV_RULE(int, max_chasers)
+#undef LV_RULE
+
+protected:
+	static void _bind_methods();
+};
 
 // Conecta las reglas del trofeo (lv::core::TrophyTracker) con el mundo de Godot.
 //
@@ -21,7 +58,8 @@ class Participant;
 //   no dibuja nada. A las vistas les pasa datos con set(): `color`, `size_px`, `carried`.
 // - Robo básico (`steal_enabled`): quien TOCA al portador (los cuerpos se superponen + `steal_margin` px) le
 //   quita el trofeo; el nuevo portador queda inmune `steal_immunity` s. Señal trophy_stolen(thief, victim).
-//   Es la regla mínima para la primera prueba; el combate (Etapa 4) agregará otras formas (golpe, muerte).
+//   Anti-bucle: el ladrón gana velocidad un rato y la víctima queda aturdida (modificadores temporales de Stats).
+//   Todos los valores vienen de `rules` (TrophyRules, datos). El combate (Etapa 4) agregará otras formas de robo.
 // - No sabe dónde está la bóveda en el mundo: recibe la casilla del trofeo (DISENO_MAPA §3).
 // Ver docs/ARQUITECTURA.md §11.
 class TrophyController : public Node2D {
@@ -47,23 +85,21 @@ public:
 	Ref<PackedScene> get_trophy_scene() const { return trophy_scene_; }
 	void set_base_scene(const Ref<PackedScene> &p_value) { base_scene_ = p_value; }
 	Ref<PackedScene> get_base_scene() const { return base_scene_; }
-	void set_steal_enabled(bool p_value) { steal_enabled_ = p_value; }
-	bool is_steal_enabled() const { return steal_enabled_; }
-	void set_steal_immunity(float p_value) { tracker_.set_steal_immunity(p_value); }
-	float get_steal_immunity() const { return tracker_.steal_immunity(); }
-	void set_steal_margin(float p_value) { steal_margin_ = p_value; }
-	float get_steal_margin() const { return steal_margin_; }
+	void set_rules(const Ref<TrophyRules> &p_value);
+	Ref<TrophyRules> get_rules() const { return rules_; }
+	// Reglas vigentes (las de `rules`, o las por defecto si no hay).
+	const TrophyRules &rules() const;
+	float get_steal_immunity() const { return rules().steal_immunity; }
 	// Segundos que le quedan al portador sin que se lo puedan quitar (0 = se puede robar).
 	float get_immunity_left() const { return tracker_.immunity_left(); }
-
-	void set_carrier_speed_multiplier(float p_value) { carrier_speed_multiplier_ = p_value; }
-	float get_carrier_speed_multiplier() const { return carrier_speed_multiplier_; }
 
 protected:
 	static void _bind_methods();
 
 private:
 	static inline const char *CARRIER_SOURCE = "trophy";
+	static inline const char *BOOST_SOURCE = "steal_boost";
+	static inline const char *STUN_SOURCE = "steal_stun";
 
 	lv::core::TrophyTracker tracker_;
 	Maze *maze_ = nullptr;
@@ -72,9 +108,8 @@ private:
 	Node2D *trophy_view_ = nullptr;
 	Ref<PackedScene> trophy_scene_;
 	Ref<PackedScene> base_scene_;
-	float carrier_speed_multiplier_ = 0.6f;
-	bool steal_enabled_ = true;
-	float steal_margin_ = 2.0f;
+	Ref<TrophyRules> rules_;
+	Ref<TrophyRules> default_rules_;
 
 	void check_steal();
 

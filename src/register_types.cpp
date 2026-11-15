@@ -68,6 +68,7 @@ void initialize_laberinto_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(PickupSpawner);
 
 	// Trofeo y bases
+	GDREGISTER_CLASS(TrophyRules);
 	GDREGISTER_CLASS(TrophyController);
 
 	// Bots

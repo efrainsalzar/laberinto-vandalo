@@ -636,6 +636,13 @@ classDiagram
 - **Robo (v0.0.18):** quien toca al portador le quita el trofeo. Inmunidad de `steal_immunity` (3 s) al tomarlo y al
   robarlo, para que no cambie de mano en cada frame. Evento `trophy_stolen(thief, victim)`. Los bots tienen la acción
   `StealTrophyAction` (persiguen al portador). 3 tests en core + 1 de bots.
+- **Anti-bucle (v0.0.19):** el robo instantáneo + portador lento + todos persiguiendo hacía que el trofeo cambiara de
+  mano sin parar. Se combinan tres soluciones:
+  1. **Reglas como datos** (`TrophyRules`, `data/trophy/default_rules.tres`): impulso al ladrón (×1,5 por 2 s) y
+     aturdimiento a la víctima (×0,2 por 1 s), con **modificadores temporales** de Stats (orígenes `steal_boost` y
+     `steal_stun`). Valen igual para humanos y bots.
+  2. **Fichas de ataque** (`lv::core::TokenPool`, §19): solo `max_chasers` (2) bots persiguen al portador.
+  3. **Emboscada** (`AmbushAction`, §19): los demás esperan 2 celdas antes de la base del portador.
 - Se toma el trofeo a 1 casilla de distancia (Chebyshev).
 - **El trofeo tiene luz propia**: es "visible para todos" (VISION §6) aunque esté lejos o en la oscuridad.
 - Mientras no exista la pieza "Partida", el sandbox muestra el cartel de victoria con el tiempo y detiene al ganador.
@@ -1034,6 +1041,8 @@ classDiagram
 | `BotBrain` + `BotAction` | **Utility AI** (cada acción, un Strategy) | Agregar disparar, portales o power-ups = registrar una acción; el cerebro no cambia. |
 | `BotProfile` (.tres × 4) | **Datos** | Dificultades y, luego, personalidades sin código. "Mixto" = un perfil al azar por bot. |
 | `BotCoordinator` | **Factory** + cola con presupuesto + **Observer** | Crea bots; calcula ≤ 2 caminos por frame; ante `map_changed` (cierres) cada bot revisa su camino. |
+| `TokenPool` (v0.0.19) | **Fichas de ataque** (técnica de juegos de acción) | Solo los N más cercanos persiguen al portador (con inercia para que la ficha no salte). Genérico: luego vándalos y guardianes. Se reparte cada 0,25 s. |
+| `StealTrophyAction` / `AmbushAction` | **Utility AI** (acciones nuevas) | Con ficha: persigue. Sin ficha: espera en el camino a la base del portador (punto calculado con A* y cacheado; se borra si el mapa cambia). |
 | Percepción (`build_world`) | Juego limpio | El trofeo se ve siempre (tiene luz); los objetos, solo con línea de visión y el radio de su stat. |
 
 **Movimiento:** sigue los centros de celda; si ya está dentro del "carril" no retrocede al centro de la celda
@@ -1069,13 +1078,14 @@ sí hasta la etapa de combate. Los objetos detectan la capa 2. Los bots no tiene
 | Strategy (algoritmos) | `carve_maze` + `MazeAlgorithm`; `MazeProfile` | ✅ |
 | Strategy | `ParticipantController` (Human, Wander, Bot); `PickupSpawnPolicy`; `BotAction` | ✅ |
 | Utility AI (puntajes) | `BotBrain` | ✅ |
+| Fichas de ataque | `TokenPool` en `BotCoordinator` | ✅ |
 | A* (búsqueda de caminos) | `find_path` | ✅ |
 | Command | `ParticipantCommand` | ✅ |
 | Composición / separación lógica-vista | `Participant` + `View` + `StatsComponent` + `Vision`; `core` vs `game`; `line_of_sight` vs luz | ✅ |
 | Decorator / modificadores | `Stats` + `StatModifier` | ✅ |
 | Observer / señales | `StatsComponent` → `HUD`, `Vision`; `Pickup` → `PickupFactory` → `Events` → UI; `pickup_spawned`; `MatchController` → `Events.match_*` → HUD | ✅ |
 | State | `TrophyTracker` (estados del trofeo); `App` (flujo del juego); `MazeShifter` (laberinto vivo); `MatchFlow` (fases de la partida); luego estados del participante | ✅ (parcial) |
-| Datos fuera del código | `StatsProfile`, `MatchRules`, `BotProfile` (.tres) | ✅ |
+| Datos fuera del código | `StatsProfile`, `MatchRules`, `BotProfile`, `TrophyRules` (.tres) | ✅ |
 | Factory + datos | `PickupFactory` + `PickupType` (.tres); vistas de trofeo/bases en `TrophyController` | ✅ |
 | Event Bus | `Events` (autoload) | ✅ |
 | Command (cola con presupuesto, prioridades y reservas) | `MapChangeQueue` en `Maze` | ✅ |
