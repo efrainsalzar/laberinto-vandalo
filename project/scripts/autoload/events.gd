@@ -12,3 +12,12 @@ signal pickup_collected(type: PickupType, participant: Participant, world_positi
 
 ## Apareció un objeto nuevo (reaparición).
 signal pickup_spawned(pickup: Pickup)
+
+## Un participante tomó el trofeo.
+signal trophy_taken(participant: Participant)
+
+## El trofeo cayó al piso (su portador lo soltó o murió).
+signal trophy_dropped(participant: Participant, world_position: Vector2)
+
+## Un participante llevó el trofeo a su base: ganó.
+signal trophy_delivered(participant: Participant)

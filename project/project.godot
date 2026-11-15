@@ -6,7 +6,7 @@ config_version=5
 
 config/name="Laberinto Vándalo"
 config/description="Torneo en un laberinto vivo: consigue el trofeo y vuelve a tu base antes de que los vándalos lo roben."
-config/version="0.0.8"
+config/version="0.0.9"
 run/main_scene="res://scenes/sandbox/participant_sandbox.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"

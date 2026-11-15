@@ -12,6 +12,7 @@
 #include "game/pickup_type.h"
 #include "game/stats_component.h"
 #include "game/stats_profile.h"
+#include "game/trophy_controller.h"
 #include "game/vision.h"
 
 #include <gdextension_interface.h>
@@ -50,6 +51,9 @@ void initialize_laberinto_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_ABSTRACT_CLASS(PickupSpawnPolicy);
 	GDREGISTER_CLASS(KeepDensityPolicy);
 	GDREGISTER_CLASS(PickupSpawner);
+
+	// Trofeo y bases
+	GDREGISTER_CLASS(TrophyController);
 
 	UtilityFunctions::print("[laberinto] Extension C++ cargada (v", LV_VERSION, ")");
 }

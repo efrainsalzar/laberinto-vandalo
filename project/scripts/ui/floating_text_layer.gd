@@ -23,6 +23,10 @@ func _ready() -> void:
 	for i in pool_size:
 		_pool.append(_make_label())
 	Events.pickup_collected.connect(_on_pickup_collected)
+	Events.trophy_taken.connect(func(p: Participant) -> void:
+		show_text(p.global_position + Vector2(0, -26), "¡TROFEO!", Color(1.0, 0.82, 0.25), true))
+	Events.trophy_dropped.connect(func(_p: Participant, pos: Vector2) -> void:
+		show_text(pos, "¡SE CAYÓ EL TROFEO!", Color(1.0, 0.5, 0.35), true))
 
 
 ## Muestra un texto en una posición del mundo.

@@ -1,10 +1,14 @@
 extends Node2D
-## Escena de prueba de la fase 1 (participante, stats, visión, objetos, HUD). No es el juego final.
+## Escena de prueba de la fase 1 (participante, stats, visión, objetos, HUD, trofeo y bases).
+## No es el juego final: la partida (reloj, fases) y las pantallas llegan en las piezas siguientes.
 ## Las teclas están en el panel de controles (F1).
 
 const FOLLOW_ZOOM := Vector2(2.0, 2.0)
 const DEBUG_SOURCE := "prueba"
-const CONTROLS := """WASD / flechas · moverse
+const CONTROLS := """Objetivo: toma el TROFEO del centro y llévalo a TU BASE.
+La flecha del borde te indica a dónde ir.
+
+WASD / flechas · moverse
 F1 · mostrar u ocultar esta ayuda
 
 Pruebas
@@ -12,9 +16,10 @@ Pruebas
 2 · +10 VEL permanente
 3 · +2 VIS (5 s)
 0 · quitar efectos de prueba
+T · soltar el trofeo
 V · niebla sí / no
 Tab · ver el mapa completo
-R · otro laberinto
+R · otro laberinto (nueva partida)
 Esc · salir"""
 
 @onready var _maze: Maze = $Maze
@@ -24,8 +29,11 @@ Esc · salir"""
 @onready var _pickups: PickupFactory = $Pickups
 @onready var _spawner: PickupSpawner = $PickupSpawner
 @onready var _hud: HUD = $HUD
+@onready var _trophy: TrophyController = $Trophy
 
 var _overview := false
+var _elapsed := 0.0
+var _finished := false
 
 
 func _ready() -> void:
@@ -36,12 +44,19 @@ func _ready() -> void:
 	_pickups.pickup_collected.connect(func(pickup: Pickup, participant: Participant) -> void:
 		Events.pickup_collected.emit(pickup.type, participant, pickup.global_position))
 	_spawner.pickup_spawned.connect(func(pickup: Pickup) -> void: Events.pickup_spawned.emit(pickup))
+	_trophy.trophy_taken.connect(func(p: Participant) -> void: Events.trophy_taken.emit(p))
+	_trophy.trophy_dropped.connect(func(p: Participant, pos: Vector2) -> void: Events.trophy_dropped.emit(p, pos))
+	_trophy.trophy_delivered.connect(func(p: Participant) -> void: Events.trophy_delivered.emit(p))
+	Events.trophy_delivered.connect(_on_trophy_delivered)
+	_hud.bind_objective(_trophy, _maze)
 	_maze.generated.connect(_on_maze_generated)
 	if _maze.get_last_seed() != 0:
 		_on_maze_generated(_maze.get_last_seed())
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	if not _finished:
+		_elapsed += delta
 	if not _overview:
 		_camera.position = _participant.position
 
@@ -59,6 +74,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			stats.add_modifier(StatsComponent.STAT_VISION, StatsComponent.OP_ADD, 2.0, 5.0, DEBUG_SOURCE)
 		KEY_0:
 			stats.remove_modifiers_from(DEBUG_SOURCE)
+		KEY_T:
+			_trophy.drop_trophy()
 		KEY_V:
 			_darkness.visible = not _darkness.visible
 		KEY_R:
@@ -75,8 +92,15 @@ func _on_maze_generated(seed_value: int) -> void:
 	# Misma semilla que el laberinto (determinista). Se dejan libres las 4 esquinas (bases).
 	_spawner.start(_maze, _maze.get_base_cells(4), seed_value)
 	_hud.reset_collected()
+	_hud.hide_banner()
 	var base: Vector2i = _maze.get_base_cells(1)[0]
 	_participant.position = _maze.cell_to_world(base)
+	# Trofeo y bases: participante i -> base i.
+	var participants: Array[Participant] = [_participant]
+	_trophy.start(_maze, participants)
+	_participant.set_controller(HumanController.new())
+	_elapsed = 0.0
+	_finished = false
 	_camera.position = _participant.position
 	_camera.reset_smoothing()
 	_update_camera()
@@ -96,3 +120,10 @@ func _update_camera() -> void:
 	var z := minf(view.x / world_size.x, view.y / world_size.y)
 	_camera.zoom = Vector2(z, z)
 	_camera.offset = Vector2(0, -20) / z
+
+
+func _on_trophy_delivered(participant: Participant) -> void:
+	_finished = true
+	participant.set_controller(null)  # quieto: terminó la partida
+	var time := "%d:%02d" % [int(_elapsed) / 60, int(_elapsed) % 60]
+	_hud.show_banner("¡VICTORIA!", "Llevaste el trofeo a tu base en %s\nR · jugar otra vez" % time, Color(1.0, 0.82, 0.25))

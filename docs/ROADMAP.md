@@ -55,21 +55,46 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 - [x] Textos flotantes con Object Pool (`+8 VEL`, `+0.5 VIS`, `¡RAPIDEZ! ×1.5 VEL`), visibles en la oscuridad.
 - [x] Ayuda de controles en F1 (pista que se desvanece).
 
-## Plan acordado (bloques, uno a la vez)
+### v0.0.9 — Etapa 1.1: Trofeo y bases ✅
+- [x] `TrophyTracker` (core, State): en bóveda → llevado → en el piso → entregado. 9 tests.
+- [x] `TrophyController`: lentitud ×0.6 al portador, eventos al Event Bus, vistas de trofeo (con luz) y bases.
+- [x] Flecha de objetivo en el borde (trofeo / tu base) con distancia; aviso "LLEVAS EL TROFEO"; cartel de victoria.
 
-1. ~~Objetos infinitos~~ ✅
-2. ~~HUD que no tapa el juego + textos flotantes~~ ✅
-3. **Identidad visual** (Theme, fuente, paleta; recomendado: neón arcade con glow, renderer Forward+; Phantom Camera). ← siguiente
-4. Pieza 6 — Trofeo y zonas de resguardo.
-5. Pieza 7 — Partida: reloj, fases (State), victoria y fin por tiempo.
-6. Menús: principal, pausa, fin de partida; flujo del juego (State).
+## Plan acordado (etapas, una pieza a la vez)
 
-## Después (fase 1 — prototipo), un módulo a la vez
+Bloques de interfaz ya hechos: ~~objetos infinitos~~ ✅ · ~~HUD limpio + textos flotantes~~ ✅.
+Colores, arte e identidad visual se dejan para la etapa 7 (decisión del dueño del proyecto).
+Ideas del mapa en detalle: [`DISENO_MAPA.md`](DISENO_MAPA.md).
 
-6. Trofeo y zonas de resguardo.
-7. Gestor de partida: reloj, victoria y fin por tiempo.
-8. Arte CC0 (Kenney) reemplazando las formas de colores.
+### Etapa 1 — Jugable de principio a fin
+1. ~~Bases + trofeo + ganar~~ ✅
+2. **Partida**: reloj, fases (State: Preparación → Asalto → Golpe de los vándalos), victoria y fin por tiempo. ← siguiente
+3. Pantallas mínimas: inicio, pausa, fin de partida (flujo del juego con State).
 
+### Etapa 2 — El mundo
+1. `MapConfig` + mapa más grande + formas de contorno (cuadrado, círculo, hexágono...).
+2. Áreas conectadas por puertas → **la bóveda como mini-mapa propio**; las puertas sirven para portales.
+3. Terrenos como datos: agua, barro, hielo (inercia), ríos con puentes, árboles/rocas.
+4. Mapa que cambia: paredes rompibles, atajos, pasadizos secretos, paredes móviles.
+5. Geometría avanzada: laberintos circulares de anillos, hexagonales, paredes diagonales/curvas.
+
+### Etapa 3 — Bots
+`BotController` (Strategy), caminos con costos de terreno (AStarGrid2D), árboles de comportamiento (LimboAI), personalidades.
+
+### Etapa 4 — Combate
+Salud, 3 vidas, reaparición (State), soltar el trofeo al morir; armas, bombas, minas, escudos, pociones como datos.
+
+### Etapa 5 — Seguridad de la bóveda
+Soldados guardianes (mini jefes).
+
+### Etapa 6 — Vándalos y Director de IA
+Robo, burlas, saqueo, emboscadas coordinadas; el Director controla apariciones, eventos y objetos.
+
+### Etapa 7 — Presentación
+Identidad visual (paleta, fuente, Theme, glow, Forward+), avatares, arte, sonido, partículas, cámara (Phantom Camera).
+
+### Después
+Demo en itch.io · aliados · torneo con rondas · multijugador local · en línea · Steam (VISION §17).
 ## Ideas anotadas (no implementar todavía)
 
 - **Política del Director para objetos:** el Director de IA (fase 5) tendrá su propia `PickupSpawnPolicy` (p. ej. más objetos cerca de quien va perdiendo).

@@ -23,6 +23,11 @@ const HINT_SECONDS := 5.0
 @onready var _hint: Label = $HintF1
 @onready var _controls: PanelContainer = $Controls
 @onready var _controls_list: Label = $Controls/Rows/List
+@onready var _trophy_status: Label = $TopBar/Row/TrophyStatus
+@onready var _objective: ObjectiveIndicator = $Objective
+@onready var _banner: PanelContainer = $Banner
+@onready var _banner_title: Label = $Banner/Rows/Title
+@onready var _banner_subtitle: Label = $Banner/Rows/Subtitle
 
 var _participant: Participant
 var _stats: StatsComponent
@@ -30,11 +35,18 @@ var _shown := {StatsComponent.STAT_SPEED: 0.0, StatsComponent.STAT_VISION: 0.0}
 var _count_tweens := {}
 var _chips := {}  # id de modificador -> {panel, bar, duration}
 var _collected_count := 0
+var _trophy: TrophyController
+var _maze: Maze
+
+const TROPHY_COLOR := Color(1.0, 0.82, 0.25)
 
 
 func _ready() -> void:
 	_controls_list.text = controls_text
 	Events.pickup_collected.connect(_on_pickup_collected)
+	Events.trophy_taken.connect(_on_trophy_changed.unbind(1))
+	Events.trophy_dropped.connect(_on_trophy_changed.unbind(2))
+	Events.trophy_delivered.connect(_on_trophy_changed.unbind(1))
 	var hint_tween := create_tween()
 	hint_tween.tween_interval(HINT_SECONDS)
 	hint_tween.tween_property(_hint, "modulate:a", 0.0, 1.0)
@@ -51,6 +63,31 @@ func bind(participant: Participant) -> void:
 	for stat in _shown:
 		_shown[stat] = _stats.get_stat(stat)
 		_render_stat(stat, _shown[stat])
+
+
+## Conecta el indicador de objetivo al trofeo (y al laberinto, para medir distancias en casillas).
+func bind_objective(trophy: TrophyController, maze: Maze) -> void:
+	_trophy = trophy
+	_maze = maze
+	_on_trophy_changed()
+
+
+## Cartel centrado (fin de partida). Es lo único que ocupa el centro, y solo al terminar.
+func show_banner(title: String, subtitle: String, color: Color) -> void:
+	_banner_title.text = title
+	_banner_title.add_theme_color_override("font_color", color)
+	_banner_subtitle.text = subtitle
+	_banner.visible = true
+	_banner.pivot_offset = _banner.size / 2.0
+	_banner.scale = Vector2(0.7, 0.7)
+	_banner.modulate.a = 0.0
+	var t := create_tween().set_parallel(true)
+	t.tween_property(_banner, "modulate:a", 1.0, 0.25)
+	t.tween_property(_banner, "scale", Vector2.ONE, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+func hide_banner() -> void:
+	_banner.visible = false
 
 
 func reset_collected() -> void:
@@ -94,6 +131,38 @@ func _toggle_controls() -> void:
 func _process(_delta: float) -> void:
 	if _stats != null:
 		_sync_effect_chips()
+	_update_objective()
+
+
+# --- Objetivo: trofeo o base -------------------------------------------------------------
+
+func _update_objective() -> void:
+	if _trophy == null or _participant == null or _trophy.is_finished():
+		_objective.active = false
+		return
+	var carrying := _trophy.get_carrier() == _participant
+	_objective.active = true
+	if carrying:
+		_objective.target_position = _trophy.get_base_position(_participant)
+		_objective.target_name = "TU BASE"
+		_objective.target_color = _participant.color
+	else:
+		_objective.target_position = _trophy.get_trophy_position()
+		_objective.target_name = "TROFEO"
+		_objective.target_color = TROPHY_COLOR
+	var tile := _maze.get_tile_px() if _maze != null else 16.0
+	_objective.distance_tiles = _participant.global_position.distance_to(_objective.target_position) / tile
+
+
+func _on_trophy_changed() -> void:
+	if _trophy == null or _participant == null:
+		return
+	var carrying := _trophy.get_carrier() == _participant
+	if carrying != _trophy_status.visible:
+		_trophy_status.visible = carrying
+		if carrying:
+			_trophy_status.modulate.a = 0.0
+			create_tween().tween_property(_trophy_status, "modulate:a", 1.0, 0.25)
 
 
 # --- Stats: números que cuentan y destellan ------------------------------------------------

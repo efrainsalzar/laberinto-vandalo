@@ -40,7 +40,8 @@
 | 4 | **Stats** | `Stats`: valores base + modificadores | expuesto como recurso del participante | **Decorator / modificadores** |
 | 5 | **Visión** | `line_of_sight`: radio + línea de visión | `Vision` (`PointLight2D` con sombras) | Composición, Observer |
 | 6 | **Objetos** | `place_pickups` (dónde/qué tipo), `Rng` | `PickupType` (datos), `Pickup`, `PickupFactory` | **Factory + datos**, Observer |
-| 7 | **Partida** | `MatchState`: reloj, trofeo, bases, victoria | `MatchManager` (`Node`): pasa posiciones a `core`, emite señales | **State** (fases), Observer |
+| 7 | **Trofeo y bases** | `TrophyTracker` | `TrophyController` + vistas | **State**, Observer, Factory |
+| 8 | **Partida** | reloj, fases, victoria/tiempo | gestor de partida | **State** (fases), Observer |
 
 Fases siguientes (bots, combate, vándalos, director) se diseñan cuando lleguemos; ver [ROADMAP](ROADMAP.md).
 
@@ -565,7 +566,80 @@ flowchart LR
 
 ---
 
-## 11. Patrones aplicados (índice)
+## 11. Etapa 1.1 — Trofeo y bases
+
+### Problema que resuelve el diseño
+Es el corazón del juego (VISION §3, §6): tomar el trofeo en la bóveda, ir más lento con él y llevarlo a la
+base propia. Las reglas tienen que ser exactas y probadas, y no depender de cómo se ve ni de dónde esté la
+bóveda (que en la etapa 2.2 será un mini-mapa propio, ver DISENO_MAPA §3).
+
+### Solución: máquina de estados en `core` + controlador que la conecta con Godot
+
+```mermaid
+stateDiagram-v2
+    [*] --> EnBoveda
+    EnBoveda --> Llevado : un participante llega a su lado
+    Llevado --> EnElPiso : se suelta (muerte en etapa 4, o tecla T)
+    EnElPiso --> Llevado : cualquiera llega a su lado
+    Llevado --> Entregado : el portador llega a SU base
+    Entregado --> [*] : hay ganador; no hay más cambios
+```
+
+| Pieza | Patrón | Por qué |
+|---|---|---|
+| `lv::core::TrophyTracker` | **State** (enum: 4 estados sin comportamiento propio) | Reglas exactas y testeadas: solo un portador, solo se entrega en la base propia, tras la entrega no cambia nada. |
+| `TrophyController` (`Node2D`) | Adaptador + **Observer** | Pasa casillas al tracker y emite `trophy_taken` / `trophy_dropped` / `trophy_delivered`. |
+| Lentitud del portador | Reutiliza **modificadores** (§6) | `×0.6` con origen `"trophy"`; se quita al soltar o entregar. |
+| Vistas del trofeo y bases | **Factory** con escenas (como `PickupFactory`) | El controlador instancia `trophy_scene` y `base_scene` y les pasa datos (`color`, `size_px`, `carried`); no dibuja. |
+| `ObjectiveIndicator` (HUD) | Vista | Flecha al objetivo (trofeo, o tu base si lo llevas) con distancia en casillas. |
+
+```mermaid
+classDiagram
+    direction LR
+    class Node2D { <<Godot>> }
+    class TrophyTracker {
+        <<core>>
+        +setup(trophy_cell, bases, pickup_range, base_radius)
+        +update(participant, cell) eventos
+        +drop(cell) eventos
+        +state() / carrier() / winner()
+    }
+    class TrophyController {
+        +trophy_scene, base_scene
+        +carrier_speed_multiplier = 0.6
+        +start(maze, participants)
+        +drop_trophy()
+        +get_trophy_position() / get_base_position(p)
+        signal trophy_taken / trophy_dropped / trophy_delivered
+    }
+    Node2D <|-- TrophyController
+    TrophyController *-- TrophyTracker : envuelve
+    TrophyController ..> StatsComponent : ×0.6 al portador
+    TrophyController ..> Maze : casillas y bases
+```
+
+### Archivos
+| Archivo | Qué es |
+|---|---|
+| `src/core/trophy_tracker.{h,cpp}` | Reglas y estados del trofeo |
+| `tests/test_trophy_tracker.cpp` | 9 tests: tomar de cerca/lejos, un solo portador, solo base propia, base sin trofeo, soltar y retomar, soltar sin portador, cierre tras entrega, inválidos |
+| `src/game/trophy_controller.{h,cpp}` | `TrophyController` |
+| `project/scenes/trophy/trophy.tscn` + `scripts/trophy/trophy_view.gd` | Copa dorada con luz propia (se ve en la oscuridad) |
+| `project/scenes/trophy/base.tscn` + `scripts/trophy/base_view.gd` | Zona de resguardo del color del dueño, con luz tenue |
+| `project/scripts/ui/objective_indicator.gd` | Flecha de objetivo en el borde de la pantalla |
+| `project/scripts/autoload/events.gd` | Nuevos eventos `trophy_taken`, `trophy_dropped`, `trophy_delivered` |
+
+### Decisiones
+- Participante `i` ↔ base `i` de `Maze.get_base_cells(n)` (esquinas primero). La zona de base mide 3×3 casillas.
+- Se toma el trofeo a 1 casilla de distancia (Chebyshev).
+- **El trofeo tiene luz propia**: es "visible para todos" (VISION §6) aunque esté lejos o en la oscuridad.
+- Mientras no exista la pieza "Partida", el sandbox muestra el cartel de victoria con el tiempo y detiene al ganador.
+- Verificado en Godot: base sin trofeo → nada; tomar → 160 → 96 px/s, aviso y flecha a "TU BASE"; soltar → 160 y se
+  retoma al pasar; entregar → cartel "¡VICTORIA!", velocidad normal, jugador quieto. Capturas con base, flecha y trofeo.
+
+---
+
+## 12. Patrones aplicados (índice)
 
 | Patrón | Dónde | Estado |
 |---|---|---|
@@ -575,8 +649,8 @@ flowchart LR
 | Composición / separación lógica-vista | `Participant` + `View` + `StatsComponent` + `Vision`; `core` vs `game`; `line_of_sight` vs luz | ✅ |
 | Decorator / modificadores | `Stats` + `StatModifier` | ✅ |
 | Observer / señales | `StatsComponent` → `HUD`, `Vision`; `Pickup` → `PickupFactory` → `Events` → UI; `pickup_spawned`; luego `MatchManager` | ✅ (parcial) |
-| State | Fases de la partida, estados del participante | Pieza 7 / fase 3 |
+| State | `TrophyTracker` (estados del trofeo); luego fases de la partida y estados del participante | ✅ (parcial) |
 | Datos fuera del código | `StatsProfile` (.tres) | ✅ |
-| Factory + datos | `PickupFactory` + `PickupType` (.tres) | ✅ |
+| Factory + datos | `PickupFactory` + `PickupType` (.tres); vistas de trofeo/bases en `TrophyController` | ✅ |
 | Event Bus | `Events` (autoload) | ✅ |
 | Object Pool | `FloatingTextLayer` | ✅ |
