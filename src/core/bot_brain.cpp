@@ -30,6 +30,10 @@ float GetTrophyAction::score(const BotWorld &p_world, const BotTuning &) const {
 	return (!p_world.carrying_trophy && p_world.trophy_available) ? 0.8f : 0.0f;
 }
 
+float StealTrophyAction::score(const BotWorld &p_world, const BotTuning &) const {
+	return (!p_world.carrying_trophy && p_world.trophy_carried_by_other) ? 0.75f : 0.0f;
+}
+
 float DeliverTrophyAction::score(const BotWorld &p_world, const BotTuning &) const {
 	return p_world.carrying_trophy ? 1.0f : 0.0f;
 }
@@ -57,6 +61,7 @@ std::unique_ptr<BotBrain> BotBrain::make_default(const BotTuning &p_tuning) {
 	auto brain = std::make_unique<BotBrain>(p_tuning);
 	brain->add_action(std::make_unique<DeliverTrophyAction>());
 	brain->add_action(std::make_unique<GetTrophyAction>());
+	brain->add_action(std::make_unique<StealTrophyAction>());
 	brain->add_action(std::make_unique<CollectPickupAction>());
 	brain->add_action(std::make_unique<ExploreAction>());
 	return brain;

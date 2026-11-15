@@ -62,6 +62,7 @@ func _ready() -> void:
 	Events.pickup_collected.connect(_on_pickup_collected)
 	Events.trophy_taken.connect(_on_trophy_changed.unbind(1))
 	Events.trophy_dropped.connect(_on_trophy_changed.unbind(2))
+	Events.trophy_stolen.connect(_on_trophy_changed.unbind(2))
 	Events.trophy_delivered.connect(_on_trophy_changed.unbind(1))
 	Events.match_phase_changed.connect(_on_phase_changed)
 	Events.match_time_warning.connect(func(seconds_left: float) -> void:
@@ -243,6 +244,11 @@ func _update_objective() -> void:
 		_objective.target_position = _trophy.get_base_position(_participant)
 		_objective.target_name = "TU BASE"
 		_objective.target_color = _participant.color
+	elif _trophy.get_carrier() != null:
+		# Lo lleva otro: la flecha apunta al portador (tócalo para quitárselo).
+		_objective.target_position = _trophy.get_trophy_position()
+		_objective.target_name = "QUÍTASELO"
+		_objective.target_color = _trophy.get_carrier().color
 	else:
 		_objective.target_position = _trophy.get_trophy_position()
 		_objective.target_name = "TROFEO"

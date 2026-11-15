@@ -33,7 +33,8 @@ struct BotWorld {
 	TileRect base; // su zona de resguardo
 	bool carrying_trophy = false; // lo lleva él
 	bool trophy_available = false; // está en la bóveda o en el piso (se puede tomar)
-	Cell trophy; // dónde está (válido si trophy_available)
+	bool trophy_carried_by_other = false; // lo lleva otro participante (se le puede quitar)
+	Cell trophy; // dónde está (en la bóveda, en el piso o sobre su portador)
 	std::vector<Cell> seen_pickups; // objetos que VE ahora (juego limpio: solo con línea de visión)
 	Cell explore_target; // a dónde ir si no hay nada mejor (lo elige el controlador al azar)
 	float time_left = -1.0f; // segundos de partida (-1 = sin límite); para acciones futuras
@@ -45,6 +46,7 @@ enum class BotGoal {
 	DeliverTrophy,
 	CollectPickup,
 	Explore,
+	StealTrophy,
 };
 
 struct BotDecision {
@@ -66,6 +68,15 @@ public:
 class GetTrophyAction : public BotAction {
 public:
 	BotGoal goal() const override { return BotGoal::GetTrophy; }
+	float score(const BotWorld &p_world, const BotTuning &p_tuning) const override;
+	Cell target(const BotWorld &p_world) const override { return p_world.trophy; }
+};
+
+// Persigue al portador para quitarle el trofeo (robo por contacto). El destino se mueve: el bot replantea
+// el camino cada vez que piensa.
+class StealTrophyAction : public BotAction {
+public:
+	BotGoal goal() const override { return BotGoal::StealTrophy; }
 	float score(const BotWorld &p_world, const BotTuning &p_tuning) const override;
 	Cell target(const BotWorld &p_world) const override { return p_world.trophy; }
 };
@@ -99,7 +110,7 @@ public:
 	static constexpr float KEEP_BONUS = 0.05f; // inercia: no cambia de idea por diferencias mínimas
 
 	explicit BotBrain(const BotTuning &p_tuning);
-	// Crea un cerebro con las acciones de hoy (trofeo, entregar, objetos, explorar).
+	// Crea un cerebro con las acciones de hoy (trofeo, entregar, quitarlo, objetos, explorar).
 	static std::unique_ptr<BotBrain> make_default(const BotTuning &p_tuning);
 
 	void add_action(std::unique_ptr<BotAction> p_action);

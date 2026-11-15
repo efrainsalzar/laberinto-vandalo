@@ -245,4 +245,19 @@ TEST_SUITE("Bots: cerebro (Utility AI)") {
 		brain.add_action(std::make_unique<AlwaysExplore>());
 		CHECK(brain.evaluate(w, rng).target == Cell{ 99, 99 });
 	}
+
+	TEST_CASE("Si otro lleva el trofeo, lo persigue para quitárselo") {
+		auto brain = BotBrain::make_default(no_noise());
+		Rng rng(1);
+		BotWorld w = world_at({ 5, 5 });
+		w.trophy_available = false;
+		w.trophy_carried_by_other = true;
+		w.trophy = { 12, 7 }; // sobre el portador
+		const auto d = brain->evaluate(w, rng);
+		CHECK(d.goal == BotGoal::StealTrophy);
+		CHECK(d.target == Cell{ 12, 7 });
+		w.carrying_trophy = true; // si lo lleva él, no se persigue a sí mismo
+		w.trophy_carried_by_other = false;
+		CHECK(brain->evaluate(w, rng).goal == BotGoal::DeliverTrophy);
+	}
 }

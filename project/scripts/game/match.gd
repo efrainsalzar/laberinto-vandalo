@@ -7,6 +7,7 @@ const DEBUG_SOURCE := "prueba"
 const CONTROLS := """Objetivo: toma el TROFEO del centro y llévalo a TU BASE
 antes de que se acabe el tiempo (si no, los vándalos se lo llevan).
 La flecha del borde te indica a dónde ir.
+Si otro lleva el trofeo, TÓCALO para quitárselo (quien lo toma es inmune unos segundos).
 Fases: Preparación → Asalto → Golpe de los vándalos (el laberinto se acelera).
 
 WASD / flechas · moverse
@@ -64,6 +65,8 @@ func _ready() -> void:
 		Events.pickup_collected.emit(pickup.type, participant, pickup.global_position))
 	_spawner.pickup_spawned.connect(func(pickup: Pickup) -> void: Events.pickup_spawned.emit(pickup))
 	_trophy.trophy_taken.connect(func(p: Participant) -> void: Events.trophy_taken.emit(p))
+	_trophy.trophy_stolen.connect(func(thief: Participant, victim: Participant) -> void: Events.trophy_stolen.emit(thief, victim))
+	Events.trophy_stolen.connect(_on_trophy_stolen)
 	Events.trophy_taken.connect(func(p: Participant) -> void:
 		if p != _participant:
 			_hud.toast("¡%s TOMÓ EL TROFEO!" % p.display_name.to_upper(), p.color, 2.5))
@@ -205,6 +208,17 @@ func _configure_live_maze(seed_value: int) -> void:
 	_shifter.interval = _live_interval / maxf(0.1, _match.get_maze_speed())
 	_shifter.pairs = int(level[1] * maxf(1.0, scale))
 	_shifter.start(_maze, seed_value)
+
+
+func _on_trophy_stolen(thief: Participant, victim: Participant) -> void:
+	var seconds: float = _trophy.get_steal_immunity()
+	if thief == _participant:
+		_hud.toast("¡LE QUITASTE EL TROFEO A %s! · %d s sin que te lo quiten" % [victim.display_name.to_upper(), roundi(seconds)],
+			Color(1.0, 0.82, 0.25), 3.0)
+	elif victim == _participant:
+		_hud.toast("¡%s TE QUITÓ EL TROFEO! · tócalo para recuperarlo" % thief.display_name.to_upper(), thief.color, 3.0)
+	else:
+		_hud.toast("%s le quitó el trofeo a %s" % [thief.display_name.to_upper(), victim.display_name.to_upper()], thief.color, 2.0)
 
 
 ## Cada fase cambia el ritmo del laberinto vivo (datos: data/match/default_rules.tres).

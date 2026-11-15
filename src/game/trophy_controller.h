@@ -19,6 +19,9 @@ class Participant;
 //   y se lo quita al soltarlo o entregarlo (reutiliza Stats, §6).
 // - Crea la vista del trofeo y de cada base a partir de escenas (`trophy_scene`, `base_scene`):
 //   no dibuja nada. A las vistas les pasa datos con set(): `color`, `size_px`, `carried`.
+// - Robo básico (`steal_enabled`): quien TOCA al portador (los cuerpos se superponen + `steal_margin` px) le
+//   quita el trofeo; el nuevo portador queda inmune `steal_immunity` s. Señal trophy_stolen(thief, victim).
+//   Es la regla mínima para la primera prueba; el combate (Etapa 4) agregará otras formas (golpe, muerte).
 // - No sabe dónde está la bóveda en el mundo: recibe la casilla del trofeo (DISENO_MAPA §3).
 // Ver docs/ARQUITECTURA.md §11.
 class TrophyController : public Node2D {
@@ -44,6 +47,15 @@ public:
 	Ref<PackedScene> get_trophy_scene() const { return trophy_scene_; }
 	void set_base_scene(const Ref<PackedScene> &p_value) { base_scene_ = p_value; }
 	Ref<PackedScene> get_base_scene() const { return base_scene_; }
+	void set_steal_enabled(bool p_value) { steal_enabled_ = p_value; }
+	bool is_steal_enabled() const { return steal_enabled_; }
+	void set_steal_immunity(float p_value) { tracker_.set_steal_immunity(p_value); }
+	float get_steal_immunity() const { return tracker_.steal_immunity(); }
+	void set_steal_margin(float p_value) { steal_margin_ = p_value; }
+	float get_steal_margin() const { return steal_margin_; }
+	// Segundos que le quedan al portador sin que se lo puedan quitar (0 = se puede robar).
+	float get_immunity_left() const { return tracker_.immunity_left(); }
+
 	void set_carrier_speed_multiplier(float p_value) { carrier_speed_multiplier_ = p_value; }
 	float get_carrier_speed_multiplier() const { return carrier_speed_multiplier_; }
 
@@ -61,6 +73,10 @@ private:
 	Ref<PackedScene> trophy_scene_;
 	Ref<PackedScene> base_scene_;
 	float carrier_speed_multiplier_ = 0.6f;
+	bool steal_enabled_ = true;
+	float steal_margin_ = 2.0f;
+
+	void check_steal();
 
 	void clear_views();
 	void on_map_changed(const TypedArray<Vector2i> &p_tiles, bool p_now_wall);

@@ -123,4 +123,52 @@ TEST_SUITE("TrophyTracker") {
 		CHECK(events[0].type == Type::Delivered);
 		CHECK(t.base_of(0) == lv::core::TileRect{ 1, 1, 4, 4 });
 	}
+
+	TEST_CASE("Robo: quien toca al portador se lo quita, pero no durante la inmunidad") {
+		TrophyTracker t = make(); // inmunidad por defecto: 3 s
+		t.update(0, { 20, 20 });
+		CHECK_FALSE(t.can_steal(1)); // recién tomado: inmune
+		CHECK(t.steal(1, { 20, 21 }).empty());
+		t.tick(3.0f);
+		CHECK_FALSE(t.can_steal(0)); // el portador no se roba a sí mismo
+		const auto events = t.steal(1, { 20, 21 });
+		REQUIRE(events.size() == 1);
+		CHECK(events[0].type == Type::Stolen);
+		CHECK(events[0].participant == 1);
+		CHECK(events[0].victim == 0);
+		CHECK(t.carrier() == 1);
+		CHECK(t.state() == State::Carried);
+		// El nuevo portador es inmune: no se lo devuelven en el mismo instante.
+		CHECK(t.steal(0, { 20, 21 }).empty());
+		t.tick(1.0f);
+		CHECK(t.immunity_left() == doctest::Approx(2.0f));
+		t.tick(2.5f);
+		CHECK(t.can_steal(0));
+	}
+
+	TEST_CASE("Robo: nada que robar si nadie lo lleva o ya se entregó") {
+		TrophyTracker t = make();
+		t.set_steal_immunity(0.0f);
+		CHECK_FALSE(t.can_steal(1)); // en la bóveda
+		t.update(0, { 20, 20 });
+		t.drop({ 10, 10 });
+		CHECK_FALSE(t.can_steal(1)); // en el piso: se toma, no se roba
+		t.update(1, { 10, 10 });
+		t.update(1, { 40, 1 }); // lo entrega en su base
+		CHECK(t.state() == State::Delivered);
+		CHECK(t.steal(0, { 40, 1 }).empty());
+		CHECK_FALSE(t.can_steal(7)); // inválido
+	}
+
+	TEST_CASE("Robar y entregar: el ladrón gana si llega a SU base") {
+		TrophyTracker t = make();
+		t.set_steal_immunity(0.0f);
+		t.update(0, { 20, 20 });
+		t.steal(1, { 20, 20 });
+		CHECK(t.update(0, { 1, 1 }).empty()); // la víctima en su base: ya no lo lleva
+		const auto events = t.update(1, { 40, 1 });
+		REQUIRE(events.size() == 1);
+		CHECK(events[0].type == Type::Delivered);
+		CHECK(t.winner() == 1);
+	}
 }

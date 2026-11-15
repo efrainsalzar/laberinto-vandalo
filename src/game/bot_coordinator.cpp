@@ -107,6 +107,7 @@ void BotCoordinator::build_world(const Participant &p_participant, lv::core::Bot
 		const Participant *carrier = trophy_->get_carrier();
 		r_world.carrying_trophy = carrier == &p_participant;
 		r_world.trophy_available = !trophy_->is_finished() && carrier == nullptr;
+		r_world.trophy_carried_by_other = !trophy_->is_finished() && carrier != nullptr && carrier != &p_participant;
 		const Vector2i trophy_tile = maze_->world_to_cell(trophy_->get_trophy_position());
 		r_world.trophy = { trophy_tile.x, trophy_tile.y };
 	}

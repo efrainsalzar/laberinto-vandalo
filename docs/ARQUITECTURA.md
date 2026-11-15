@@ -581,6 +581,7 @@ stateDiagram-v2
     EnBoveda --> Llevado : un participante llega a su lado
     Llevado --> EnElPiso : se suelta (muerte en etapa 4, o tecla T)
     EnElPiso --> Llevado : cualquiera llega a su lado
+    Llevado --> Llevado : otro TOCA al portador (robo; inmune 3 s)
     Llevado --> Entregado : el portador llega a SU base
     Entregado --> [*] : hay ganador; no hay más cambios
 ```
@@ -589,7 +590,8 @@ stateDiagram-v2
 |---|---|---|
 | `lv::core::TrophyTracker` | **State** (enum: 4 estados sin comportamiento propio) | Reglas exactas y testeadas: solo un portador, solo se entrega en la base propia, tras la entrega no cambia nada. |
 | `TrophyController` (`Node2D`) | Adaptador + **Observer** | Pasa casillas al tracker y emite `trophy_taken` / `trophy_dropped` / `trophy_delivered`. |
-| Lentitud del portador | Reutiliza **modificadores** (§6) | `×0.6` con origen `"trophy"`; se quita al soltar o entregar. |
+| Lentitud del portador | Reutiliza **modificadores** (§6) | `×0.6` con origen `"trophy"`; se quita al soltar o entregar y pasa al ladrón en un robo. |
+| Robo por contacto (v0.0.18) | Regla en core (`steal`, `can_steal`, `tick`) + detección en el controlador | El tracker decide si se puede (portador distinto, sin inmunidad); el controlador decide qué es "tocar" (cuerpos superpuestos + `steal_margin`). El combate agregará otras formas sin cambiar la regla. |
 | Vistas del trofeo y bases | **Factory** con escenas (como `PickupFactory`) | El controlador instancia `trophy_scene` y `base_scene` y les pasa datos (`color`, `size_px`, `carried`); no dibuja. |
 | `ObjectiveIndicator` (HUD) | Vista | Flecha al objetivo (trofeo, o tu base si lo llevas) con distancia en casillas. |
 
@@ -630,7 +632,10 @@ classDiagram
 | `project/scripts/autoload/events.gd` | Nuevos eventos `trophy_taken`, `trophy_dropped`, `trophy_delivered` |
 
 ### Decisiones
-- Participante `i` ↔ base `i` de `Maze.get_base_cells(n)` (esquinas primero). La zona de base mide 3×3 casillas.
+- Participante `i` ↔ base `i` de `Maze.get_base_zones(n)` (esquinas primero). La zona mide lo que el pasillo (§18).
+- **Robo (v0.0.18):** quien toca al portador le quita el trofeo. Inmunidad de `steal_immunity` (3 s) al tomarlo y al
+  robarlo, para que no cambie de mano en cada frame. Evento `trophy_stolen(thief, victim)`. Los bots tienen la acción
+  `StealTrophyAction` (persiguen al portador). 3 tests en core + 1 de bots.
 - Se toma el trofeo a 1 casilla de distancia (Chebyshev).
 - **El trofeo tiene luz propia**: es "visible para todos" (VISION §6) aunque esté lejos o en la oscuridad.
 - Mientras no exista la pieza "Partida", el sandbox muestra el cartel de victoria con el tiempo y detiene al ganador.

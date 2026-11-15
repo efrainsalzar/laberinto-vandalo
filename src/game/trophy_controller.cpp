@@ -21,6 +21,13 @@ void TrophyController::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_base_position", "participant"), &TrophyController::get_base_position);
 	ClassDB::bind_method(D_METHOD("set_trophy_scene", "value"), &TrophyController::set_trophy_scene);
 	ClassDB::bind_method(D_METHOD("get_trophy_scene"), &TrophyController::get_trophy_scene);
+	ClassDB::bind_method(D_METHOD("set_steal_enabled", "value"), &TrophyController::set_steal_enabled);
+	ClassDB::bind_method(D_METHOD("is_steal_enabled"), &TrophyController::is_steal_enabled);
+	ClassDB::bind_method(D_METHOD("set_steal_immunity", "value"), &TrophyController::set_steal_immunity);
+	ClassDB::bind_method(D_METHOD("get_steal_immunity"), &TrophyController::get_steal_immunity);
+	ClassDB::bind_method(D_METHOD("set_steal_margin", "value"), &TrophyController::set_steal_margin);
+	ClassDB::bind_method(D_METHOD("get_steal_margin"), &TrophyController::get_steal_margin);
+	ClassDB::bind_method(D_METHOD("get_immunity_left"), &TrophyController::get_immunity_left);
 	ClassDB::bind_method(D_METHOD("set_base_scene", "value"), &TrophyController::set_base_scene);
 	ClassDB::bind_method(D_METHOD("get_base_scene"), &TrophyController::get_base_scene);
 	ClassDB::bind_method(D_METHOD("set_carrier_speed_multiplier", "value"), &TrophyController::set_carrier_speed_multiplier);
@@ -32,6 +39,11 @@ void TrophyController::_bind_methods() {
 
 	ADD_SIGNAL(MethodInfo("trophy_taken", PropertyInfo(Variant::OBJECT, "participant", PROPERTY_HINT_NODE_TYPE, "Participant")));
 	ADD_SIGNAL(MethodInfo("trophy_dropped", PropertyInfo(Variant::OBJECT, "participant", PROPERTY_HINT_NODE_TYPE, "Participant"), PropertyInfo(Variant::VECTOR2, "world_position")));
+	ADD_GROUP("Robo", "steal_");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "steal_enabled"), "set_steal_enabled", "is_steal_enabled");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "steal_immunity", PROPERTY_HINT_RANGE, "0,10,0.1,suffix:s"), "set_steal_immunity", "get_steal_immunity");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "steal_margin", PROPERTY_HINT_RANGE, "0,32,0.5,suffix:px"), "set_steal_margin", "get_steal_margin");
+	ADD_SIGNAL(MethodInfo("trophy_stolen", PropertyInfo(Variant::OBJECT, "thief", PROPERTY_HINT_NODE_TYPE, "Participant"), PropertyInfo(Variant::OBJECT, "victim", PROPERTY_HINT_NODE_TYPE, "Participant")));
 	ADD_SIGNAL(MethodInfo("trophy_delivered", PropertyInfo(Variant::OBJECT, "participant", PROPERTY_HINT_NODE_TYPE, "Participant")));
 }
 
@@ -93,11 +105,12 @@ void TrophyController::start(Maze *p_maze, const TypedArray<Participant> &p_part
 	update_trophy_view();
 }
 
-void TrophyController::_physics_process(double) {
+void TrophyController::_physics_process(double p_delta) {
 	if (Engine::get_singleton()->is_editor_hint() || maze_ == nullptr || is_finished()) {
 		return;
 	}
 	lv::core::PerfScope perf("trophy.update");
+	tracker_.tick(static_cast<float>(p_delta));
 	for (size_t i = 0; i < participants_.size(); i++) {
 		Participant *p = participants_[i];
 		if (p == nullptr) {
@@ -109,7 +122,31 @@ void TrophyController::_physics_process(double) {
 			break;
 		}
 	}
+	if (!is_finished()) {
+		check_steal();
+	}
 	update_trophy_view();
+}
+
+// Robo por contacto. Solo hay un portador, así que basta con comparar contra los demás (máx. 7).
+void TrophyController::check_steal() {
+	Participant *carrier = get_carrier();
+	if (!steal_enabled_ || carrier == nullptr || tracker_.immunity_left() > 0.0f) {
+		return;
+	}
+	const Vector2 at = carrier->get_global_position();
+	for (size_t i = 0; i < participants_.size(); i++) {
+		Participant *p = participants_[i];
+		if (p == nullptr || p == carrier || !tracker_.can_steal(static_cast<int>(i))) {
+			continue;
+		}
+		const float reach = carrier->get_body_radius() + p->get_body_radius() + steal_margin_;
+		if (p->get_global_position().distance_squared_to(at) <= reach * reach) {
+			const Vector2i cell = maze_->world_to_cell(at);
+			handle(tracker_.steal(static_cast<int>(i), { cell.x, cell.y }));
+			return;
+		}
+	}
 }
 
 void TrophyController::drop_trophy() {
@@ -139,6 +176,18 @@ void TrophyController::handle(const std::vector<TrophyTracker::Event> &p_events)
 				}
 				emit_signal("trophy_dropped", p, cell_center(event.cell));
 				break;
+			case TrophyTracker::Event::Type::Stolen: {
+				// La lentitud del portador pasa de la víctima al ladrón.
+				Participant *victim = participant(event.victim);
+				if (victim != nullptr && victim->get_stats() != nullptr) {
+					victim->get_stats()->remove_modifiers_from(CARRIER_SOURCE);
+				}
+				if (stats != nullptr) {
+					stats->add_modifier(StatsComponent::STAT_SPEED, StatsComponent::OP_MULTIPLY, carrier_speed_multiplier_, -1.0, CARRIER_SOURCE);
+				}
+				emit_signal("trophy_stolen", p, victim);
+				break;
+			}
 			case TrophyTracker::Event::Type::Delivered:
 				if (stats != nullptr) {
 					stats->remove_modifiers_from(CARRIER_SOURCE);

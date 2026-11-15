@@ -9,6 +9,7 @@ void TrophyTracker::setup(const Cell &p_trophy_cell, const std::vector<TileRect>
 	carrier_ = NO_ONE;
 	winner_ = NO_ONE;
 	pickup_range_ = p_pickup_range < 0 ? 0 : p_pickup_range;
+	immunity_left_ = 0.0f;
 }
 
 void TrophyTracker::setup(const Cell &p_trophy_cell, const std::vector<Cell> &p_bases, int p_pickup_range, int p_base_radius) {
@@ -30,6 +31,7 @@ std::vector<TrophyTracker::Event> TrophyTracker::update(int p_participant, const
 			if (chebyshev_distance(p_cell, trophy_cell_) <= pickup_range_) {
 				state_ = State::Carried;
 				carrier_ = p_participant;
+				immunity_left_ = steal_immunity_; // recién tomado: nadie se lo quita al instante
 				events.push_back({ Event::Type::Taken, p_participant, p_cell });
 			}
 			break;
@@ -57,6 +59,29 @@ std::vector<TrophyTracker::Event> TrophyTracker::drop(const Cell &p_cell) {
 	carrier_ = NO_ONE;
 	trophy_cell_ = p_cell;
 	events.push_back({ Event::Type::Dropped, previous, p_cell });
+	return events;
+}
+
+void TrophyTracker::tick(float p_delta) {
+	if (immunity_left_ > 0.0f) {
+		immunity_left_ = immunity_left_ - p_delta > 0.0f ? immunity_left_ - p_delta : 0.0f;
+	}
+}
+
+bool TrophyTracker::can_steal(int p_thief) const {
+	return state_ == State::Carried && valid(p_thief) && p_thief != carrier_ && immunity_left_ <= 0.0f;
+}
+
+std::vector<TrophyTracker::Event> TrophyTracker::steal(int p_thief, const Cell &p_cell) {
+	std::vector<Event> events;
+	if (!can_steal(p_thief)) {
+		return events;
+	}
+	Event e{ Event::Type::Stolen, p_thief, p_cell };
+	e.victim = carrier_;
+	carrier_ = p_thief;
+	immunity_left_ = steal_immunity_;
+	events.push_back(e);
 	return events;
 }
 

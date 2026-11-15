@@ -99,6 +99,12 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 - [x] Arreglo: la base mide el pasillo completo (antes 3×3 fijo, se metía en las paredes); el cuerpo del participante cabe en pasillos de 1. 2 tests (82 en total).
 - [x] Tecla de prueba N: saltar a la siguiente fase.
 
+### v0.0.18 — Quitar el trofeo (robo básico) y velocidad inicial pareja ✅
+- [x] Robo por contacto: tocar al portador le quita el trofeo; inmunidad de 3 s al tomarlo o robarlo. Evento `trophy_stolen`.
+- [x] Bots: nueva acción "quitar el trofeo" (persiguen al portador). Flecha "QUÍTASELO" y avisos en el HUD.
+- [x] Todos empiezan con la misma velocidad, más lenta: 120 (antes 160); los objetos de velocidad pesan más.
+- [x] 4 tests (99 en total). Reglas finas del robo (golpe, escudos anti-robo) llegan con el combate.
+
 ### v0.0.17 — Etapa 3: Bots con dificultad ✅
 - [x] A* sobre celdas lógicas (con costos, listo para terrenos) y errores en cruces según la dificultad.
 - [x] `BotBrain` (Utility AI): entregar, ir por el trofeo, recoger objetos VISTOS, explorar. Cada acción es una clase: agregar mecánicas = agregar acciones.
@@ -161,4 +167,5 @@ Demo en itch.io · aliados · torneo con rondas · multijugador local · en lín
   usar objeto) como nuevos campos de `ParticipantCommand`; power-ups nuevos (.tres); romper paredes; portales
   (puertas de la Etapa 2.2); objetos que al comerlos cambian el mapa y los caminos (usan `Maze.queue_passage_change`).
   Cada mecánica trae su `BotAction` para que los bots también la usen.
-- **Robo del trofeo / choques entre participantes:** con el combate (Etapa 4). Hoy se atraviesan.
+- **Choques entre participantes:** con el combate (Etapa 4). Hoy se atraviesan. El robo básico por contacto ya existe (v0.0.18).
+- **Bots que huyen con el trofeo** (esquivar a quien los persigue): una `BotAction` más cuando haga falta.
