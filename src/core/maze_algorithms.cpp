@@ -139,6 +139,73 @@ bool PassageGrid::is_connected() const {
 	return reached == cell_count();
 }
 
+bool PassageGrid::has_alternative_path(int p_a, int p_b, int p_max_visits) const {
+	// Marcas: 0 = sin visitar, 1 = alcanzada desde a, 2 = alcanzada desde b.
+	// Se usa un mapa disperso (solo celdas visitadas) para no reservar memoria del tamaño del mapa.
+	std::vector<int> frontier_a{ p_a };
+	std::vector<int> frontier_b{ p_b };
+	std::vector<std::pair<int, uint8_t>> marks; // celda -> lado (búsqueda lineal: pocas celdas)
+	marks.reserve(256);
+	std::vector<uint8_t> dense;
+	const bool use_dense = cell_count() <= 4096 * 4;
+	if (use_dense) {
+		dense.assign(static_cast<size_t>(cell_count()), 0);
+	}
+	auto get_mark = [&](int p_cell) -> uint8_t {
+		if (use_dense) {
+			return dense[p_cell];
+		}
+		for (const auto &m : marks) {
+			if (m.first == p_cell) {
+				return m.second;
+			}
+		}
+		return 0;
+	};
+	auto set_mark = [&](int p_cell, uint8_t p_side) {
+		if (use_dense) {
+			dense[p_cell] = p_side;
+		} else {
+			marks.emplace_back(p_cell, p_side);
+		}
+	};
+	set_mark(p_a, 1);
+	set_mark(p_b, 2);
+	int visits = 2;
+	std::vector<int> next;
+	while (!frontier_a.empty() && !frontier_b.empty()) {
+		// Expandir el lado con la frontera más chica (búsqueda equilibrada).
+		const bool expand_a = frontier_a.size() <= frontier_b.size();
+		std::vector<int> &frontier = expand_a ? frontier_a : frontier_b;
+		const uint8_t side = expand_a ? 1 : 2;
+		const uint8_t other = expand_a ? 2 : 1;
+		next.clear();
+		for (int c : frontier) {
+			int n[4];
+			const int count = neighbors(c, n);
+			for (int i = 0; i < count; i++) {
+				const bool is_direct = (c == p_a && n[i] == p_b) || (c == p_b && n[i] == p_a);
+				if (is_direct || !is_open(c, n[i])) {
+					continue;
+				}
+				const uint8_t mark = get_mark(n[i]);
+				if (mark == other) {
+					return true; // las dos búsquedas se tocaron: hay otro camino
+				}
+				if (mark == 0) {
+					set_mark(n[i], side);
+					next.push_back(n[i]);
+					if (++visits > p_max_visits) {
+						return false; // demasiado lejos: se considera inseguro (conservador)
+					}
+				}
+			}
+		}
+		frontier.swap(next);
+	}
+	return false;
+}
+
 // --- Algoritmos ---------------------------------------------------------------------------
 
 namespace {

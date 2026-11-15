@@ -39,7 +39,9 @@ Gana quien lleva el trofeo a su zona de resguardo antes de que acabe el tiempo.
   la interfaz, los sonidos y el Director escuchan ahí. La lógica C++ no conoce la interfaz.
 - **Interfaz:** el centro de la pantalla queda libre; HUD en los bordes; ayuda en F1; textos flotantes para feedback.
   Cada opción de menú lleva descripción con `UiFx.hint(control, "...")` (globo flotante, no texto fijo).
-- **Rendimiento:** ninguna vista que exista en cantidad (objetos, enemigos...) se redibuja cada frame.
+- **Rendimiento** ([`docs/RENDIMIENTO.md`](docs/RENDIMIENTO.md)): medir antes de optimizar. **Todo sistema nuevo trae su medición**
+  (`lv::core::PerfScope perf("sistema.tarea")`) y se revisa en el panel F3 contra el presupuesto. Ninguna vista
+  que exista en cantidad se redibuja cada frame. Todo cambio del mapa va por `Maze.queue_passage_change`.
 
 ## Estructura de carpetas
 

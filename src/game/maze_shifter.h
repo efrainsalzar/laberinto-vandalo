@@ -22,6 +22,7 @@ class Maze;
 // - Cierres: solo si NADIE está encima (casilla + margen). Si sigue ocupado `max_block_wait` segundos,
 //   ese cierre se CANCELA: nunca se aplasta ni se encierra a nadie. Cancelar un cierre es seguro
 //   (lv::core::plan_maze_shift garantiza conectividad con cualquier subconjunto de cierres).
+// - Los cambios no se aplican directamente: se encolan en Maze (Command + presupuesto por frame, §16).
 // - Red de seguridad: tras un cierre, si un participante quedara dentro de una pared, se lo mueve
 //   al suelo libre más cercano.
 // La lógica (qué cambiar sin desconectar) está en core; aquí se gestiona tiempo, avisos y ocupación.
@@ -85,6 +86,7 @@ private:
 	void update_closures(double p_delta);
 	bool is_occupied(const lv::core::PassageChange &p_change) const;
 	void rescue_trapped_participants();
+	void on_map_changed(const TypedArray<Vector2i> &p_tiles, bool p_now_wall);
 	TypedArray<Vector2i> tiles_of(const lv::core::PassageChange &p_change) const;
 };
 

@@ -1,5 +1,7 @@
 #include "game/trophy_controller.h"
 
+#include "core/perf.h"
+
 #include "game/maze.h"
 #include "game/participant.h"
 
@@ -97,6 +99,7 @@ void TrophyController::_physics_process(double) {
 	if (Engine::get_singleton()->is_editor_hint() || maze_ == nullptr || is_finished()) {
 		return;
 	}
+	lv::core::PerfScope perf("trophy.update");
 	for (size_t i = 0; i < participants_.size(); i++) {
 		Participant *p = participants_[i];
 		if (p == nullptr) {

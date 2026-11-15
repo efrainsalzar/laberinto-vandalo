@@ -3,7 +3,7 @@
 [![CI](https://github.com/efrainsalzar/laberinto-vandalo/actions/workflows/ci.yml/badge.svg)](https://github.com/efrainsalzar/laberinto-vandalo/actions/workflows/ci.yml)
 [![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE)
 
-> Nombre provisional · **En desarrollo temprano (v0.0.12)**
+> Nombre provisional · **En desarrollo temprano (v0.0.13)**
 
 **Un torneo en un laberinto vivo donde varios participantes compiten por un trofeo, pero unos vándalos
 sabotean todo para robárselo. Solo gana uno: quien consiga el trofeo y vuelva con él a su zona de
@@ -72,7 +72,7 @@ godot --editor --path project
 
 Si ya clonaste sin `--recurse-submodules`: `git submodule update --init --recursive`.
 
-Al ejecutar verás el **menú principal**: en **Jugar** eliges la dificultad del mapa (con vista previa) y empiezas. Toma el **trofeo** del centro y llévalo a **tu base** (la flecha del borde te guía). Muévete con **WASD** o las flechas y recoge objetos. **Esc** pausa y **F1** muestra los controles.
+Al ejecutar verás el **menú principal**: en **Jugar** eliges la dificultad del mapa (con vista previa) y empiezas. Toma el **trofeo** del centro y llévalo a **tu base** (la flecha del borde te guía). Muévete con **WASD** o las flechas y recoge objetos. **Esc** pausa, **F1** muestra los controles y **F3** el panel de rendimiento.
 
 ---
 

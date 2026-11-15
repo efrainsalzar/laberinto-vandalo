@@ -146,4 +146,47 @@ TEST_SUITE("Laberinto vivo") {
 		CHECK(lv::core::chebyshev_distance(f, { 0, 0 }) <= 2);
 		CHECK(grid.nearest_floor(grid.center()) == grid.center());
 	}
+
+	TEST_CASE("La búsqueda local da la misma respuesta que revisar el mapa completo") {
+		for (int d = 0; d < static_cast<int>(MazeDifficulty::Count); d++) {
+			const MazeGrid grid = make(static_cast<MazeDifficulty>(d), 17);
+			const auto &p = grid.passages();
+			int compared = 0;
+			for (int i = 0; i < p.cell_count(); i += 7) {
+				int n[4];
+				const int count = p.neighbors(i, n);
+				for (int k = 0; k < count; k++) {
+					if (!p.is_open(i, n[k])) {
+						continue;
+					}
+					lv::core::PassageGrid scratch = p;
+					scratch.close(i, n[k]);
+					const bool full = scratch.is_connected();
+					const bool local = p.has_alternative_path(i, n[k], 1 << 30); // sin límite
+					CHECK(full == local);
+					compared++;
+				}
+			}
+			CHECK(compared > 50);
+		}
+	}
+
+	TEST_CASE("Con límite de pasos, la respuesta es conservadora (nunca dice 'seguro' si no lo es)") {
+		const MazeGrid grid = make(MazeDifficulty::Hard, 23);
+		const auto &p = grid.passages();
+		for (int i = 0; i < p.cell_count(); i += 5) {
+			int n[4];
+			const int count = p.neighbors(i, n);
+			for (int k = 0; k < count; k++) {
+				if (!p.is_open(i, n[k])) {
+					continue;
+				}
+				if (p.has_alternative_path(i, n[k], 20)) { // límite muy bajo
+					lv::core::PassageGrid scratch = p;
+					scratch.close(i, n[k]);
+					CHECK(scratch.is_connected());
+				}
+			}
+		}
+	}
 }

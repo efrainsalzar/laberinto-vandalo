@@ -7,6 +7,7 @@ signal closed
 @onready var _fullscreen: CheckButton = %Fullscreen
 @onready var _vsync: CheckButton = %VSync
 @onready var _show_fps: CheckButton = %ShowFps
+@onready var _show_perf: CheckButton = %ShowPerf
 @onready var _debug_keys: CheckButton = %DebugKeys
 @onready var _zoom: HSlider = %Zoom
 @onready var _zoom_label: Label = %ZoomLabel
@@ -16,6 +17,10 @@ func _ready() -> void:
 	_fullscreen.button_pressed = Settings.get_value("fullscreen")
 	_vsync.button_pressed = Settings.get_value("vsync")
 	_show_fps.button_pressed = Settings.get_value("show_fps")
+	_show_perf.button_pressed = Settings.get_value("show_perf")
+	_show_perf.toggled.connect(func(on: bool) -> void: Settings.set_value("show_perf", on))
+	Settings.changed.connect(_on_setting_changed)  # método (no lambda): Godot lo desconecta al cerrar
+	UiFx.hint(_show_perf, "Muestra FPS, el peor frame del último segundo (tirones), un gráfico y cuánto tarda cada sistema del juego. También con F3 en cualquier momento.")
 	_debug_keys.button_pressed = Settings.get_value("debug_keys")
 	_zoom.value = Settings.get_value("camera_zoom")
 	_update_zoom_label(_zoom.value)
@@ -39,6 +44,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		close()
 		get_viewport().set_input_as_handled()
+
+
+func _on_setting_changed(key: String, value: Variant) -> void:
+	if key == "show_perf":
+		_show_perf.set_pressed_no_signal(value)  # F3 mientras el panel está abierto
 
 
 func close() -> void:

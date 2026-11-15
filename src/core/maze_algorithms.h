@@ -59,6 +59,12 @@ public:
 
 	bool is_connected() const;
 
+	// ¿Hay otro camino entre dos celdas vecinas sin usar el pasaje directo entre ellas?
+	// Búsqueda bidireccional local: explora desde ambos lados a la vez y para al encontrarse.
+	// Costo acotado por p_max_visits: si se supera, devuelve false (respuesta conservadora: "no es seguro
+	// cerrarlo"). Así cerrar un pasaje nunca cuesta más que eso, aunque el mapa sea gigante.
+	bool has_alternative_path(int p_a, int p_b, int p_max_visits = 4096) const;
+
 private:
 	int width_;
 	int height_;

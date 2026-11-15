@@ -1,5 +1,7 @@
 #include "game/pickup_spawner.h"
 
+#include "core/perf.h"
+
 #include "game/maze.h"
 #include "game/participant.h"
 
@@ -63,6 +65,7 @@ void PickupSpawner::_process(double p_delta) {
 	if (Engine::get_singleton()->is_editor_hint() || maze_ == nullptr || policy_.is_null()) {
 		return;
 	}
+	lv::core::PerfScope perf("pickups.spawner");
 	const int to_spawn = policy_->compute_spawns(factory_->get_active_count(), p_delta);
 	for (int i = 0; i < to_spawn; i++) {
 		if (Pickup *pickup = spawn_one()) {

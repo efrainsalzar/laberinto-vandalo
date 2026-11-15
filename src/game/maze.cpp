@@ -1,6 +1,7 @@
 #include "game/maze.h"
 
 #include "core/line_of_sight.h"
+#include "core/perf.h"
 
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/classes/image.hpp>
@@ -91,6 +92,11 @@ void Maze::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "generate_on_ready"), "set_generate_on_ready", "get_generate_on_ready");
 
 	ClassDB::bind_method(D_METHOD("set_passage", "a", "b", "open"), &Maze::set_passage);
+	ClassDB::bind_method(D_METHOD("queue_passage_change", "a", "b", "open"), &Maze::queue_passage_change);
+	ClassDB::bind_method(D_METHOD("get_pending_changes"), &Maze::get_pending_changes);
+	ClassDB::bind_method(D_METHOD("set_changes_per_frame", "value"), &Maze::set_changes_per_frame);
+	ClassDB::bind_method(D_METHOD("get_changes_per_frame"), &Maze::get_changes_per_frame);
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "changes_per_frame", PROPERTY_HINT_RANGE, "1,64,1"), "set_changes_per_frame", "get_changes_per_frame");
 	ClassDB::bind_method(D_METHOD("nearest_floor_world", "world_position"), &Maze::nearest_floor_world);
 
 	ADD_SIGNAL(MethodInfo("generated", PropertyInfo(Variant::INT, "seed")));
@@ -115,6 +121,7 @@ void Maze::generate() {
 
 	ensure_tile_set();
 	ensure_walls_layer();
+	change_queue_.clear();
 	clear();
 	walls_->clear();
 	for (int y = 0; y < grid_.height(); y++) {
@@ -270,6 +277,29 @@ Dictionary Maze::build_preview(const Ref<MazeProfile> &p_profile, int p_seed) {
 	result["size"] = Vector2i(grid.width(), grid.height());
 	return result;
 }
+void Maze::queue_passage_change(int p_a, int p_b, bool p_open) {
+	change_queue_.push_back({ p_a, p_b, p_open });
+	set_process(true);
+}
+
+void Maze::_process(double) {
+	if (Engine::get_singleton()->is_editor_hint() || change_queue_.empty()) {
+		set_process(false);
+		return;
+	}
+	lv::core::PerfScope perf("maze.apply");
+	for (int i = 0; i < changes_per_frame_ && !change_queue_.empty(); i++) {
+		const lv::core::PassageChange change = change_queue_.front();
+		change_queue_.pop_front();
+		set_passage(change.a, change.b, change.open);
+	}
+	{
+		// Forzar ahora la reconstrucción de colisión/sombras de Godot para poder medirla aparte.
+		lv::core::PerfScope rebuild("maze.rebuild");
+		walls_->update_internals();
+	}
+}
+
 void Maze::set_passage(int p_a, int p_b, bool p_open) {
 	const std::vector<lv::core::Cell> changed = grid_.set_passage(p_a, p_b, p_open);
 	if (changed.empty() || walls_ == nullptr) {

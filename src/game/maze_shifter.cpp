@@ -1,5 +1,7 @@
 #include "game/maze_shifter.h"
 
+#include "core/perf.h"
+
 #include "game/maze.h"
 #include "game/participant.h"
 
@@ -44,7 +46,12 @@ void MazeShifter::_bind_methods() {
 }
 
 void MazeShifter::start(Maze *p_maze, int p_seed) {
+	if (maze_ != nullptr && maze_->is_connected("map_changed", callable_mp(this, &MazeShifter::on_map_changed))) {
+		maze_->disconnect("map_changed", callable_mp(this, &MazeShifter::on_map_changed));
+	}
 	maze_ = p_maze;
+	// Red de seguridad: cuando un cierre se aplica de verdad (puede ser unos frames después, por la cola).
+	maze_->connect("map_changed", callable_mp(this, &MazeShifter::on_map_changed));
 	rng_ = std::make_unique<lv::core::Rng>(static_cast<uint32_t>(p_seed) ^ 0x51ED270Bu);
 	planned_.clear();
 	closures_.clear();
@@ -69,6 +76,7 @@ void MazeShifter::_process(double p_delta) {
 	if (Engine::get_singleton()->is_editor_hint() || maze_ == nullptr) {
 		return;
 	}
+	lv::core::PerfScope perf("maze.shifter");
 	switch (state_) {
 		case STATE_IDLE:
 			if (!enabled_) {
@@ -111,7 +119,7 @@ void MazeShifter::begin_applying() {
 	closures_.clear();
 	for (const lv::core::PassageChange &change : planned_) {
 		if (change.open) {
-			maze_->set_passage(change.a, change.b, true);
+			maze_->queue_passage_change(change.a, change.b, true);
 		} else {
 			closures_.push_back({ change, 0.0f });
 		}
@@ -124,8 +132,7 @@ void MazeShifter::begin_applying() {
 void MazeShifter::update_closures(double p_delta) {
 	for (auto it = closures_.begin(); it != closures_.end();) {
 		if (!is_occupied(it->change)) {
-			maze_->set_passage(it->change.a, it->change.b, false);
-			rescue_trapped_participants();
+			maze_->queue_passage_change(it->change.a, it->change.b, false);
 			it = closures_.erase(it);
 			continue;
 		}
@@ -182,4 +189,10 @@ TypedArray<Vector2i> MazeShifter::tiles_of(const lv::core::PassageChange &p_chan
 		tiles.push_back(Vector2i(tile.x, tile.y));
 	}
 	return tiles;
+}
+
+void MazeShifter::on_map_changed(const TypedArray<Vector2i> &, bool p_now_wall) {
+	if (p_now_wall) {
+		rescue_trapped_participants();
+	}
 }

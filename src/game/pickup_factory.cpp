@@ -1,5 +1,6 @@
 #include "game/pickup_factory.h"
 
+#include "core/perf.h"
 #include "core/pickup_placer.h"
 #include "game/maze.h"
 
@@ -53,11 +54,14 @@ Pickup *PickupFactory::create(const Ref<PickupType> &p_type, const Vector2 &p_po
 	pickup->set_position(p_position);
 	pickup->connect("collected", callable_mp(this, &PickupFactory::on_pickup_collected).bind(pickup));
 	add_child(pickup);
+	index_add(pickup);
 	return pickup;
 }
 
 int PickupFactory::populate(Maze *p_maze, const TypedArray<Vector2i> &p_bases, int p_seed) {
+	lv::core::PerfScope perf("pickups.populate");
 	clear_pickups();
+	maze_ = p_maze;
 	if (p_maze == nullptr || types_.is_empty()) {
 		return 0;
 	}
@@ -88,7 +92,24 @@ int PickupFactory::populate(Maze *p_maze, const TypedArray<Vector2i> &p_bases, i
 	return created;
 }
 
+void PickupFactory::index_add(Pickup *p_pickup) {
+	if (maze_ != nullptr) {
+		by_cell_[cell_key(maze_->world_to_cell(p_pickup->get_global_position()))] = p_pickup;
+	}
+}
+
+void PickupFactory::index_remove(Pickup *p_pickup) {
+	if (maze_ == nullptr) {
+		return;
+	}
+	const auto it = by_cell_.find(cell_key(maze_->world_to_cell(p_pickup->get_global_position())));
+	if (it != by_cell_.end() && it->second == p_pickup) {
+		by_cell_.erase(it);
+	}
+}
+
 void PickupFactory::clear_pickups() {
+	by_cell_.clear();
 	for (int i = get_child_count() - 1; i >= 0; i--) {
 		if (Pickup *pickup = Object::cast_to<Pickup>(get_child(i))) {
 			remove_child(pickup);
@@ -98,13 +119,20 @@ void PickupFactory::clear_pickups() {
 }
 
 int PickupFactory::remove_pickups_at(Maze *p_maze, const TypedArray<Vector2i> &p_tiles) {
+	lv::core::PerfScope perf("pickups.remove");
 	if (p_maze == nullptr) {
 		return 0;
 	}
+	// O(casillas cambiadas) gracias al índice espacial.
 	int removed = 0;
-	for (Pickup *pickup : get_active_pickups()) {
-		const Vector2i cell = p_maze->world_to_cell(pickup->get_global_position());
-		if (p_tiles.has(cell)) {
+	for (int i = 0; i < p_tiles.size(); i++) {
+		const auto it = by_cell_.find(cell_key(p_tiles[i]));
+		if (it == by_cell_.end()) {
+			continue;
+		}
+		Pickup *pickup = it->second;
+		by_cell_.erase(it);
+		if (pickup != nullptr && !pickup->is_consumed()) {
 			remove_child(pickup);
 			pickup->queue_free();
 			removed++;
@@ -125,5 +153,6 @@ std::vector<Pickup *> PickupFactory::get_active_pickups() const {
 }
 
 void PickupFactory::on_pickup_collected(Object *p_participant, Pickup *p_pickup) {
+	index_remove(p_pickup);
 	emit_signal("pickup_collected", p_pickup, p_participant);
 }

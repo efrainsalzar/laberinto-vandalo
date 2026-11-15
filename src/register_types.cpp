@@ -7,6 +7,7 @@
 #include "game/maze_shifter.h"
 #include "game/participant.h"
 #include "game/participant_controller.h"
+#include "game/perf_stats.h"
 #include "game/pickup.h"
 #include "game/pickup_factory.h"
 #include "game/pickup_spawn_policy.h"
@@ -30,6 +31,9 @@ void initialize_laberinto_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;
 	}
+	// Rendimiento
+	GDREGISTER_CLASS(PerfStats);
+
 	// Laberinto
 	GDREGISTER_CLASS(MazeProfile);
 	GDREGISTER_CLASS(Maze);

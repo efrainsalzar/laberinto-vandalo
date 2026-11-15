@@ -8,6 +8,7 @@
 #include <godot_cpp/variant/typed_array.hpp>
 #include <godot_cpp/variant/vector2i.hpp>
 
+#include <unordered_map>
 #include <vector>
 
 using namespace godot;
@@ -58,4 +59,12 @@ private:
 	int base_clearance_ = 6;
 
 	void on_pickup_collected(Object *p_participant, Pickup *p_pickup);
+
+	// Índice espacial: casilla -> objeto. Encontrar qué hay en una casilla es O(1) en lugar de
+	// recorrer todos los objetos (cientos en mapas gigantes). Se mantiene al crear/recoger/retirar.
+	Maze *maze_ = nullptr;
+	std::unordered_map<int64_t, Pickup *> by_cell_;
+	static int64_t cell_key(const Vector2i &p_cell) { return (static_cast<int64_t>(p_cell.x) << 32) ^ static_cast<uint32_t>(p_cell.y); }
+	void index_add(Pickup *p_pickup);
+	void index_remove(Pickup *p_pickup);
 };

@@ -58,6 +58,11 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Mostrar FPS"
 
+[node name="ShowPerf" type="CheckButton" parent="Center/Panel/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Panel de rendimiento (F3)"
+
 [node name="DebugKeys" type="CheckButton" parent="Center/Panel/Rows"]
 unique_name_in_owner = true
 layout_mode = 2

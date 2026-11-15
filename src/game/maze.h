@@ -2,7 +2,10 @@
 
 #include "core/line_of_sight.h"
 #include "core/maze_grid.h"
+#include "core/maze_shift.h"
 #include "game/maze_profile.h"
+
+#include <deque>
 
 #include <godot_cpp/classes/image.hpp>
 #include <godot_cpp/classes/tile_map_layer.hpp>
@@ -70,10 +73,18 @@ public:
 	// {algorithm, cells, dead_ends, junctions, dead_end_ratio, route_length} del último laberinto.
 	Dictionary get_metrics() const;
 
-	// --- Mapa cambiante (§15) ---
-	// Abre o cierra el pasaje entre dos celdas lógicas: actualiza la lógica, las casillas (colisión
-	// y sombras) y emite `map_changed(tiles, now_wall)` (Observer) para que el resto se adapte.
+	// --- Mapa cambiante (§15) y cola de cambios (§16) ---
+	// Patrón Command: TODO cambio del mapa (laberinto vivo, jugadores, power-ups, Director) es una
+	// orden que entra a esta cola. Se aplican como máximo `changes_per_frame` órdenes por frame:
+	// muchos cambios a la vez se reparten en varios frames en lugar de producir un pico.
+	void queue_passage_change(int p_a, int p_b, bool p_open);
+	int get_pending_changes() const { return static_cast<int>(change_queue_.size()); }
+	void set_changes_per_frame(int p_value) { changes_per_frame_ = p_value < 1 ? 1 : p_value; }
+	int get_changes_per_frame() const { return changes_per_frame_; }
+	// Aplica un cambio YA (sin cola): actualiza la lógica, las casillas (colisión y sombras) y emite
+	// `map_changed(tiles, now_wall)` (Observer). Preferir queue_passage_change.
 	void set_passage(int p_a, int p_b, bool p_open);
+	void _process(double p_delta) override;
 	// Centro (mundo) de la casilla de suelo más cercana a una posición.
 	Vector2 nearest_floor_world(const Vector2 &p_world) const;
 
@@ -87,6 +98,8 @@ protected:
 private:
 	lv::core::MazeGrid grid_;
 	Ref<MazeProfile> profile_;
+	std::deque<lv::core::PassageChange> change_queue_;
+	int changes_per_frame_ = 2;
 	lv::core::MazeGrid::Options options_ = default_options();
 
 	static lv::core::MazeGrid::Options default_options() {

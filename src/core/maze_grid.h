@@ -88,6 +88,9 @@ private:
 	std::vector<uint8_t> walls_;
 	Metrics metrics_;
 	PassageGrid passages_{ 1, 1 };
+	// Pasajes protegidos, calculados una vez al generar (índice = celda; este/sur).
+	std::vector<uint8_t> protected_east_;
+	std::vector<uint8_t> protected_south_;
 
 	int index(const Cell &p_cell) const { return p_cell.y * width_ + p_cell.x; }
 	void set_wall(const Cell &p_cell, bool p_wall);
@@ -98,6 +101,8 @@ private:
 	void widen_corridors(int p_corridor_width);
 	void open_vault();
 	void sync_passages_with_tiles(); // tras abrir la bóveda: los pasajes que quedaron abiertos
+	void compute_protected_passages();
+	bool compute_is_protected(int p_a, int p_b) const;
 
 	// Convierte una coordenada de la cuadrícula compacta al centro de su bloque en la final.
 	int compact_to_final(int p_compact) const;

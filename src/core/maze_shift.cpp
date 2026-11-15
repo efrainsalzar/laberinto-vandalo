@@ -1,59 +1,79 @@
 #include "core/maze_shift.h"
 
+#include "core/perf.h"
+
 namespace lv::core {
 
 std::vector<PassageChange> plan_maze_shift(const MazeGrid &p_grid, int p_pairs, Rng &r_rng) {
+	PerfScope perf("maze.plan");
 	std::vector<PassageChange> plan;
-	if (p_pairs <= 0) {
+	const PassageGrid &passages = p_grid.passages();
+	if (p_pairs <= 0 || passages.cell_count() < 2) {
 		return plan;
 	}
-	const PassageGrid &passages = p_grid.passages();
 
-	// Candidatos: pasajes no protegidos, abiertos (para cerrar) o cerrados (para abrir).
-	std::vector<PassageChange> openable;
-	std::vector<PassageChange> closable;
-	for (int i = 0; i < passages.cell_count(); i++) {
-		int n[4];
-		const int count = passages.neighbors(i, n);
-		for (int k = 0; k < count; k++) {
-			if (n[k] < i || p_grid.is_protected_passage(i, n[k])) {
-				continue;
-			}
-			if (passages.is_open(i, n[k])) {
-				closable.push_back({ i, n[k], false });
-			} else {
-				openable.push_back({ i, n[k], true });
-			}
+	// Muestreo al azar de pasajes en lugar de recorrer todo el mapa: el costo depende de cuántos
+	// cambios se piden, no del tamaño del mapa.
+	const int max_attempts = p_pairs * 80;
+	auto random_edge = [&](int &r_a, int &r_b) -> bool {
+		r_a = r_rng.range(passages.cell_count());
+		const Cell c = passages.cell(r_a);
+		const bool east = r_rng.chance(0.5f);
+		if (east && c.x + 1 < passages.width()) {
+			r_b = r_a + 1;
+		} else if (!east && c.y + 1 < passages.height()) {
+			r_b = r_a + passages.width();
+		} else {
+			return false;
 		}
-	}
-	r_rng.shuffle(openable);
-	r_rng.shuffle(closable);
+		return !p_grid.is_protected_passage(r_a, r_b);
+	};
+
+	// Se trabaja sobre una copia para que cada decisión tenga en cuenta las anteriores.
+	PassageGrid scratch = passages;
 
 	// 1) Aperturas: siempre seguras.
-	PassageGrid scratch = passages;
 	int opened = 0;
-	for (const PassageChange &change : openable) {
-		if (opened >= p_pairs) {
-			break;
+	for (int attempt = 0; attempt < max_attempts && opened < p_pairs; attempt++) {
+		int a = 0;
+		int b = 0;
+		if (random_edge(a, b) && !scratch.is_open(a, b)) {
+			scratch.carve(a, b);
+			plan.push_back({ a, b, true });
+			opened++;
 		}
-		scratch.carve(change.a, change.b);
-		plan.push_back(change);
-		opened++;
 	}
 
-	// 2) Cierres: solo si, con todo lo planificado hasta ahora, el laberinto sigue conectado.
+	// 2) Cierres: solo si queda un camino alternativo (búsqueda local acotada).
 	int closed = 0;
-	for (const PassageChange &change : closable) {
-		if (closed >= opened) {
-			break;
+	for (int attempt = 0; attempt < max_attempts && closed < opened; attempt++) {
+		int a = 0;
+		int b = 0;
+		if (!random_edge(a, b) || !scratch.is_open(a, b)) {
+			continue;
 		}
-		scratch.close(change.a, change.b);
-		if (scratch.is_connected()) {
-			plan.push_back(change);
-			closed++;
-		} else {
-			scratch.carve(change.a, change.b); // deshacer: ese pasaje era imprescindible
+		bool just_opened = false;
+		for (const PassageChange &p : plan) {
+			just_opened = just_opened || ((p.a == a && p.b == b) || (p.a == b && p.b == a));
 		}
+		if (just_opened || !scratch.has_alternative_path(a, b)) {
+			continue;
+		}
+		scratch.close(a, b);
+		plan.push_back({ a, b, false });
+		closed++;
+	}
+
+	// 3) Equilibrio: si se encontraron menos cierres que aperturas, se descartan aperturas sobrantes
+	//    (las más recientes), pero solo si quitarlas no desconecta nada (se validan como un cierre).
+	for (int i = static_cast<int>(plan.size()) - 1; i >= 0 && closed < opened; i--) {
+		const PassageChange p = plan[i];
+		if (!p.open || !scratch.has_alternative_path(p.a, p.b)) {
+			continue;
+		}
+		scratch.close(p.a, p.b);
+		plan.erase(plan.begin() + i);
+		opened--;
 	}
 	return plan;
 }

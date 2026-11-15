@@ -10,6 +10,7 @@ const DEFAULTS := {
 	"fullscreen": false,
 	"vsync": true,
 	"show_fps": false,
+	"show_perf": false,  # panel de rendimiento (F3)
 	"debug_keys": false,  # teclas de prueba (1/2/3/0/T/V/Tab/M) dentro de la partida
 	"camera_zoom": 2.0,
 }

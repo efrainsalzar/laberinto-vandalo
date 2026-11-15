@@ -6,7 +6,7 @@ config_version=5
 
 config/name="Laberinto Vándalo"
 config/description="Torneo en un laberinto vivo: consigue el trofeo y vuelve a tu base antes de que los vándalos lo roben."
-config/version="0.0.12"
+config/version="0.0.13"
 run/main_scene="res://scenes/menus/main_menu.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
@@ -17,6 +17,7 @@ Events="*res://scripts/autoload/events.gd"
 Settings="*res://scripts/autoload/settings.gd"
 App="*res://scripts/autoload/app.gd"
 UiFx="*res://scripts/autoload/ui_fx.gd"
+Perf="*res://scripts/autoload/perf_overlay.gd"
 
 [display]
 

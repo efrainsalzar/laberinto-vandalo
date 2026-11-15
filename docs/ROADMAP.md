@@ -77,6 +77,11 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 - [x] Tamaños Normal/Grande/Enorme/Gigante; Personalizado hasta 160×110. Optimización: objetos dibujados una vez.
 - [x] Laberinto vivo: cambios seguros (conectividad garantizada), aviso previo, espera/cancelación si hay alguien encima, objetos y trofeo se adaptan. 7 tests.
 
+### v0.0.13 — Rendimiento: medición y escalabilidad ✅ (pendiente medición en vivo)
+- [x] Panel de rendimiento F3 + monitores del depurador; `PerfScope` en todos los sistemas en caliente.
+- [x] Cola de cambios del mapa (Command + presupuesto por frame); conectividad local acotada; caché de protegidos; muestreo; índice espacial de objetos.
+- [x] `docs/RENDIMIENTO.md`: presupuesto, cómo medir, reglas. 62 tests.
+
 ## Plan acordado (etapas, una pieza a la vez)
 
 Bloques de interfaz ya hechos: ~~objetos infinitos~~ ✅ · ~~HUD limpio + textos flotantes~~ ✅.

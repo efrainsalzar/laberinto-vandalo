@@ -39,6 +39,7 @@ void MazeGrid::generate(const Options &p_options) {
 	open_vault();
 	passages_ = passages;
 	sync_passages_with_tiles();
+	compute_protected_passages();
 
 	const std::vector<Cell> bases = base_cells(1);
 	metrics_.route_length = bases.empty() ? 0 : path_length(bases[0], center());
@@ -253,7 +254,7 @@ Cell MazeGrid::cell_center(int p_cell) const {
 	return { c.x * step + 1 + corridor_width_ / 2, c.y * step + 1 + corridor_width_ / 2 };
 }
 
-bool MazeGrid::is_protected_passage(int p_a, int p_b) const {
+bool MazeGrid::compute_is_protected(int p_a, int p_b) const {
 	const std::vector<Cell> bases = base_cells(8);
 	const int base_guard = corridor_width_ + 1; // la celda de la base y sus pasajes
 	for (const Cell &tile : passage_tiles(p_a, p_b)) {
@@ -272,6 +273,30 @@ bool MazeGrid::is_protected_passage(int p_a, int p_b) const {
 	return false;
 }
 
+void MazeGrid::compute_protected_passages() {
+	protected_east_.assign(static_cast<size_t>(passages_.cell_count()), 0);
+	protected_south_.assign(static_cast<size_t>(passages_.cell_count()), 0);
+	for (int i = 0; i < passages_.cell_count(); i++) {
+		const Cell c = passages_.cell(i);
+		if (c.x + 1 < passages_.width()) {
+			protected_east_[i] = compute_is_protected(i, i + 1) ? 1 : 0;
+		}
+		if (c.y + 1 < passages_.height()) {
+			protected_south_[i] = compute_is_protected(i, i + passages_.width()) ? 1 : 0;
+		}
+	}
+}
+
+bool MazeGrid::is_protected_passage(int p_a, int p_b) const {
+	if (!passages_.are_adjacent(p_a, p_b)) {
+		return true;
+	}
+	if (p_a > p_b) {
+		std::swap(p_a, p_b);
+	}
+	return (p_b == p_a + 1 ? protected_east_[p_a] : protected_south_[p_a]) != 0;
+}
+
 bool MazeGrid::can_open_passage(int p_a, int p_b) const {
 	return passages_.are_adjacent(p_a, p_b) && !passages_.is_open(p_a, p_b) && !is_protected_passage(p_a, p_b);
 }
@@ -280,9 +305,7 @@ bool MazeGrid::can_close_passage(int p_a, int p_b) const {
 	if (!passages_.are_adjacent(p_a, p_b) || !passages_.is_open(p_a, p_b) || is_protected_passage(p_a, p_b)) {
 		return false;
 	}
-	PassageGrid scratch = passages_;
-	scratch.close(p_a, p_b);
-	return scratch.is_connected();
+	return passages_.has_alternative_path(p_a, p_b);
 }
 
 std::vector<Cell> MazeGrid::set_passage(int p_a, int p_b, bool p_open) {
