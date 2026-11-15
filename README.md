@@ -1,6 +1,6 @@
 # 🏆 Laberinto Vándalo
 
-> Nombre provisional · **En desarrollo temprano (v0.0.1 — base del proyecto)**
+> Nombre provisional · **En desarrollo temprano (v0.0.2)**
 
 **Un torneo en un laberinto vivo donde varios participantes compiten por un trofeo, pero unos vándalos
 sabotean todo para robárselo. Solo gana uno: quien consiga el trofeo y vuelva con él a su zona de
@@ -17,8 +17,8 @@ Juego 2D top-down hecho con **Godot 4** y **C++ (GDExtension)**. Código abierto
 | Fase | Estado |
 |---|---|
 | Base del proyecto (entorno, compilación, tests, CI, documentación) | ✅ Lista |
-| Diseño de arquitectura | ⏳ Siguiente |
-| Fase 1 — Prototipo: laberinto, participante, visión, puntos, trofeo, base | 🔜 |
+| Diseño de arquitectura ([ARQUITECTURA.md](docs/ARQUITECTURA.md)) | ✅ Lista |
+| Fase 1 — Prototipo: laberinto ✅ · participante ⏳ · visión · puntos · trofeo · base | 🚧 En curso |
 | Bots · Combate · Soldados · Vándalos · Mapa vivo | 🔜 |
 
 Detalle y siguiente paso: [`docs/ROADMAP.md`](docs/ROADMAP.md).
@@ -69,7 +69,7 @@ godot --editor --path project
 
 Si ya clonaste sin `--recurse-submodules`: `git submodule update --init --recursive`.
 
-Al ejecutar deberías ver la pantalla de arranque con el mensaje **"base lista · extensión C++ cargada"**.
+Al ejecutar verás un laberinto generado por C++. Pulsa **R** para generar otro y **Esc** para salir.
 
 ---
 

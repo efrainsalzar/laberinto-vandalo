@@ -26,6 +26,8 @@ Help(opts.GenerateHelpText(localEnv))
 if localEnv["tests"]:
     test_env = Environment(tools=["default"], ENV=os.environ)
     test_env.Append(CPPPATH=["src/", "thirdparty/"])
+    # Sufijo propio para no pisar los .obj de la extensión (mismos .cpp, otras opciones).
+    test_env["OBJSUFFIX"] = ".test" + test_env["OBJSUFFIX"]
     if test_env["CC"] == "cl":
         test_env.Append(CXXFLAGS=["/std:c++17", "/EHsc", "/utf-8", "/W3"])
     else:
