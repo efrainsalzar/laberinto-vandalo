@@ -7,6 +7,8 @@
 #include "game/participant_controller.h"
 #include "game/pickup.h"
 #include "game/pickup_factory.h"
+#include "game/pickup_spawn_policy.h"
+#include "game/pickup_spawner.h"
 #include "game/pickup_type.h"
 #include "game/stats_component.h"
 #include "game/stats_profile.h"
@@ -45,6 +47,9 @@ void initialize_laberinto_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(PickupType);
 	GDREGISTER_CLASS(Pickup);
 	GDREGISTER_CLASS(PickupFactory);
+	GDREGISTER_ABSTRACT_CLASS(PickupSpawnPolicy);
+	GDREGISTER_CLASS(KeepDensityPolicy);
+	GDREGISTER_CLASS(PickupSpawner);
 
 	UtilityFunctions::print("[laberinto] Extension C++ cargada (v", LV_VERSION, ")");
 }

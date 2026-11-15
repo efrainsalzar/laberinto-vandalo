@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/sandbox/participant_sandbox.gd" id="1_sbx"]
 [ext_resource type="PackedScene" path="res://scenes/participant/participant.tscn" id="2_part"]
@@ -7,6 +7,7 @@
 [ext_resource type="PickupType" path="res://data/pickups/punto_velocidad.tres" id="5_pv"]
 [ext_resource type="PickupType" path="res://data/pickups/punto_vision.tres" id="6_pvi"]
 [ext_resource type="PickupType" path="res://data/pickups/powerup_rapidez.tres" id="7_pr"]
+[ext_resource type="KeepDensityPolicy" path="res://data/spawning/keep_density_default.tres" id="8_pol"]
 
 [node name="ParticipantSandbox" type="Node2D"]
 script = ExtResource("1_sbx")
@@ -16,6 +17,10 @@ script = ExtResource("1_sbx")
 [node name="Pickups" type="PickupFactory" parent="."]
 pickup_scene = ExtResource("4_pickup")
 types = Array[PickupType]([ExtResource("5_pv"), ExtResource("6_pvi"), ExtResource("7_pr")])
+
+[node name="PickupSpawner" type="PickupSpawner" parent="."]
+factory_path = NodePath("../Pickups")
+policy = ExtResource("8_pol")
 
 [node name="Participant" parent="." instance=ExtResource("2_part")]
 

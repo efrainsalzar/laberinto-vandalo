@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/line_of_sight.h"
 #include "core/maze_grid.h"
 
 #include <godot_cpp/classes/tile_map_layer.hpp>
@@ -40,6 +41,8 @@ public:
 	bool can_see(const Vector2 &p_from, const Vector2 &p_to, float p_radius_tiles) const;
 
 	const lv::core::MazeGrid &get_grid() const { return grid_; }
+	// Posición global -> coordenadas de casilla con decimales (para la lógica de core).
+	lv::core::GridPoint world_to_grid_point(const Vector2 &p_world) const;
 
 	// Propiedades editables desde el inspector.
 	void set_cells_width(int p_value) { options_.cells_w = p_value; }

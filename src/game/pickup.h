@@ -26,6 +26,7 @@ public:
 	// Aplica los efectos a un participante y se consume. Público para poder usarlo
 	// sin física (tests, IA, red). Devuelve false si ya estaba consumido.
 	bool collect(Participant *p_participant);
+	bool is_consumed() const { return consumed_; }
 
 protected:
 	static void _bind_methods();

@@ -192,17 +192,15 @@ float Maze::get_tile_px() const {
 	return get_tile_set().is_valid() ? static_cast<float>(get_tile_set()->get_tile_size().x) : static_cast<float>(TILE_PX);
 }
 
-namespace {
-lv::core::GridPoint to_grid_point(const Maze &p_maze, const Vector2 &p_world) {
-	const Vector2 local = p_maze.to_local(p_world) / p_maze.get_tile_px();
+lv::core::GridPoint Maze::world_to_grid_point(const Vector2 &p_world) const {
+	const Vector2 local = to_local(p_world) / get_tile_px();
 	return { local.x, local.y };
 }
-} // namespace
 
 bool Maze::has_line_of_sight(const Vector2 &p_from, const Vector2 &p_to) const {
-	return lv::core::has_line_of_sight(grid_, to_grid_point(*this, p_from), to_grid_point(*this, p_to));
+	return lv::core::has_line_of_sight(grid_, world_to_grid_point(p_from), world_to_grid_point(p_to));
 }
 
 bool Maze::can_see(const Vector2 &p_from, const Vector2 &p_to, float p_radius_tiles) const {
-	return lv::core::can_see(grid_, to_grid_point(*this, p_from), to_grid_point(*this, p_to), p_radius_tiles);
+	return lv::core::can_see(grid_, world_to_grid_point(p_from), world_to_grid_point(p_to), p_radius_tiles);
 }

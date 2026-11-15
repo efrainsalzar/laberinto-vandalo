@@ -9,6 +9,12 @@ const RARE_WEIGHT := 3.0
 var _time := randf() * TAU
 
 
+func _ready() -> void:
+	# Aparición con rebote (también al reaparecer).
+	scale = Vector2.ZERO
+	create_tween().tween_property(self, "scale", Vector2.ONE, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
 func _process(delta: float) -> void:
 	_time += delta * 3.0
 	queue_redraw()

@@ -12,6 +12,7 @@ const DEBUG_SOURCE := "prueba"
 @onready var _help: Label = $UI/Help
 @onready var _darkness: CanvasModulate = $Darkness
 @onready var _pickups: PickupFactory = $Pickups
+@onready var _spawner: PickupSpawner = $PickupSpawner
 @onready var _panel = $UI/StatsPanel
 
 var _collected := 0
@@ -59,9 +60,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _on_maze_generated(seed_value: int) -> void:
-	# Objetos: misma semilla que el laberinto (determinista). Se dejan libres las 4 esquinas (bases).
-	var placed := _pickups.populate(_maze, _maze.get_base_cells(4), seed_value)
-	print("[sandbox] objetos colocados: ", placed)
+	# Objetos infinitos: el spawner coloca los iniciales y repone los recogidos (fuera de la vista).
+	# Misma semilla que el laberinto (determinista). Se dejan libres las 4 esquinas (bases).
+	_spawner.start(_maze, _maze.get_base_cells(4), seed_value)
+	print("[sandbox] objetos colocados: ", _pickups.get_active_count())
 	_collected = 0
 	_panel.set_collected(_collected)
 	var base: Vector2i = _maze.get_base_cells(1)[0]

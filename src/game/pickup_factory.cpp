@@ -12,6 +12,7 @@ void PickupFactory::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("create", "type", "position"), &PickupFactory::create);
 	ClassDB::bind_method(D_METHOD("populate", "maze", "bases", "seed"), &PickupFactory::populate);
 	ClassDB::bind_method(D_METHOD("clear_pickups"), &PickupFactory::clear_pickups);
+	ClassDB::bind_method(D_METHOD("get_active_count"), &PickupFactory::get_active_count);
 	ClassDB::bind_method(D_METHOD("set_pickup_scene", "value"), &PickupFactory::set_pickup_scene);
 	ClassDB::bind_method(D_METHOD("get_pickup_scene"), &PickupFactory::get_pickup_scene);
 	ClassDB::bind_method(D_METHOD("set_types", "value"), &PickupFactory::set_types);
@@ -93,6 +94,17 @@ void PickupFactory::clear_pickups() {
 			pickup->queue_free();
 		}
 	}
+}
+
+std::vector<Pickup *> PickupFactory::get_active_pickups() const {
+	std::vector<Pickup *> result;
+	for (int i = 0; i < get_child_count(); i++) {
+		Pickup *pickup = Object::cast_to<Pickup>(get_child(i));
+		if (pickup != nullptr && !pickup->is_consumed()) {
+			result.push_back(pickup);
+		}
+	}
+	return result;
 }
 
 void PickupFactory::on_pickup_collected(Object *p_participant, Pickup *p_pickup) {

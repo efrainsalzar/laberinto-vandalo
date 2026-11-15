@@ -8,6 +8,8 @@
 #include <godot_cpp/variant/typed_array.hpp>
 #include <godot_cpp/variant/vector2i.hpp>
 
+#include <vector>
+
 using namespace godot;
 
 class Maze;
@@ -28,6 +30,9 @@ public:
 	// Borra los objetos actuales y coloca nuevos en el laberinto. Devuelve cuántos creó.
 	int populate(Maze *p_maze, const TypedArray<Vector2i> &p_bases, int p_seed);
 	void clear_pickups();
+	// Objetos en el nivel que todavía no se recogieron.
+	std::vector<Pickup *> get_active_pickups() const;
+	int get_active_count() const { return static_cast<int>(get_active_pickups().size()); }
 
 	void set_pickup_scene(const Ref<PackedScene> &p_value) { pickup_scene_ = p_value; }
 	Ref<PackedScene> get_pickup_scene() const { return pickup_scene_; }

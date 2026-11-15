@@ -44,9 +44,19 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 - [x] `lv::core::Rng`: aleatorio portable (misma semilla = mismo resultado en todas las plataformas); `MazeGrid` migrado. 3 tests.
 - [x] 3 tipos: punto de velocidad, punto de visión, power-up de rapidez (raro). Contador en el panel.
 
-## Siguiente paso: Pieza 6 — Trofeo y zonas de resguardo
+### v0.0.7 — Bloque UX-1: Objetos infinitos ✅
+- [x] `PickupSpawner` + `PickupSpawnPolicy` (Strategy; hoy `KeepDensityPolicy`: 30 objetos, uno cada 3 s).
+- [x] `pick_spawn_cell` (core): nunca aparece a la vista de un participante. 7 tests.
+- [x] Animación de aparición.
 
-Diseñar y aprobar antes de programar.
+## Plan acordado (bloques, uno a la vez)
+
+1. ~~Objetos infinitos~~ ✅
+2. **HUD que no tapa el juego + textos flotantes** (Event Bus, Object Pool, números animados, temporizadores de efectos, ayuda con F1). ← siguiente
+3. Identidad visual (Theme, fuente, paleta; recomendado: neón arcade con glow).
+4. Pieza 6 — Trofeo y zonas de resguardo.
+5. Pieza 7 — Partida: reloj, fases (State), victoria y fin por tiempo.
+6. Menús: principal, pausa, fin de partida; flujo del juego (State).
 
 ## Después (fase 1 — prototipo), un módulo a la vez
 
@@ -56,7 +66,7 @@ Diseñar y aprobar antes de programar.
 
 ## Ideas anotadas (no implementar todavía)
 
-- **Reaparición de objetos:** que los puntos vuelvan a aparecer con el tiempo; lo decidirá el Director de IA (fase 5).
+- **Política del Director para objetos:** el Director de IA (fase 5) tendrá su propia `PickupSpawnPolicy` (p. ej. más objetos cerca de quien va perdiendo).
 - **Más tipos de objeto** (pociones, escudos, bombas): solo nuevos .tres + los efectos que falten en la fase de combate.
 
 - **Multijugador local y visión:** solo hay una luz/oscuridad por pantalla; con varios humanos en la misma máquina hará falta pantalla dividida u otra solución.

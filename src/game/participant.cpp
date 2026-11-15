@@ -24,6 +24,7 @@ void Participant::_bind_methods() {
 }
 
 void Participant::_ready() {
+	add_to_group("participants"); // lo usan sistemas que necesitan a todos (p. ej. PickupSpawner)
 	for (int i = 0; i < get_child_count(); i++) {
 		stats_ = Object::cast_to<StatsComponent>(get_child(i));
 		if (stats_ != nullptr) {
