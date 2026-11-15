@@ -20,6 +20,12 @@ Teclas de prueba (Opciones › Teclas de prueba)
 T · soltar el trofeo   V · niebla sí / no
 K · mover el laberinto ya   Tab · ver el mapa completo
 N · saltar a la siguiente fase"""
+const PARTICIPANT_SCENE := preload("res://scenes/participant/participant.tscn")
+const BOT_NAMES := ["Rojo", "Verde", "Naranja", "Violeta", "Rosa", "Turquesa", "Blanco"]
+const BOT_COLORS := [
+	Color(1.0, 0.4, 0.35), Color(0.45, 0.9, 0.45), Color(1.0, 0.68, 0.25), Color(0.75, 0.5, 1.0),
+	Color(1.0, 0.55, 0.8), Color(0.35, 0.9, 0.85), Color(0.92, 0.92, 0.92),
+]
 const PAUSE_MENU := preload("res://scenes/menus/pause_menu.tscn")
 const RESULTS_SCREEN := preload("res://scenes/menus/results_screen.tscn")
 
@@ -34,6 +40,7 @@ const RESULTS_SCREEN := preload("res://scenes/menus/results_screen.tscn")
 @onready var _shifter: MazeShifter = $MazeShifter
 @onready var _shift_view: MazeShiftView = $ShiftView
 @onready var _match: MatchController = $MatchController
+@onready var _bots: BotCoordinator = $Bots
 
 ## Radio normal del cuerpo del participante (px) y cuánto del pasillo puede ocupar como máximo.
 const BODY_RADIUS := 11.0
@@ -44,6 +51,7 @@ var _finished := false
 var _live_interval := 0.0  # intervalo del laberinto vivo elegido en el menú (antes del ritmo de la fase)
 var _pause_menu: CanvasLayer
 var _stress: Node
+var _bot_nodes: Array[Participant] = []
 
 
 func _ready() -> void:
@@ -56,6 +64,9 @@ func _ready() -> void:
 		Events.pickup_collected.emit(pickup.type, participant, pickup.global_position))
 	_spawner.pickup_spawned.connect(func(pickup: Pickup) -> void: Events.pickup_spawned.emit(pickup))
 	_trophy.trophy_taken.connect(func(p: Participant) -> void: Events.trophy_taken.emit(p))
+	Events.trophy_taken.connect(func(p: Participant) -> void:
+		if p != _participant:
+			_hud.toast("¡%s TOMÓ EL TROFEO!" % p.display_name.to_upper(), p.color, 2.5))
 	_trophy.trophy_dropped.connect(func(p: Participant, pos: Vector2) -> void: Events.trophy_dropped.emit(p, pos))
 	_trophy.trophy_delivered.connect(func(p: Participant) -> void: Events.trophy_delivered.emit(p))
 	# La partida: quien entrega el trofeo gana; el reloj y las fases se publican en el Event Bus.
@@ -127,15 +138,19 @@ func _on_maze_generated(seed_value: int) -> void:
 		_maze.profile.get_display_name().to_upper() if _maze.profile else "?", m.algorithm, size.x, size.y, seed_value])
 	_spawner.start(_maze, _maze.get_base_cells(4), seed_value)
 	_hud.reset_collected()
-	# La zona de resguardo mide lo que mide el pasillo: el participante empieza en su centro y su cuerpo
-	# se ajusta para caber siempre (en pasillos de 1 casilla, el cuerpo normal no pasaría).
-	var zone: Rect2i = _maze.get_base_zones(1)[0]
-	var zone_world: Rect2 = _maze.tile_rect_to_world(zone)
-	_participant.body_radius = minf(BODY_RADIUS, zone_world.size.x * BODY_MAX_CORRIDOR_SHARE)
+	# La zona de resguardo mide lo que mide el pasillo: cada participante empieza en el centro de la suya y
+	# su cuerpo se ajusta para caber siempre (en pasillos de 1 casilla, el cuerpo normal no pasaría).
+	var bot_count := clampi(App.match_config.bot_count, 0, BotCoordinator.MAX_BOTS)
+	var zones: Array[Rect2i] = _maze.get_base_zones(1 + bot_count)
+	bot_count = mini(bot_count, zones.size() - 1)  # hay como máximo 8 bases
+	var zone_world: Rect2 = _maze.tile_rect_to_world(zones[0])
+	var body_radius := minf(BODY_RADIUS, zone_world.size.x * BODY_MAX_CORRIDOR_SHARE)
+	_participant.body_radius = body_radius
 	_participant.position = zone_world.get_center()
-	var participants: Array[Participant] = [_participant]
-	_trophy.start(_maze, participants)
 	_participant.set_controller(HumanController.new())
+	var participants: Array[Participant] = [_participant]
+	participants.append_array(_spawn_bots(bot_count, zones, body_radius, seed_value))
+	_trophy.start(_maze, participants)
 	_match.start(App.match_config.duration_minutes * 60.0)
 	_configure_live_maze(seed_value)
 	if App.match_config.stress_test and _stress == null:
@@ -147,6 +162,35 @@ func _on_maze_generated(seed_value: int) -> void:
 	_camera.position = _participant.position
 	_camera.reset_smoothing()
 	_update_camera()
+
+
+## Crea los rivales: cada uno en su base, con su color, su perfil de dificultad y un BotController.
+func _spawn_bots(count: int, zones: Array[Rect2i], body_radius: float, seed_value: int) -> Array[Participant]:
+	for old in _bot_nodes:
+		old.queue_free()
+	_bot_nodes.clear()
+	_bots.setup(_maze, _trophy, _pickups)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	for i in count:
+		var bot: Participant = PARTICIPANT_SCENE.instantiate()
+		bot.name = "Bot%s" % BOT_NAMES[i]
+		bot.display_name = "Bot %s" % BOT_NAMES[i]
+		bot.color = BOT_COLORS[i]
+		bot.participant_id = i + 1
+		# Sin luz propia: los rivales no te iluminan el mapa (y ahorra sombras). Su stat de visión sigue
+		# sirviéndole al bot para ver objetos (BotCoordinator).
+		bot.get_node("Vision").free()
+		_participant.add_sibling(bot)
+		bot.body_radius = body_radius
+		bot.position = _maze.tile_rect_to_world(zones[i + 1]).get_center()
+		var level: int = App.match_config.bot_difficulty
+		if level == MatchConfig.BOT_MIXED:
+			level = rng.randi_range(0, MatchConfig.BOT_PROFILES.size() - 1)
+		var profile: BotProfile = load(MatchConfig.BOT_PROFILES[clampi(level, 0, MatchConfig.BOT_PROFILES.size() - 1)])
+		_bots.add_bot(bot, profile, zones[i + 1], seed_value + (i + 1) * 7919)
+		_bot_nodes.append(bot)
+	return _bot_nodes
 
 
 ## Laberinto vivo según la configuración: ritmo por nivel y más cambios simultáneos en mapas grandes.
@@ -170,6 +214,8 @@ func _on_phase_changed(_phase: int) -> void:
 
 
 func _on_match_ended(outcome: int, winner: Participant) -> void:
+	if App.match_config.stress_test:
+		return  # la prueba de estrés sigue midiendo y muestra su propio informe
 	_finished = true
 	_shifter.stop()
 	for p in get_tree().get_nodes_in_group("participants"):
@@ -181,14 +227,15 @@ func _on_match_ended(outcome: int, winner: Participant) -> void:
 	var time := "%d:%02d" % [int(elapsed) / 60, int(elapsed) % 60]
 	var collected: String = _hud.get_node("TopBar/Row/Collected").text
 	var map := "mapa %s · semilla %d" % [_maze.profile.get_display_name() if _maze.profile else "", _maze.get_last_seed()]
-	if outcome == MatchController.OUTCOME_VICTORY and winner != null:
+	if outcome == MatchController.OUTCOME_VICTORY and winner == _participant:
 		results.show_result("¡VICTORIA!", Color(1.0, 0.82, 0.25),
-			"Llevaste el trofeo a tu base en %s
-%s · %s" % [time, collected, map])
+			"Llevaste el trofeo a tu base en %s\n%s · %s" % [time, collected, map])
+	elif outcome == MatchController.OUTCOME_VICTORY and winner != null:
+		results.show_result("DERROTA", winner.color,
+			"Ganó %s: llevó el trofeo a su base en %s\n%s · %s" % [winner.display_name, time, collected, map])
 	else:
 		results.show_result("TIEMPO AGOTADO", Color(1.0, 0.4, 0.35),
-			"Los vándalos se llevan el trofeo. Nadie gana.
-%s · %s" % [collected, map])
+			"Los vándalos se llevan el trofeo. Nadie gana.\n%s · %s" % [collected, map])
 
 
 func _open_pause() -> void:

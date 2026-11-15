@@ -1,0 +1,9 @@
+[gd_resource type="BotProfile" format=3]
+
+[resource]
+display_name = "Experto"
+reaction_time = 0.15
+think_interval = 0.25
+mistake_chance = 0.0
+pickup_interest = 0.2
+variation = 0.03

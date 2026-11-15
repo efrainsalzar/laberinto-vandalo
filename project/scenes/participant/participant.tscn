@@ -7,6 +7,8 @@
 radius = 11.0
 
 [node name="Participant" type="Participant"]
+collision_layer = 2
+collision_mask = 1
 motion_mode = 1
 
 [node name="Stats" type="StatsComponent" parent="."]

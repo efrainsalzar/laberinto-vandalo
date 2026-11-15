@@ -1,0 +1,9 @@
+[gd_resource type="BotProfile" format=3]
+
+[resource]
+display_name = "Normal"
+reaction_time = 0.5
+think_interval = 0.6
+mistake_chance = 0.1
+pickup_interest = 0.6
+variation = 0.2

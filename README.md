@@ -3,7 +3,7 @@
 [![CI](https://github.com/efrainsalzar/laberinto-vandalo/actions/workflows/ci.yml/badge.svg)](https://github.com/efrainsalzar/laberinto-vandalo/actions/workflows/ci.yml)
 [![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE)
 
-> Nombre provisional · **En desarrollo temprano (v0.0.16)**
+> Nombre provisional · **En desarrollo temprano (v0.0.17)**
 
 **Un torneo en un laberinto vivo donde varios participantes compiten por un trofeo, pero unos vándalos
 sabotean todo para robárselo. Solo gana uno: quien consiga el trofeo y vuelva con él a su zona de
@@ -22,7 +22,8 @@ Juego 2D top-down hecho con **Godot 4** y **C++ (GDExtension)**. Código abierto
 | Base del proyecto (entorno, compilación, tests, CI, documentación) | ✅ Lista |
 | Diseño de arquitectura ([ARQUITECTURA.md](docs/ARQUITECTURA.md)) | ✅ Lista |
 | Fase 1 — Prototipo: laberinto ✅ · participante ✅ · stats ✅ · visión ✅ · objetos ✅ (infinitos) · HUD ✅ · trofeo y bases ✅ · mapas con 6 algoritmos y 4 dificultades ✅ · menús ✅ · laberinto vivo ✅ · partida (reloj y fases) ✅ · base | 🚧 En curso |
-| Bots · Combate · Soldados · Vándalos · Mapa vivo | 🔜 |
+| Bots con 4 dificultades ✅ (v0.0.17) |  ✅ |
+| Combate · Soldados · Vándalos · Mapa vivo | 🔜 |
 
 Detalle y siguiente paso: [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
@@ -72,7 +73,7 @@ godot --editor --path project
 
 Si ya clonaste sin `--recurse-submodules`: `git submodule update --init --recursive`.
 
-Al ejecutar verás el **menú principal**: en **Jugar** eliges la dificultad del mapa (con vista previa) y empiezas. Toma el **trofeo** del centro y llévalo a **tu base** antes de que se acabe el **reloj** (la flecha del borde te guía); la partida pasa por tres fases y en la última el laberinto se acelera. Muévete con **WASD** o las flechas y recoge objetos. **Esc** pausa, **F1** muestra los controles y **F3** el panel de rendimiento.
+Al ejecutar verás el **menú principal**: en **Jugar** eliges la dificultad del mapa (con vista previa), cuántos **rivales (bots)** y su dificultad, y empiezas. Toma el **trofeo** del centro y llévalo a **tu base** antes de que se acabe el **reloj** (la flecha del borde te guía); la partida pasa por tres fases y en la última el laberinto se acelera. Muévete con **WASD** o las flechas y recoge objetos. **Esc** pausa, **F1** muestra los controles y **F3** el panel de rendimiento.
 
 ---
 

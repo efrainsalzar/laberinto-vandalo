@@ -264,6 +264,13 @@ Cell MazeGrid::cell_center(int p_cell) const {
 	return { c.x * step + 1 + corridor_width_ / 2, c.y * step + 1 + corridor_width_ / 2 };
 }
 
+int MazeGrid::cell_index_of(const Cell &p_tile) const {
+	const int step = corridor_width_ + 1;
+	const int cx = std::clamp((p_tile.x - 1) / step, 0, passages_.width() - 1);
+	const int cy = std::clamp((p_tile.y - 1) / step, 0, passages_.height() - 1);
+	return passages_.index({ cx, cy });
+}
+
 bool MazeGrid::compute_is_protected(int p_a, int p_b) const {
 	const std::vector<Cell> bases = base_cells(8);
 	const int base_guard = corridor_width_ + 1; // la celda de la base y sus pasajes

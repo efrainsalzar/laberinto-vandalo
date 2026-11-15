@@ -103,6 +103,7 @@ try {
 	}
 	if ($Estres) {
 		Paso 'Prueba de estrés' {
+			$inicio = Get-Date
 			$job = Start-Job { param($g, $p) & $g --path $p -- --stress --quit-after-stress 2>&1 } -ArgumentList $godot, (Join-Path $raiz 'project')
 			if (-not (Wait-Job $job -Timeout 180)) {
 				Stop-Job $job
@@ -112,6 +113,11 @@ try {
 			Receive-Job $job | Select-String -Pattern 'ERROR|SCRIPT ERROR' | ForEach-Object { Write-Host $_ -ForegroundColor Yellow }
 			$informe = Get-ChildItem (Join-Path $env:APPDATA 'Godot\app_userdata\*\stress\latest.json') -ErrorAction SilentlyContinue | Select-Object -First 1
 			if (-not $informe) { Write-Host 'No se encontró latest.json' -ForegroundColor Red; return $false }
+			# Un informe viejo no vale: la prueba de esta vez no llegó a escribirlo (falló o se cerró antes).
+			if ($informe.LastWriteTime -lt $inicio) {
+				Write-Host "latest.json es de $($informe.LastWriteTime): la prueba de estrés no escribió un informe nuevo" -ForegroundColor Red
+				return $false
+			}
 			$r = Get-Content $informe.FullName -Raw -Encoding utf8 | ConvertFrom-Json
 			$f = $r.frames
 			Write-Host ("{0} · promedio {1} ms ({2} FPS) · p95 {3} · p99 {4} · peor {5} ms · frames >33 ms: {6} · tirones: {7}" -f `

@@ -22,6 +22,13 @@ const LIVE_LEVELS := [
 	["Normal", "Cada 15 s cambian varios pasajes. Las rutas que conocías pueden dejar de existir."],
 	["Caótico", "Cada 7 s el laberinto se transforma. Nada es seguro por mucho tiempo."],
 ]
+const BOT_LEVELS := [
+	["Fácil", "Reaccionan lento, se pierden en los cruces y se distraen con cualquier objeto."],
+	["Normal", "Rivales razonables: a veces dudan o se desvían."],
+	["Difícil", "Rápidos y directos al trofeo; casi no se equivocan."],
+	["Experto", "Reaccionan al instante, nunca se pierden y solo recogen lo que les conviene."],
+	["Mixto", "Cada rival con una dificultad distinta al azar: unos pros y otros novatos."],
+]
 const DURATION_HINTS := {
 	5.0: "Partida corta: fases rápidas, hay que ir directo al trofeo.",
 	8.0: "Duración estándar del torneo (VISION: reloj de 8 minutos).",
@@ -48,6 +55,8 @@ var _difficulty_group := ButtonGroup.new()
 var _size_group := ButtonGroup.new()
 var _live_group := ButtonGroup.new()
 var _duration_group := ButtonGroup.new()
+var _bots_group := ButtonGroup.new()
+var _bot_level_group := ButtonGroup.new()
 
 
 func _ready() -> void:
@@ -57,6 +66,7 @@ func _ready() -> void:
 	_build_difficulty_buttons()
 	_build_size_buttons()
 	_build_live_buttons()
+	_build_bot_buttons()
 	_build_duration_buttons()
 	_build_custom_controls()
 	UiFx.hint(%Seed, "Número que define el mapa. Vacío = uno al azar. Escribe la semilla de un mapa para repetirlo o compartirlo.")
@@ -93,6 +103,33 @@ func _build_difficulty_buttons() -> void:
 		b.set_meta("difficulty", entry[0])
 		UiFx.hint(b, entry[2])
 		%Difficulty.add_child(b)
+
+
+func _build_bot_buttons() -> void:
+	for count in 8:
+		var b := Button.new()
+		b.text = "Solo" if count == 0 else str(count)
+		b.toggle_mode = true
+		b.button_group = _bots_group
+		b.set_pressed_no_signal(_config.bot_count == count)
+		b.pressed.connect(func() -> void:
+			_config.bot_count = count
+			%BotLevel.visible = count > 0
+			%BotLevelLabel.visible = count > 0)
+		UiFx.hint(b, "Sin rivales: solo tú contra el reloj." if count == 0
+			else "%d rival%s compitiendo por el trofeo. Cada uno sale de su propia base." % [count, "" if count == 1 else "es"])
+		%Bots.add_child(b)
+	for i in BOT_LEVELS.size():
+		var b := Button.new()
+		b.text = BOT_LEVELS[i][0]
+		b.toggle_mode = true
+		b.button_group = _bot_level_group
+		b.set_pressed_no_signal(_config.bot_difficulty == i)
+		b.pressed.connect(func() -> void: _config.bot_difficulty = i)
+		UiFx.hint(b, BOT_LEVELS[i][1])
+		%BotLevel.add_child(b)
+	%BotLevel.visible = _config.bot_count > 0
+	%BotLevelLabel.visible = _config.bot_count > 0
 
 
 func _build_duration_buttons() -> void:

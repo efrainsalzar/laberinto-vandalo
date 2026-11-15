@@ -9,6 +9,19 @@ extends Resource
 ## Laberinto vivo: 0 apagado, 1 lento, 2 normal, 3 caótico.
 @export_enum("Apagado", "Lento", "Normal", "Caótico") var live_maze := 2
 
+## Rivales controlados por la IA (0-7; con el humano son hasta 8 participantes).
+@export_range(0, 7) var bot_count := 3
+## Dificultad de los rivales: índice en BOT_PROFILES, o BOT_MIXED (cada bot una al azar).
+@export_range(0, 4) var bot_difficulty := 1
+
+const BOT_PROFILES := [
+	"res://data/bots/facil.tres",
+	"res://data/bots/normal.tres",
+	"res://data/bots/dificil.tres",
+	"res://data/bots/experto.tres",
+]
+const BOT_MIXED := 4
+
 ## Duración de la partida en minutos. 0 = sin límite (las fases avanzan, pero no hay fin por tiempo).
 @export_range(0.0, 60.0, 0.5, "suffix:min") var duration_minutes := 8.0
 
@@ -31,6 +44,8 @@ static func create_stress() -> MatchConfig:
 	config.profile = load("res://data/maps/dificil.tres").duplicate()
 	config.profile.size_scale = 3.0
 	config.live_maze = 3
+	config.bot_count = 7  # máximo de participantes: bots reales además de la carga extra
+	config.bot_difficulty = BOT_MIXED
 	config.stress_test = true
 	return config
 

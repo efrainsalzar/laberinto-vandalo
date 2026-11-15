@@ -2,6 +2,8 @@
 
 #include "version.h"
 
+#include "game/bot_controller.h"
+#include "game/bot_coordinator.h"
 #include "game/entity_index.h"
 #include "game/match_controller.h"
 #include "game/maze.h"
@@ -50,6 +52,7 @@ void initialize_laberinto_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_ABSTRACT_CLASS(ParticipantController);
 	GDREGISTER_CLASS(HumanController);
 	GDREGISTER_CLASS(WanderController);
+	GDREGISTER_CLASS(BotController);
 	GDREGISTER_CLASS(Participant);
 
 	// Visión
@@ -66,6 +69,10 @@ void initialize_laberinto_module(ModuleInitializationLevel p_level) {
 
 	// Trofeo y bases
 	GDREGISTER_CLASS(TrophyController);
+
+	// Bots
+	GDREGISTER_CLASS(BotProfile);
+	GDREGISTER_CLASS(BotCoordinator);
 
 	// Partida: reloj y fases
 	GDREGISTER_CLASS(MatchRules);

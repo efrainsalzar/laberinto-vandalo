@@ -99,6 +99,13 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 - [x] Arreglo: la base mide el pasillo completo (antes 3×3 fijo, se metía en las paredes); el cuerpo del participante cabe en pasillos de 1. 2 tests (82 en total).
 - [x] Tecla de prueba N: saltar a la siguiente fase.
 
+### v0.0.17 — Etapa 3: Bots con dificultad ✅
+- [x] A* sobre celdas lógicas (con costos, listo para terrenos) y errores en cruces según la dificultad.
+- [x] `BotBrain` (Utility AI): entregar, ir por el trofeo, recoger objetos VISTOS, explorar. Cada acción es una clase: agregar mecánicas = agregar acciones.
+- [x] `BotProfile` .tres: Fácil, Normal, Difícil, Experto + "Mixto". `BotCoordinator`: cola de caminos (2/frame) y replanificación cuando el mapa cierra un camino.
+- [x] Menú: rivales 0–7 y su dificultad. Resultado "DERROTA — ganó Bot X". Participantes se atraviesan (capas de física).
+- [x] 13 tests (95 en total).
+
 ## Plan acordado (etapas, una pieza a la vez)
 
 Bloques de interfaz ya hechos: ~~objetos infinitos~~ ✅ · ~~HUD limpio + textos flotantes~~ ✅.
@@ -112,8 +119,9 @@ Ideas del mapa en detalle: [`DISENO_MAPA.md`](DISENO_MAPA.md).
 
 ~~Mapas que cambian en tiempo real~~ ✅ (v0.0.12, en prueba en vivo).
 
-**Etapa 1 completa.** Siguiente paso: **Etapa 2.1 — `MapConfig` + formas de contorno**, o adelantar la
-Etapa 3 — Bots para tener rivales (decisión del dueño del proyecto).
+**Etapa 1 completa. Etapa 3 (bots) adelantada ✅.** Siguiente paso (orden propuesto por el dueño del proyecto):
+acciones del participante → combate y robo del trofeo (Etapa 4) → objetos que cambian el mapa, paredes rompibles y
+portales (Etapa 2.2–2.4) → formas de mapa (Etapa 2.1). Cada una entra como **acción del bot** + **dato .tres**.
 
 ### Etapa 2 — El mundo
 1. `MapConfig` + formas de contorno (cuadrado, círculo, hexágono...). (Algoritmos, dificultad y tamaños ✅ en v0.0.10.)
@@ -122,8 +130,9 @@ Etapa 3 — Bots para tener rivales (decisión del dueño del proyecto).
 4. Mapa que cambia: paredes rompibles, atajos, pasadizos secretos, paredes móviles.
 5. Geometría avanzada: laberintos circulares de anillos, hexagonales, paredes diagonales/curvas.
 
-### Etapa 3 — Bots
-`BotController` (Strategy), caminos con costos de terreno (AStarGrid2D), árboles de comportamiento (LimboAI), personalidades.
+### Etapa 3 — Bots ✅ (base en v0.0.17)
+Hecho: `BotController`, A* con costos, Utility AI, dificultades. Falta: personalidades (pesos por acción en .tres),
+árboles de comportamiento para vándalos/guardianes, bots que usen armas/portales (una `BotAction` por mecánica).
 
 ### Etapa 4 — Combate
 Salud, 3 vidas, reaparición (State), soltar el trofeo al morir; armas, bombas, minas, escudos, pociones como datos.
@@ -148,3 +157,8 @@ Demo en itch.io · aliados · torneo con rondas · multijugador local · en lín
 - **Partes de cada fase en el menú:** hoy se ajustan en `data/match/default_rules.tres`; se podría exponer en "Personalizado".
 - **Bóveda proporcional al pasillo:** el radio de la bóveda está en casillas; con pasillos de 5, una bóveda de radio 2 mide lo mismo que un pasillo. Podría medirse en celdas.
 - **Qué pasa en cada fase:** vándalos y guardianes por fase (Etapas 5–6), bases que se mueven en el Golpe.
+- **Ideas del dueño del proyecto (en orden, una pieza a la vez):** botones de acción del participante (disparar,
+  usar objeto) como nuevos campos de `ParticipantCommand`; power-ups nuevos (.tres); romper paredes; portales
+  (puertas de la Etapa 2.2); objetos que al comerlos cambian el mapa y los caminos (usan `Maze.queue_passage_change`).
+  Cada mecánica trae su `BotAction` para que los bots también la usen.
+- **Robo del trofeo / choques entre participantes:** con el combate (Etapa 4). Hoy se atraviesan.

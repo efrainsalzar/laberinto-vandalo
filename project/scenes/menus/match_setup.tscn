@@ -93,6 +93,25 @@ text = "Laberinto vivo"
 unique_name_in_owner = true
 layout_mode = 2
 
+[node name="BotsLabel" type="Label" parent="Margin/Rows/Body/Options/Scroll/List"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.25, 1)
+text = "Rivales (bots)"
+
+[node name="Bots" type="HFlowContainer" parent="Margin/Rows/Body/Options/Scroll/List"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="BotLevelLabel" type="Label" parent="Margin/Rows/Body/Options/Scroll/List"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.25, 1)
+text = "Dificultad de los rivales"
+
+[node name="BotLevel" type="HFlowContainer" parent="Margin/Rows/Body/Options/Scroll/List"]
+unique_name_in_owner = true
+layout_mode = 2
+
 [node name="DurationLabel" type="Label" parent="Margin/Rows/Body/Options/Scroll/List"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.82, 0.25, 1)

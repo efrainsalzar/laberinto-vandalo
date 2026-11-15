@@ -71,6 +71,9 @@ public:
 	std::vector<Cell> passage_tiles(int p_a, int p_b) const;
 	// Centro (en casillas) de una celda lógica.
 	Cell cell_center(int p_cell) const;
+	// Celda lógica que contiene una casilla (las casillas de pared entre dos celdas cuentan para la de
+	// la izquierda / arriba). Siempre devuelve un índice válido (se ajusta a los bordes).
+	int cell_index_of(const Cell &p_tile) const;
 	// Pasajes que nunca cambian: tocan la bóveda, una base o el borde.
 	bool is_protected_passage(int p_a, int p_b) const;
 	// ¿Se puede cerrar sin dejar zonas aisladas? (abierto, no protegido, y el resto sigue conectado)

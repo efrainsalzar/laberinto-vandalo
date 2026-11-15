@@ -38,6 +38,8 @@ Escenario de referencia para medir: **mapa Gigante, Difícil, laberinto vivo Ca�
 | `trophy.update` | Reglas del trofeo por frame de física | `game/trophy_controller.cpp` |
 | `entities.update` | Índice espacial de entidades por frame de física | `game/entity_index.cpp` |
 | `match.tick` | Reloj y fases de la partida por frame de física | `game/match_controller.cpp` |
+| `bots.think` | Decisión y movimiento de cada bot (percepción solo al pensar) | `game/bot_controller.cpp` |
+| `bots.path` | Cola de caminos A* (máx. 2 por frame) | `game/bot_coordinator.cpp` |
 
 **Agregar una medición** (C++): `#include "core/perf.h"` y al inicio del bloque `lv::core::PerfScope perf("sistema.tarea");`.
 Aparece sola en el panel F3 y en los monitores. Nombre: `<sistema>.<tarea>` en minúsculas.

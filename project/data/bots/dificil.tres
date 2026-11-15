@@ -1,0 +1,9 @@
+[gd_resource type="BotProfile" format=3]
+
+[resource]
+display_name = "Difícil"
+reaction_time = 0.3
+think_interval = 0.4
+mistake_chance = 0.04
+pickup_interest = 0.35
+variation = 0.1

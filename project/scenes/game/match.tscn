@@ -33,6 +33,8 @@ script = ExtResource("13_shift")
 trophy_scene = ExtResource("10_trophy")
 base_scene = ExtResource("11_base")
 
+[node name="Bots" type="BotCoordinator" parent="."]
+
 [node name="MatchController" type="MatchController" parent="."]
 rules = ExtResource("20_rules")
 
