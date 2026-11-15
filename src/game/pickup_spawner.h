@@ -51,4 +51,5 @@ private:
 	std::unique_ptr<lv::core::Rng> rng_;
 
 	Pickup *spawn_one();
+	void on_map_changed(const TypedArray<Vector2i> &p_tiles, bool p_now_wall);
 };

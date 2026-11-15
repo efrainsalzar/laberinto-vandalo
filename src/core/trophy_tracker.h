@@ -44,6 +44,10 @@ public:
 	// El portador suelta el trofeo en p_cell (muerte en la fase de combate, o a propósito).
 	std::vector<Event> drop(const Cell &p_cell);
 
+	// Mueve el trofeo que está en el piso o en la bóveda (p. ej. una pared se cerró encima).
+	// No hace nada si alguien lo lleva o ya fue entregado. Devuelve true si lo movió.
+	bool relocate(const Cell &p_cell);
+
 	State state() const { return state_; }
 	int carrier() const { return carrier_; }
 	int winner() const { return winner_; }

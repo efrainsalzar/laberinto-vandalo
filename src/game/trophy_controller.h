@@ -65,6 +65,7 @@ private:
 	int base_radius_ = 1;
 
 	void clear_views();
+	void on_map_changed(const TypedArray<Vector2i> &p_tiles, bool p_now_wall);
 	void handle(const std::vector<lv::core::TrophyTracker::Event> &p_events);
 	void update_trophy_view();
 	Participant *participant(int p_index) const;

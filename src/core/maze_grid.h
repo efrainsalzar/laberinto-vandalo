@@ -60,6 +60,23 @@ public:
 	bool is_fully_connected() const;
 
 	const Metrics &metrics() const { return metrics_; }
+
+	// --- Mapa cambiante (ver docs/ARQUITECTURA.md §15) ------------------------------------
+	// Topología actual (celdas lógicas y pasajes). Se mantiene sincronizada con las casillas.
+	const PassageGrid &passages() const { return passages_; }
+	// Casillas de la "pared" entre dos celdas vecinas (lo que se abre o se cierra).
+	std::vector<Cell> passage_tiles(int p_a, int p_b) const;
+	// Centro (en casillas) de una celda lógica.
+	Cell cell_center(int p_cell) const;
+	// Pasajes que nunca cambian: tocan la bóveda, una base o el borde.
+	bool is_protected_passage(int p_a, int p_b) const;
+	// ¿Se puede cerrar sin dejar zonas aisladas? (abierto, no protegido, y el resto sigue conectado)
+	bool can_close_passage(int p_a, int p_b) const;
+	bool can_open_passage(int p_a, int p_b) const;
+	// Abre o cierra un pasaje: actualiza topología y casillas. Devuelve las casillas cambiadas.
+	std::vector<Cell> set_passage(int p_a, int p_b, bool p_open);
+	// Casilla de suelo más cercana (BFS). Si p_cell ya es suelo, devuelve p_cell.
+	Cell nearest_floor(const Cell &p_cell) const;
 	// Largo del camino más corto entre dos casillas de suelo (-1 si no hay camino).
 	int path_length(const Cell &p_from, const Cell &p_to) const;
 
@@ -70,6 +87,7 @@ private:
 	int corridor_width_ = 1;
 	std::vector<uint8_t> walls_;
 	Metrics metrics_;
+	PassageGrid passages_{ 1, 1 };
 
 	int index(const Cell &p_cell) const { return p_cell.y * width_ + p_cell.x; }
 	void set_wall(const Cell &p_cell, bool p_wall);
@@ -79,6 +97,7 @@ private:
 	void rasterize(const PassageGrid &p_passages);
 	void widen_corridors(int p_corridor_width);
 	void open_vault();
+	void sync_passages_with_tiles(); // tras abrir la bóveda: los pasajes que quedaron abiertos
 
 	// Convierte una coordenada de la cuadrícula compacta al centro de su bloque en la final.
 	int compact_to_final(int p_compact) const;

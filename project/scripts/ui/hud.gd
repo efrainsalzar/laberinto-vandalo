@@ -30,6 +30,8 @@ const HINT_SECONDS := 5.0
 @onready var _banner_subtitle: Label = $Banner/Rows/Subtitle
 @onready var _map_info: Label = $MapInfo
 @onready var _fps: Label = $TopBar/Row/Fps
+@onready var _toast: Label = $Toast
+var _toast_tween: Tween
 
 var _participant: Participant
 var _stats: StatsComponent
@@ -49,6 +51,8 @@ func _ready() -> void:
 	Events.trophy_taken.connect(_on_trophy_changed.unbind(1))
 	Events.trophy_dropped.connect(_on_trophy_changed.unbind(2))
 	Events.trophy_delivered.connect(_on_trophy_changed.unbind(1))
+	Events.maze_shift_warned.connect(func(_c: Array, _o: Array, seconds: float) -> void:
+		toast("¡EL LABERINTO SE MUEVE!", Color(1.0, 0.4, 0.35), seconds))
 	var hint_tween := create_tween()
 	hint_tween.tween_interval(HINT_SECONDS)
 	hint_tween.tween_property(_hint, "modulate:a", 0.0, 1.0)
@@ -93,6 +97,24 @@ func set_map_info(text: String) -> void:
 	_map_info.text = text
 	_map_info.modulate = Color(1.6, 1.5, 1.0)
 	create_tween().tween_property(_map_info, "modulate", Color.WHITE, 0.8)
+
+
+## Aviso breve arriba al centro (debajo de la barra): entra, late y se va. No tapa el centro.
+func toast(text: String, color: Color, seconds := 2.0) -> void:
+	_toast.text = text
+	_toast.add_theme_color_override("font_color", color)
+	_toast.visible = true
+	_toast.pivot_offset = _toast.size / 2.0
+	if _toast_tween and _toast_tween.is_valid():
+		_toast_tween.kill()
+	_toast.modulate.a = 0.0
+	_toast.scale = Vector2(1.25, 1.25)
+	_toast_tween = create_tween()
+	_toast_tween.set_parallel(true)
+	_toast_tween.tween_property(_toast, "modulate:a", 1.0, 0.15)
+	_toast_tween.tween_property(_toast, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_BACK)
+	_toast_tween.chain().tween_interval(maxf(seconds - 0.6, 0.3))
+	_toast_tween.chain().tween_property(_toast, "modulate:a", 0.0, 0.4)
 
 
 func hide_banner() -> void:

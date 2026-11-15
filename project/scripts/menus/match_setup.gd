@@ -16,6 +16,12 @@ const SIZES := [
 	[2.0, "Enorme", "×2: partidas largas, ideal para muchos jugadores."],
 	[3.0, "Gigante", "×3: un laberinto inmenso. Fácil perderse; la flecha de objetivo es tu aliada."],
 ]
+const LIVE_LEVELS := [
+	["Apagado", "Las paredes no se mueven: el mapa es fijo toda la partida."],
+	["Lento", "Cada 25 s se cierra un pasaje y se abre otro, con aviso previo."],
+	["Normal", "Cada 15 s cambian varios pasajes. Las rutas que conocías pueden dejar de existir."],
+	["Caótico", "Cada 7 s el laberinto se transforma. Nada es seguro por mucho tiempo."],
+]
 const ALGORITHMS := ["Backtracking", "Growing Tree", "Prim", "Kruskal", "Wilson", "Hunt-and-Kill"]
 const ALGORITHM_HINTS := [
 	"Backtracking: pasillos muy largos y sinuosos, pocos callejones.",
@@ -33,6 +39,7 @@ var _preview_seed := 0
 var _refresh_pending := false
 var _difficulty_group := ButtonGroup.new()
 var _size_group := ButtonGroup.new()
+var _live_group := ButtonGroup.new()
 
 
 func _ready() -> void:
@@ -41,6 +48,7 @@ func _ready() -> void:
 	_config.profile = _profile
 	_build_difficulty_buttons()
 	_build_size_buttons()
+	_build_live_buttons()
 	_build_custom_controls()
 	UiFx.hint(%Seed, "Número que define el mapa. Vacío = uno al azar. Escribe la semilla de un mapa para repetirlo o compartirlo.")
 	UiFx.hint(%RandomSeed, "Genera otro mapa al azar con la misma configuración.")
@@ -76,6 +84,18 @@ func _build_difficulty_buttons() -> void:
 		b.set_meta("difficulty", entry[0])
 		UiFx.hint(b, entry[2])
 		%Difficulty.add_child(b)
+
+
+func _build_live_buttons() -> void:
+	for i in LIVE_LEVELS.size():
+		var b := Button.new()
+		b.text = LIVE_LEVELS[i][0]
+		b.toggle_mode = true
+		b.button_group = _live_group
+		b.set_pressed_no_signal(_config.live_maze == i)
+		b.pressed.connect(func() -> void: _config.live_maze = i)
+		UiFx.hint(b, LIVE_LEVELS[i][1])
+		%Live.add_child(b)
 
 
 func _build_size_buttons() -> void:

@@ -12,6 +12,7 @@ void PickupFactory::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("create", "type", "position"), &PickupFactory::create);
 	ClassDB::bind_method(D_METHOD("populate", "maze", "bases", "seed"), &PickupFactory::populate);
 	ClassDB::bind_method(D_METHOD("clear_pickups"), &PickupFactory::clear_pickups);
+	ClassDB::bind_method(D_METHOD("remove_pickups_at", "maze", "tiles"), &PickupFactory::remove_pickups_at);
 	ClassDB::bind_method(D_METHOD("get_active_count"), &PickupFactory::get_active_count);
 	ClassDB::bind_method(D_METHOD("set_pickup_scene", "value"), &PickupFactory::set_pickup_scene);
 	ClassDB::bind_method(D_METHOD("get_pickup_scene"), &PickupFactory::get_pickup_scene);
@@ -94,6 +95,22 @@ void PickupFactory::clear_pickups() {
 			pickup->queue_free();
 		}
 	}
+}
+
+int PickupFactory::remove_pickups_at(Maze *p_maze, const TypedArray<Vector2i> &p_tiles) {
+	if (p_maze == nullptr) {
+		return 0;
+	}
+	int removed = 0;
+	for (Pickup *pickup : get_active_pickups()) {
+		const Vector2i cell = p_maze->world_to_cell(pickup->get_global_position());
+		if (p_tiles.has(cell)) {
+			remove_child(pickup);
+			pickup->queue_free();
+			removed++;
+		}
+	}
+	return removed;
 }
 
 std::vector<Pickup *> PickupFactory::get_active_pickups() const {

@@ -21,3 +21,8 @@ signal trophy_dropped(participant: Participant, world_position: Vector2)
 
 ## Un participante llevó el trofeo a su base: ganó.
 signal trophy_delivered(participant: Participant)
+## El laberinto vivo anunció un cambio (casillas que se cerrarán / abrirán en `seconds`).
+signal maze_shift_warned(closing: Array, opening: Array, seconds: float)
+
+## Casillas del laberinto que cambiaron (now_wall = true: se cerraron).
+signal maze_changed(tiles: Array, now_wall: bool)

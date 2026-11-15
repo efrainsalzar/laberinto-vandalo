@@ -17,7 +17,7 @@ Teclas de prueba (Opciones › Teclas de prueba)
 1 · power-up ×1.5 VEL (5 s)   2 · +10 VEL
 3 · +2 VIS (5 s)   0 · quitar efectos
 T · soltar el trofeo   V · niebla sí / no
-Tab · ver el mapa completo"""
+K · mover el laberinto ya   Tab · ver el mapa completo"""
 const PAUSE_MENU := preload("res://scenes/menus/pause_menu.tscn")
 const RESULTS_SCREEN := preload("res://scenes/menus/results_screen.tscn")
 
@@ -29,6 +29,8 @@ const RESULTS_SCREEN := preload("res://scenes/menus/results_screen.tscn")
 @onready var _spawner: PickupSpawner = $PickupSpawner
 @onready var _hud: HUD = $HUD
 @onready var _trophy: TrophyController = $Trophy
+@onready var _shifter: MazeShifter = $MazeShifter
+@onready var _shift_view: MazeShiftView = $ShiftView
 
 var _overview := false
 var _elapsed := 0.0
@@ -49,6 +51,9 @@ func _ready() -> void:
 	_trophy.trophy_dropped.connect(func(p: Participant, pos: Vector2) -> void: Events.trophy_dropped.emit(p, pos))
 	_trophy.trophy_delivered.connect(func(p: Participant) -> void: Events.trophy_delivered.emit(p))
 	Events.trophy_delivered.connect(_on_trophy_delivered)
+	_shifter.shift_warned.connect(func(c: Array, o: Array, s: float) -> void: Events.maze_shift_warned.emit(c, o, s))
+	_maze.map_changed.connect(func(tiles: Array, now_wall: bool) -> void: Events.maze_changed.emit(tiles, now_wall))
+	_shift_view.bind(_maze, _shifter)
 	_maze.generated.connect(_on_maze_generated)
 	# Configuración elegida en el menú.
 	var config := App.match_config
@@ -86,6 +91,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			stats.remove_modifiers_from(DEBUG_SOURCE)
 		KEY_T:
 			_trophy.drop_trophy()
+		KEY_K:
+			_shifter.shift_now()
 		KEY_V:
 			_darkness.visible = not _darkness.visible
 		KEY_TAB:
@@ -110,6 +117,7 @@ func _on_maze_generated(seed_value: int) -> void:
 	var participants: Array[Participant] = [_participant]
 	_trophy.start(_maze, participants)
 	_participant.set_controller(HumanController.new())
+	_configure_live_maze(seed_value)
 	_elapsed = 0.0
 	_finished = false
 	_camera.position = _participant.position
@@ -117,8 +125,22 @@ func _on_maze_generated(seed_value: int) -> void:
 	_update_camera()
 
 
+## Laberinto vivo según la configuración: ritmo por nivel y más cambios simultáneos en mapas grandes.
+func _configure_live_maze(seed_value: int) -> void:
+	var level: Array = MatchConfig.LIVE_MAZE_LEVELS[App.match_config.live_maze]
+	_shifter.enabled = level[1] > 0
+	if not _shifter.enabled:
+		_shifter.stop()
+		return
+	var scale: float = _maze.profile.size_scale if _maze.profile else 1.0
+	_shifter.interval = level[0]
+	_shifter.pairs = int(level[1] * maxf(1.0, scale))
+	_shifter.start(_maze, seed_value)
+
+
 func _on_trophy_delivered(participant: Participant) -> void:
 	_finished = true
+	_shifter.stop()
 	participant.set_controller(null)  # quieto: terminó la partida
 	App.show_results()
 	var results := RESULTS_SCREEN.instantiate()

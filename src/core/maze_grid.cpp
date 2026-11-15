@@ -37,6 +37,8 @@ void MazeGrid::generate(const Options &p_options) {
 	rasterize(passages);
 	widen_corridors(corridor_width_);
 	open_vault();
+	passages_ = passages;
+	sync_passages_with_tiles();
 
 	const std::vector<Cell> bases = base_cells(1);
 	metrics_.route_length = bases.empty() ? 0 : path_length(bases[0], center());
@@ -217,6 +219,134 @@ int MazeGrid::path_length(const Cell &p_from, const Cell &p_to) const {
 		}
 	}
 	return -1;
+}
+
+// --- Mapa cambiante -------------------------------------------------------------------------
+
+std::vector<Cell> MazeGrid::passage_tiles(int p_a, int p_b) const {
+	std::vector<Cell> tiles;
+	if (!passages_.are_adjacent(p_a, p_b)) {
+		return tiles;
+	}
+	if (p_a > p_b) {
+		std::swap(p_a, p_b);
+	}
+	const Cell a = passages_.cell(p_a);
+	const int step = corridor_width_ + 1;
+	if (p_b == p_a + 1) { // vecino al este: columna de pared vertical
+		const int x = (a.x + 1) * step;
+		for (int i = 0; i < corridor_width_; i++) {
+			tiles.push_back({ x, a.y * step + 1 + i });
+		}
+	} else { // vecino al sur: fila de pared horizontal
+		const int y = (a.y + 1) * step;
+		for (int i = 0; i < corridor_width_; i++) {
+			tiles.push_back({ a.x * step + 1 + i, y });
+		}
+	}
+	return tiles;
+}
+
+Cell MazeGrid::cell_center(int p_cell) const {
+	const Cell c = passages_.cell(p_cell);
+	const int step = corridor_width_ + 1;
+	return { c.x * step + 1 + corridor_width_ / 2, c.y * step + 1 + corridor_width_ / 2 };
+}
+
+bool MazeGrid::is_protected_passage(int p_a, int p_b) const {
+	const std::vector<Cell> bases = base_cells(8);
+	const int base_guard = corridor_width_ + 1; // la celda de la base y sus pasajes
+	for (const Cell &tile : passage_tiles(p_a, p_b)) {
+		if (tile.x <= 0 || tile.y <= 0 || tile.x >= width_ - 1 || tile.y >= height_ - 1) {
+			return true;
+		}
+		if (vault_radius_ > 0 && chebyshev_distance(tile, center()) <= vault_radius_ + 1) {
+			return true;
+		}
+		for (const Cell &base : bases) {
+			if (chebyshev_distance(tile, base) <= base_guard) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+bool MazeGrid::can_open_passage(int p_a, int p_b) const {
+	return passages_.are_adjacent(p_a, p_b) && !passages_.is_open(p_a, p_b) && !is_protected_passage(p_a, p_b);
+}
+
+bool MazeGrid::can_close_passage(int p_a, int p_b) const {
+	if (!passages_.are_adjacent(p_a, p_b) || !passages_.is_open(p_a, p_b) || is_protected_passage(p_a, p_b)) {
+		return false;
+	}
+	PassageGrid scratch = passages_;
+	scratch.close(p_a, p_b);
+	return scratch.is_connected();
+}
+
+std::vector<Cell> MazeGrid::set_passage(int p_a, int p_b, bool p_open) {
+	std::vector<Cell> changed;
+	if (!passages_.are_adjacent(p_a, p_b)) {
+		return changed;
+	}
+	if (p_open) {
+		passages_.carve(p_a, p_b);
+	} else {
+		passages_.close(p_a, p_b);
+	}
+	for (const Cell &tile : passage_tiles(p_a, p_b)) {
+		if (is_wall(tile) == p_open) {
+			set_wall(tile, !p_open);
+			changed.push_back(tile);
+		}
+	}
+	return changed;
+}
+
+Cell MazeGrid::nearest_floor(const Cell &p_cell) const {
+	if (!is_wall(p_cell)) {
+		return p_cell;
+	}
+	std::vector<uint8_t> seen(walls_.size(), 0);
+	std::queue<Cell> open;
+	Cell start{ std::clamp(p_cell.x, 0, width_ - 1), std::clamp(p_cell.y, 0, height_ - 1) };
+	open.push(start);
+	seen[index(start)] = 1;
+	while (!open.empty()) {
+		const Cell c = open.front();
+		open.pop();
+		if (!is_wall(c)) {
+			return c;
+		}
+		for (const Cell &d : DIRECTIONS) {
+			const Cell n{ c.x + d.x, c.y + d.y };
+			if (in_bounds(n) && !seen[index(n)]) {
+				seen[index(n)] = 1;
+				open.push(n);
+			}
+		}
+	}
+	return p_cell;
+}
+
+void MazeGrid::sync_passages_with_tiles() {
+	for (int i = 0; i < passages_.cell_count(); i++) {
+		int n[4];
+		const int count = passages_.neighbors(i, n);
+		for (int k = 0; k < count; k++) {
+			if (n[k] < i || passages_.is_open(i, n[k])) {
+				continue;
+			}
+			bool all_floor = true;
+			for (const Cell &tile : passage_tiles(i, n[k])) {
+				all_floor = all_floor && !is_wall(tile);
+			}
+			if (all_floor) {
+				passages_.carve(i, n[k]);
+			}
+		}
+	}
 }
 
 const char *maze_difficulty_name(MazeDifficulty p_difficulty) {

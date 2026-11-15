@@ -44,6 +44,9 @@ void TrophyController::start(Maze *p_maze, const TypedArray<Participant> &p_part
 		}
 	}
 	participants_.clear();
+	if (maze_ != nullptr && maze_->is_connected("map_changed", callable_mp(this, &TrophyController::on_map_changed))) {
+		maze_->disconnect("map_changed", callable_mp(this, &TrophyController::on_map_changed));
+	}
 	maze_ = p_maze;
 	if (maze_ == nullptr) {
 		UtilityFunctions::push_error("TrophyController.start: falta el laberinto.");
@@ -59,6 +62,7 @@ void TrophyController::start(Maze *p_maze, const TypedArray<Participant> &p_part
 		const Vector2i b = base_cells[i];
 		bases.push_back({ b.x, b.y });
 	}
+	maze_->connect("map_changed", callable_mp(this, &TrophyController::on_map_changed));
 	const Vector2i center = maze_->get_center_cell();
 	tracker_.setup({ center.x, center.y }, bases, 1, base_radius_);
 
@@ -199,4 +203,19 @@ void TrophyController::clear_views() {
 		trophy_view_->queue_free();
 		trophy_view_ = nullptr;
 	}
+}
+
+// Si una pared se cierra donde está el trofeo (en el piso), se mueve al suelo libre más cercano.
+void TrophyController::on_map_changed(const TypedArray<Vector2i> &p_tiles, bool p_now_wall) {
+	const TrophyTracker::State state = tracker_.state();
+	if (!p_now_wall || (state != TrophyTracker::State::InVault && state != TrophyTracker::State::Dropped)) {
+		return;
+	}
+	const lv::core::Cell current = tracker_.trophy_cell();
+	if (!p_tiles.has(Vector2i(current.x, current.y))) {
+		return;
+	}
+	const lv::core::Cell free = maze_->get_grid().nearest_floor(current);
+	tracker_.relocate(free);
+	update_trophy_view();
 }

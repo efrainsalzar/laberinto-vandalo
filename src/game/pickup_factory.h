@@ -30,6 +30,8 @@ public:
 	// Borra los objetos actuales y coloca nuevos en el laberinto. Devuelve cuántos creó.
 	int populate(Maze *p_maze, const TypedArray<Vector2i> &p_bases, int p_seed);
 	void clear_pickups();
+	// Retira (sin efecto) los objetos que están en esas casillas: p. ej. una pared se cerró encima.
+	int remove_pickups_at(Maze *p_maze, const TypedArray<Vector2i> &p_tiles);
 	// Objetos en el nivel que todavía no se recogieron.
 	std::vector<Pickup *> get_active_pickups() const;
 	int get_active_count() const { return static_cast<int>(get_active_pickups().size()); }

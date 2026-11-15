@@ -98,4 +98,16 @@ TEST_SUITE("TrophyTracker") {
 		CHECK(t.update(5, { 20, 20 }).empty());
 		CHECK_FALSE(t.is_in_own_base(7, { 1, 1 }));
 	}
+
+	TEST_CASE("relocate mueve el trofeo del piso, pero no si alguien lo lleva") {
+		TrophyTracker t = make();
+		CHECK(t.relocate({ 19, 20 })); // en la bóveda
+		CHECK(t.trophy_cell() == Cell{ 19, 20 });
+		t.update(0, { 19, 20 });
+		CHECK_FALSE(t.relocate({ 5, 5 })); // lo lleva el participante 0
+		t.drop({ 8, 8 });
+		CHECK(t.relocate({ 9, 8 }));
+		CHECK(t.state() == State::Dropped);
+		CHECK(t.trophy_cell() == Cell{ 9, 8 });
+	}
 }

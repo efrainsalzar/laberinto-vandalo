@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scripts/game/match.gd" id="1_sbx"]
 [ext_resource type="PackedScene" path="res://scenes/participant/participant.tscn" id="2_part"]
@@ -12,6 +12,7 @@
 [ext_resource type="PackedScene" path="res://scenes/trophy/trophy.tscn" id="10_trophy"]
 [ext_resource type="PackedScene" path="res://scenes/trophy/base.tscn" id="11_base"]
 [ext_resource type="MazeProfile" path="res://data/maps/normal.tres" id="12_map"]
+[ext_resource type="Script" path="res://scripts/game/maze_shift_view.gd" id="13_shift"]
 
 [node name="Match" type="Node2D"]
 script = ExtResource("1_sbx")
@@ -19,6 +20,11 @@ script = ExtResource("1_sbx")
 [node name="Maze" type="Maze" parent="."]
 profile = ExtResource("12_map")
 generate_on_ready = false
+
+[node name="MazeShifter" type="MazeShifter" parent="."]
+
+[node name="ShiftView" type="Node2D" parent="."]
+script = ExtResource("13_shift")
 
 [node name="Trophy" type="TrophyController" parent="."]
 trophy_scene = ExtResource("10_trophy")

@@ -72,6 +72,11 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 - [x] Todo con mouse, teclado y mando; teclas de prueba solo si se activan en Opciones.
 - [x] La escena de prueba pasó a ser la partida real (`scenes/game/match.tscn`).
 
+### v0.0.12 — Interfaz animada, mapas grandes y laberinto vivo ✅ (en prueba en vivo)
+- [x] `UiFx`: hover = selección, rebote, barra de acento y descripciones flotantes en todos los menús.
+- [x] Tamaños Normal/Grande/Enorme/Gigante; Personalizado hasta 160×110. Optimización: objetos dibujados una vez.
+- [x] Laberinto vivo: cambios seguros (conectividad garantizada), aviso previo, espera/cancelación si hay alguien encima, objetos y trofeo se adaptan. 7 tests.
+
 ## Plan acordado (etapas, una pieza a la vez)
 
 Bloques de interfaz ya hechos: ~~objetos infinitos~~ ✅ · ~~HUD limpio + textos flotantes~~ ✅.
@@ -83,7 +88,7 @@ Ideas del mapa en detalle: [`DISENO_MAPA.md`](DISENO_MAPA.md).
 2. Partida: reloj, fases (State: Preparación → Asalto → Golpe de los vándalos), victoria y fin por tiempo.
 3. ~~Pantallas: inicio, configurar, pausa, resultados, opciones~~ ✅
 
-**Siguiente (pedido del dueño): mapas que cambian en tiempo real** (etapa 2.4 adelantada): modelo del mapa mutable con evento "el mapa cambió" → colisión, sombras, visión, objetos y caminos se actualizan solos; paredes que se abren/cierran con aviso.
+~~Mapas que cambian en tiempo real~~ ✅ (v0.0.12, en prueba en vivo).
 
 ### Etapa 2 — El mundo
 1. `MapConfig` + formas de contorno (cuadrado, círculo, hexágono...). (Algoritmos, dificultad y tamaños ✅ en v0.0.10.)

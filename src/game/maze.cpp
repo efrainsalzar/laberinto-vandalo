@@ -90,7 +90,11 @@ void Maze::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "vault_radius", PROPERTY_HINT_RANGE, "0,10,1"), "set_vault_radius", "get_vault_radius");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "generate_on_ready"), "set_generate_on_ready", "get_generate_on_ready");
 
+	ClassDB::bind_method(D_METHOD("set_passage", "a", "b", "open"), &Maze::set_passage);
+	ClassDB::bind_method(D_METHOD("nearest_floor_world", "world_position"), &Maze::nearest_floor_world);
+
 	ADD_SIGNAL(MethodInfo("generated", PropertyInfo(Variant::INT, "seed")));
+	ADD_SIGNAL(MethodInfo("map_changed", PropertyInfo(Variant::ARRAY, "tiles"), PropertyInfo(Variant::BOOL, "now_wall")));
 }
 
 void Maze::_ready() {
@@ -265,4 +269,26 @@ Dictionary Maze::build_preview(const Ref<MazeProfile> &p_profile, int p_seed) {
 	result["seed"] = static_cast<int64_t>(options.seed);
 	result["size"] = Vector2i(grid.width(), grid.height());
 	return result;
+}
+void Maze::set_passage(int p_a, int p_b, bool p_open) {
+	const std::vector<lv::core::Cell> changed = grid_.set_passage(p_a, p_b, p_open);
+	if (changed.empty() || walls_ == nullptr) {
+		return;
+	}
+	TypedArray<Vector2i> tiles;
+	for (const lv::core::Cell &cell : changed) {
+		const Vector2i tile = to_vector(cell);
+		if (p_open) {
+			walls_->erase_cell(tile);
+		} else {
+			walls_->set_cell(tile, SOURCE_ID, WALL_TILE);
+		}
+		tiles.push_back(tile);
+	}
+	emit_signal("map_changed", tiles, !p_open);
+}
+
+Vector2 Maze::nearest_floor_world(const Vector2 &p_world) const {
+	const Vector2i cell = world_to_cell(p_world);
+	return cell_to_world(to_vector(grid_.nearest_floor(to_cell(cell))));
 }

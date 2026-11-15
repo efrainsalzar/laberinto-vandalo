@@ -53,6 +53,14 @@ std::vector<TrophyTracker::Event> TrophyTracker::drop(const Cell &p_cell) {
 	return events;
 }
 
+bool TrophyTracker::relocate(const Cell &p_cell) {
+	if (state_ != State::InVault && state_ != State::Dropped) {
+		return false;
+	}
+	trophy_cell_ = p_cell;
+	return true;
+}
+
 bool TrophyTracker::is_in_own_base(int p_participant, const Cell &p_cell) const {
 	return valid(p_participant) && chebyshev_distance(p_cell, bases_[p_participant]) <= base_radius_;
 }

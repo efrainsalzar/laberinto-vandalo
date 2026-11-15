@@ -78,6 +78,27 @@ void PassageGrid::carve(int p_a, int p_b) {
 	}
 }
 
+void PassageGrid::close(int p_a, int p_b) {
+	if (p_a > p_b) {
+		std::swap(p_a, p_b);
+	}
+	if (p_b == p_a + 1 && cell(p_a).y == cell(p_b).y) {
+		east_[p_a] = 0;
+	} else if (p_b == p_a + width_) {
+		south_[p_a] = 0;
+	}
+}
+
+bool PassageGrid::are_adjacent(int p_a, int p_b) const {
+	if (p_a < 0 || p_b < 0 || p_a >= cell_count() || p_b >= cell_count()) {
+		return false;
+	}
+	if (p_a > p_b) {
+		std::swap(p_a, p_b);
+	}
+	return (p_b == p_a + 1 && cell(p_a).y == cell(p_b).y) || p_b == p_a + width_;
+}
+
 int PassageGrid::degree(int p_index) const {
 	int n[4];
 	const int count = neighbors(p_index, n);

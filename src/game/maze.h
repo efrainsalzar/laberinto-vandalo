@@ -70,6 +70,13 @@ public:
 	// {algorithm, cells, dead_ends, junctions, dead_end_ratio, route_length} del último laberinto.
 	Dictionary get_metrics() const;
 
+	// --- Mapa cambiante (§15) ---
+	// Abre o cierra el pasaje entre dos celdas lógicas: actualiza la lógica, las casillas (colisión
+	// y sombras) y emite `map_changed(tiles, now_wall)` (Observer) para que el resto se adapte.
+	void set_passage(int p_a, int p_b, bool p_open);
+	// Centro (mundo) de la casilla de suelo más cercana a una posición.
+	Vector2 nearest_floor_world(const Vector2 &p_world) const;
+
 	// Vista previa sin crear un nivel (para el menú de configuración): genera el laberinto del perfil
 	// con esa semilla (0 = aleatoria) y devuelve {image: Image (1 px por casilla), metrics, seed, size}.
 	static Dictionary build_preview(const Ref<MazeProfile> &p_profile, int p_seed);

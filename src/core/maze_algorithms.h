@@ -52,6 +52,8 @@ public:
 	int neighbors(int p_index, int r_out[4]) const;
 	bool is_open(int p_a, int p_b) const;
 	void carve(int p_a, int p_b);
+	void close(int p_a, int p_b);
+	bool are_adjacent(int p_a, int p_b) const;
 	int degree(int p_index) const; // pasajes abiertos de una celda
 	int passage_count() const;
 

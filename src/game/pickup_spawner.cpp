@@ -41,7 +41,12 @@ void PickupSpawner::start(Maze *p_maze, const TypedArray<Vector2i> &p_bases, int
 		maze_ = nullptr;
 		return;
 	}
+	if (maze_ != nullptr && maze_->is_connected("map_changed", callable_mp(this, &PickupSpawner::on_map_changed))) {
+		maze_->disconnect("map_changed", callable_mp(this, &PickupSpawner::on_map_changed));
+	}
 	maze_ = p_maze;
+	// Si una pared se cierra sobre un objeto, se retira; la política lo repone en otro lugar.
+	maze_->connect("map_changed", callable_mp(this, &PickupSpawner::on_map_changed));
 	bases_.clear();
 	for (int i = 0; i < p_bases.size(); i++) {
 		const Vector2i base = p_bases[i];
@@ -102,4 +107,10 @@ Pickup *PickupSpawner::spawn_one() {
 	}
 	const Vector2 world = maze_->cell_to_world(Vector2i(cell->x, cell->y));
 	return factory_->create(types[kind], factory_->to_local(world));
+}
+
+void PickupSpawner::on_map_changed(const TypedArray<Vector2i> &p_tiles, bool p_now_wall) {
+	if (p_now_wall && factory_ != nullptr) {
+		factory_->remove_pickups_at(maze_, p_tiles);
+	}
 }
