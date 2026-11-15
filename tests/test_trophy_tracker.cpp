@@ -110,4 +110,17 @@ TEST_SUITE("TrophyTracker") {
 		CHECK(t.state() == State::Dropped);
 		CHECK(t.trophy_cell() == Cell{ 9, 8 });
 	}
+
+	TEST_CASE("Zonas rectangulares: entregar en cualquier casilla de la zona, no fuera") {
+		TrophyTracker t;
+		// Zona del participante 0: pasillo de 4x4 casillas en (1,1)..(4,4).
+		t.setup({ 20, 20 }, std::vector<lv::core::TileRect>{ { 1, 1, 4, 4 }, { 40, 1, 4, 4 } });
+		t.update(0, { 20, 20 });
+		CHECK(t.update(0, { 5, 4 }).empty()); // justo fuera (columna 5)
+		CHECK(t.update(0, { 0, 0 }).empty()); // la pared exterior no es zona
+		const auto events = t.update(0, { 4, 4 }); // esquina interior
+		REQUIRE(events.size() == 1);
+		CHECK(events[0].type == Type::Delivered);
+		CHECK(t.base_of(0) == lv::core::TileRect{ 1, 1, 4, 4 });
+	}
 }

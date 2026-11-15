@@ -55,6 +55,9 @@ public:
 
 	// Casillas de inicio (zonas de resguardo): primero las 4 esquinas, luego los bordes. Máximo 8.
 	std::vector<Cell> base_cells(int p_count) const;
+	// Zona de resguardo de cada base: el cuadro de pasillo completo de su celda (corridor_width x
+	// corridor_width casillas). Así la base se ajusta sola al ancho de pasillo y nunca pisa paredes.
+	std::vector<TileRect> base_zones(int p_count) const;
 
 	// true si se puede llegar a todo el suelo desde cualquier casilla de suelo.
 	bool is_fully_connected() const;

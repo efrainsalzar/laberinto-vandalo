@@ -42,6 +42,10 @@ public:
 	bool is_wall(const Vector2i &p_cell) const;
 	Vector2i get_center_cell() const;
 	TypedArray<Vector2i> get_base_cells(int p_count) const;
+	// Zonas de resguardo (casillas): el cuadro de pasillo completo de cada base. Se ajustan al ancho de pasillo.
+	TypedArray<Rect2i> get_base_zones(int p_count) const;
+	// Rectángulo de casillas -> rectángulo en el mundo (coordenadas globales).
+	Rect2 tile_rect_to_world(const Rect2i &p_rect) const;
 	Vector2i get_grid_size() const;
 	Vector2 cell_to_world(const Vector2i &p_cell) const;
 	Vector2i world_to_cell(const Vector2 &p_world) const;

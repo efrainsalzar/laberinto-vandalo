@@ -55,6 +55,8 @@ void Maze::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_wall", "cell"), &Maze::is_wall);
 	ClassDB::bind_method(D_METHOD("get_center_cell"), &Maze::get_center_cell);
 	ClassDB::bind_method(D_METHOD("get_base_cells", "count"), &Maze::get_base_cells);
+	ClassDB::bind_method(D_METHOD("get_base_zones", "count"), &Maze::get_base_zones);
+	ClassDB::bind_method(D_METHOD("tile_rect_to_world", "rect"), &Maze::tile_rect_to_world);
 	ClassDB::bind_method(D_METHOD("get_grid_size"), &Maze::get_grid_size);
 	ClassDB::bind_method(D_METHOD("cell_to_world", "cell"), &Maze::cell_to_world);
 	ClassDB::bind_method(D_METHOD("world_to_cell", "world_position"), &Maze::world_to_cell);
@@ -228,6 +230,20 @@ TypedArray<Vector2i> Maze::get_base_cells(int p_count) const {
 	return result;
 }
 
+TypedArray<Rect2i> Maze::get_base_zones(int p_count) const {
+	TypedArray<Rect2i> result;
+	for (const lv::core::TileRect &z : grid_.base_zones(p_count)) {
+		result.push_back(Rect2i(z.x, z.y, z.w, z.h));
+	}
+	return result;
+}
+
+Rect2 Maze::tile_rect_to_world(const Rect2i &p_rect) const {
+	const float tile = get_tile_px();
+	const Vector2 top_left = cell_to_world(p_rect.position) - Vector2(tile, tile) / 2.0f;
+	return Rect2(top_left, Vector2(p_rect.size) * tile);
+}
+
 Vector2i Maze::get_grid_size() const {
 	return Vector2i(grid_.width(), grid_.height());
 }
@@ -278,14 +294,8 @@ Dictionary Maze::build_preview(const Ref<MazeProfile> &p_profile, int p_seed) {
 			image->set_pixel(x, y, grid.is_wall(cell) ? wall : (grid.is_in_vault(cell) ? vault : floor));
 		}
 	}
-	for (const lv::core::Cell &b : grid.base_cells(4)) {
-		for (int dy = -1; dy <= 1; dy++) {
-			for (int dx = -1; dx <= 1; dx++) {
-				if (!grid.is_wall({ b.x + dx, b.y + dy })) {
-					image->set_pixel(b.x + dx, b.y + dy, base);
-				}
-			}
-		}
+	for (const lv::core::TileRect &z : grid.base_zones(4)) {
+		image->fill_rect(Rect2i(z.x, z.y, z.w, z.h), base);
 	}
 	const lv::core::Cell c = grid.center();
 	image->set_pixel(c.x, c.y, Color(1.0f, 0.82f, 0.25f));

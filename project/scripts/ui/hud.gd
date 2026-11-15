@@ -31,6 +31,9 @@ const HINT_SECONDS := 5.0
 @onready var _map_info: Label = $MapInfo
 @onready var _fps: Label = $TopBar/Row/Fps
 @onready var _toast: Label = $Toast
+@onready var _clock: Control = $Clock
+@onready var _clock_time: Label = $Clock/Time
+@onready var _clock_phase: Label = $Clock/Phase
 var _toast_tween: Tween
 
 var _participant: Participant
@@ -41,6 +44,15 @@ var _chips := {}  # id de modificador -> {panel, bar, duration}
 var _collected_count := 0
 var _trophy: TrophyController
 var _maze: Maze
+var _match: MatchController
+var _clock_shown := -2  # segundo mostrado: el reloj solo se redibuja cuando cambia
+
+const CLOCK_WARN := Color(1.0, 0.4, 0.35)
+const PHASE_TOASTS := {
+	MatchController.PHASE_PREPARATION: ["FASE 1 · PREPARACIÓN", "Explora y junta mejoras", Color(0.55, 0.85, 1.0)],
+	MatchController.PHASE_ASSAULT: ["FASE 2 · ASALTO", "¡Ve por el trofeo!", Color(1.0, 0.82, 0.25)],
+	MatchController.PHASE_HEIST: ["FASE 3 · GOLPE DE LOS VÁNDALOS", "El laberinto se vuelve loco", Color(1.0, 0.4, 0.35)],
+}
 
 const TROPHY_COLOR := Color(1.0, 0.82, 0.25)
 
@@ -51,6 +63,12 @@ func _ready() -> void:
 	Events.trophy_taken.connect(_on_trophy_changed.unbind(1))
 	Events.trophy_dropped.connect(_on_trophy_changed.unbind(2))
 	Events.trophy_delivered.connect(_on_trophy_changed.unbind(1))
+	Events.match_phase_changed.connect(_on_phase_changed)
+	Events.match_time_warning.connect(func(seconds_left: float) -> void:
+		var text := "¡QUEDA 1 MINUTO!" if seconds_left >= 60.0 else "¡QUEDAN %d SEGUNDOS!" % roundi(seconds_left)
+		if seconds_left > 60.0:
+			text = "¡QUEDAN %d MINUTOS!" % roundi(seconds_left / 60.0)
+		toast(text, CLOCK_WARN, 2.5))
 	Events.maze_shift_warned.connect(func(_c: Array, _o: Array, seconds: float) -> void:
 		toast("¡EL LABERINTO SE MUEVE!", Color(1.0, 0.4, 0.35), seconds))
 	var hint_tween := create_tween()
@@ -76,6 +94,13 @@ func bind_objective(trophy: TrophyController, maze: Maze) -> void:
 	_trophy = trophy
 	_maze = maze
 	_on_trophy_changed()
+
+
+## Conecta el reloj de arriba al centro a la partida.
+func bind_match(match_controller: MatchController) -> void:
+	_match = match_controller
+	_clock_shown = -2
+	_clock.visible = true
 
 
 ## Cartel centrado (fin de partida). Es lo único que ocupa el centro, y solo al terminar.
@@ -163,9 +188,47 @@ func _process(_delta: float) -> void:
 	if _stats != null:
 		_sync_effect_chips()
 	_update_objective()
+	_update_clock()
 	_fps.visible = Settings.get_value("show_fps")
 	if _fps.visible:
 		_fps.text = "%d FPS" % Engine.get_frames_per_second()
+
+
+# --- Reloj de la partida -------------------------------------------------------------------
+
+func _update_clock() -> void:
+	if _match == null:
+		return
+	var left := _match.get_time_left()
+	if _match.is_unlimited():
+		var elapsed := int(_match.get_elapsed())
+		if elapsed != _clock_shown:
+			_clock_shown = elapsed
+			_clock_time.text = "%d:%02d" % [elapsed / 60, elapsed % 60]
+			_clock_time.remove_theme_color_override("font_color")
+		return
+	var shown := ceili(left)
+	if shown == _clock_shown:
+		return
+	_clock_shown = shown
+	_clock_time.text = "%d:%02d" % [shown / 60, shown % 60]
+	if left <= 60.0:
+		_clock_time.add_theme_color_override("font_color", CLOCK_WARN)
+	else:
+		_clock_time.remove_theme_color_override("font_color")
+	if left <= 10.0 and _match.is_running():
+		# Últimos segundos: cada segundo late.
+		_clock_time.pivot_offset = _clock_time.size / 2.0
+		_clock_time.scale = Vector2(1.35, 1.35)
+		create_tween().tween_property(_clock_time, "scale", Vector2.ONE, 0.4).set_trans(Tween.TRANS_BACK)
+
+
+func _on_phase_changed(phase: int, phase_name: String) -> void:
+	_clock_phase.text = phase_name.to_upper()
+	if PHASE_TOASTS.has(phase):
+		var info: Array = PHASE_TOASTS[phase]
+		_clock_phase.add_theme_color_override("font_color", info[2])
+		toast("%s — %s" % [info[0], info[1]], info[2], 3.0)
 
 
 # --- Objetivo: trofeo o base -------------------------------------------------------------

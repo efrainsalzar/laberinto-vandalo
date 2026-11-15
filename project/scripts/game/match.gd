@@ -1,12 +1,13 @@
 extends Node2D
 ## Una partida: arma el nivel con la configuración elegida en el menú (App.match_config) y conecta
-## los sistemas. Pausa con Esc/P (botón Start en mando), resultados al ganar.
-## La partida (reloj, fases, fin por tiempo) llega en la etapa 1.2.
-## Ver docs/ARQUITECTURA.md §13.
+## los sistemas. Pausa con Esc/P (botón Start en mando), resultados al ganar o al acabarse el tiempo.
+## Reloj y fases: MatchController (§18). Ver docs/ARQUITECTURA.md §13.
 
 const DEBUG_SOURCE := "prueba"
-const CONTROLS := """Objetivo: toma el TROFEO del centro y llévalo a TU BASE.
+const CONTROLS := """Objetivo: toma el TROFEO del centro y llévalo a TU BASE
+antes de que se acabe el tiempo (si no, los vándalos se lo llevan).
 La flecha del borde te indica a dónde ir.
+Fases: Preparación → Asalto → Golpe de los vándalos (el laberinto se acelera).
 
 WASD / flechas · moverse
 Esc / P · pausa
@@ -17,7 +18,8 @@ Teclas de prueba (Opciones › Teclas de prueba)
 1 · power-up ×1.5 VEL (5 s)   2 · +10 VEL
 3 · +2 VIS (5 s)   0 · quitar efectos
 T · soltar el trofeo   V · niebla sí / no
-K · mover el laberinto ya   Tab · ver el mapa completo"""
+K · mover el laberinto ya   Tab · ver el mapa completo
+N · saltar a la siguiente fase"""
 const PAUSE_MENU := preload("res://scenes/menus/pause_menu.tscn")
 const RESULTS_SCREEN := preload("res://scenes/menus/results_screen.tscn")
 
@@ -31,10 +33,15 @@ const RESULTS_SCREEN := preload("res://scenes/menus/results_screen.tscn")
 @onready var _trophy: TrophyController = $Trophy
 @onready var _shifter: MazeShifter = $MazeShifter
 @onready var _shift_view: MazeShiftView = $ShiftView
+@onready var _match: MatchController = $MatchController
+
+## Radio normal del cuerpo del participante (px) y cuánto del pasillo puede ocupar como máximo.
+const BODY_RADIUS := 11.0
+const BODY_MAX_CORRIDOR_SHARE := 0.4
 
 var _overview := false
-var _elapsed := 0.0
 var _finished := false
+var _live_interval := 0.0  # intervalo del laberinto vivo elegido en el menú (antes del ritmo de la fase)
 var _pause_menu: CanvasLayer
 var _stress: Node
 
@@ -51,7 +58,14 @@ func _ready() -> void:
 	_trophy.trophy_taken.connect(func(p: Participant) -> void: Events.trophy_taken.emit(p))
 	_trophy.trophy_dropped.connect(func(p: Participant, pos: Vector2) -> void: Events.trophy_dropped.emit(p, pos))
 	_trophy.trophy_delivered.connect(func(p: Participant) -> void: Events.trophy_delivered.emit(p))
-	Events.trophy_delivered.connect(_on_trophy_delivered)
+	# La partida: quien entrega el trofeo gana; el reloj y las fases se publican en el Event Bus.
+	Events.trophy_delivered.connect(func(p: Participant) -> void: _match.declare_winner(p))
+	_match.phase_changed.connect(func(phase: int, phase_name: String) -> void: Events.match_phase_changed.emit(phase, phase_name))
+	_match.time_warning.connect(func(seconds_left: float) -> void: Events.match_time_warning.emit(seconds_left))
+	_match.match_ended.connect(func(outcome: int, winner: Object) -> void: Events.match_ended.emit(outcome, winner as Participant))
+	Events.match_phase_changed.connect(_on_phase_changed.unbind(1))
+	Events.match_ended.connect(_on_match_ended)
+	_hud.bind_match(_match)
 	_shifter.shift_warned.connect(func(c: Array, o: Array, s: float) -> void: Events.maze_shift_warned.emit(c, o, s))
 	_maze.map_changed.connect(func(tiles: Array, now_wall: bool) -> void: Events.maze_changed.emit(tiles, now_wall))
 	_shift_view.bind(_maze, _shifter)
@@ -64,9 +78,7 @@ func _ready() -> void:
 	_maze.generate()
 
 
-func _process(delta: float) -> void:
-	if not _finished:
-		_elapsed += delta
+func _process(_delta: float) -> void:
 	if not _overview:
 		_camera.position = _participant.position
 
@@ -94,6 +106,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			_trophy.drop_trophy()
 		KEY_K:
 			_shifter.shift_now()
+		KEY_N:
+			_match.skip_phase()
 		KEY_V:
 			_darkness.visible = not _darkness.visible
 		KEY_TAB:
@@ -113,18 +127,22 @@ func _on_maze_generated(seed_value: int) -> void:
 		_maze.profile.get_display_name().to_upper() if _maze.profile else "?", m.algorithm, size.x, size.y, seed_value])
 	_spawner.start(_maze, _maze.get_base_cells(4), seed_value)
 	_hud.reset_collected()
-	var base: Vector2i = _maze.get_base_cells(1)[0]
-	_participant.position = _maze.cell_to_world(base)
+	# La zona de resguardo mide lo que mide el pasillo: el participante empieza en su centro y su cuerpo
+	# se ajusta para caber siempre (en pasillos de 1 casilla, el cuerpo normal no pasaría).
+	var zone: Rect2i = _maze.get_base_zones(1)[0]
+	var zone_world: Rect2 = _maze.tile_rect_to_world(zone)
+	_participant.body_radius = minf(BODY_RADIUS, zone_world.size.x * BODY_MAX_CORRIDOR_SHARE)
+	_participant.position = zone_world.get_center()
 	var participants: Array[Participant] = [_participant]
 	_trophy.start(_maze, participants)
 	_participant.set_controller(HumanController.new())
+	_match.start(App.match_config.duration_minutes * 60.0)
 	_configure_live_maze(seed_value)
 	if App.match_config.stress_test and _stress == null:
 		_stress = preload("res://scripts/game/stress_test.gd").new()
 		add_child(_stress)
 		_stress.setup(self, _maze, _hud, App.match_config)
 		_stress.start()
-	_elapsed = 0.0
 	_finished = false
 	_camera.position = _participant.position
 	_camera.reset_smoothing()
@@ -139,23 +157,38 @@ func _configure_live_maze(seed_value: int) -> void:
 		_shifter.stop()
 		return
 	var scale: float = _maze.profile.size_scale if _maze.profile else 1.0
-	_shifter.interval = level[0]
+	_live_interval = level[0]
+	_shifter.interval = _live_interval / maxf(0.1, _match.get_maze_speed())
 	_shifter.pairs = int(level[1] * maxf(1.0, scale))
 	_shifter.start(_maze, seed_value)
 
 
-func _on_trophy_delivered(participant: Participant) -> void:
+## Cada fase cambia el ritmo del laberinto vivo (datos: data/match/default_rules.tres).
+func _on_phase_changed(_phase: int) -> void:
+	if _shifter.enabled and _live_interval > 0.0:
+		_shifter.interval = _live_interval / maxf(0.1, _match.get_maze_speed())
+
+
+func _on_match_ended(outcome: int, winner: Participant) -> void:
 	_finished = true
 	_shifter.stop()
-	participant.set_controller(null)  # quieto: terminó la partida
+	for p in get_tree().get_nodes_in_group("participants"):
+		(p as Participant).set_controller(null)  # quietos: terminó la partida
 	App.show_results()
 	var results := RESULTS_SCREEN.instantiate()
 	add_child(results)
-	var time := "%d:%02d" % [int(_elapsed) / 60, int(_elapsed) % 60]
+	var elapsed := _match.get_elapsed()
+	var time := "%d:%02d" % [int(elapsed) / 60, int(elapsed) % 60]
 	var collected: String = _hud.get_node("TopBar/Row/Collected").text
-	results.show_result("¡VICTORIA!", Color(1.0, 0.82, 0.25),
-		"Llevaste el trofeo a tu base en %s\n%s · mapa %s · semilla %d" % [
-			time, collected, _maze.profile.get_display_name() if _maze.profile else "", _maze.get_last_seed()])
+	var map := "mapa %s · semilla %d" % [_maze.profile.get_display_name() if _maze.profile else "", _maze.get_last_seed()]
+	if outcome == MatchController.OUTCOME_VICTORY and winner != null:
+		results.show_result("¡VICTORIA!", Color(1.0, 0.82, 0.25),
+			"Llevaste el trofeo a tu base en %s
+%s · %s" % [time, collected, map])
+	else:
+		results.show_result("TIEMPO AGOTADO", Color(1.0, 0.4, 0.35),
+			"Los vándalos se llevan el trofeo. Nadie gana.
+%s · %s" % [collected, map])
 
 
 func _open_pause() -> void:

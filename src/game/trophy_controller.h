@@ -37,6 +37,7 @@ public:
 	bool is_finished() const { return tracker_.state() == lv::core::TrophyTracker::State::Delivered; }
 	// Dónde está el trofeo en el mundo (sobre el portador si alguien lo lleva).
 	Vector2 get_trophy_position() const;
+	// Centro de la zona de resguardo del participante (en el mundo).
 	Vector2 get_base_position(Participant *p_participant) const;
 
 	void set_trophy_scene(const Ref<PackedScene> &p_value) { trophy_scene_ = p_value; }
@@ -45,8 +46,6 @@ public:
 	Ref<PackedScene> get_base_scene() const { return base_scene_; }
 	void set_carrier_speed_multiplier(float p_value) { carrier_speed_multiplier_ = p_value; }
 	float get_carrier_speed_multiplier() const { return carrier_speed_multiplier_; }
-	void set_base_radius(int p_value) { base_radius_ = p_value; }
-	int get_base_radius() const { return base_radius_; }
 
 protected:
 	static void _bind_methods();
@@ -62,7 +61,6 @@ private:
 	Ref<PackedScene> trophy_scene_;
 	Ref<PackedScene> base_scene_;
 	float carrier_speed_multiplier_ = 0.6f;
-	int base_radius_ = 1;
 
 	void clear_views();
 	void on_map_changed(const TypedArray<Vector2i> &p_tiles, bool p_now_wall);
@@ -70,4 +68,5 @@ private:
 	void update_trophy_view();
 	Participant *participant(int p_index) const;
 	Vector2 cell_center(const lv::core::Cell &p_cell) const;
+	Rect2 zone_world_rect(const lv::core::TileRect &p_zone) const;
 };

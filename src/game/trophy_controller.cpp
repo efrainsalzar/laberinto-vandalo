@@ -25,13 +25,10 @@ void TrophyController::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_base_scene"), &TrophyController::get_base_scene);
 	ClassDB::bind_method(D_METHOD("set_carrier_speed_multiplier", "value"), &TrophyController::set_carrier_speed_multiplier);
 	ClassDB::bind_method(D_METHOD("get_carrier_speed_multiplier"), &TrophyController::get_carrier_speed_multiplier);
-	ClassDB::bind_method(D_METHOD("set_base_radius", "value"), &TrophyController::set_base_radius);
-	ClassDB::bind_method(D_METHOD("get_base_radius"), &TrophyController::get_base_radius);
 
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "trophy_scene", PROPERTY_HINT_RESOURCE_TYPE, "PackedScene"), "set_trophy_scene", "get_trophy_scene");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "base_scene", PROPERTY_HINT_RESOURCE_TYPE, "PackedScene"), "set_base_scene", "get_base_scene");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "carrier_speed_multiplier", PROPERTY_HINT_RANGE, "0.1,1,0.05"), "set_carrier_speed_multiplier", "get_carrier_speed_multiplier");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "base_radius", PROPERTY_HINT_RANGE, "0,5,1,suffix:casillas"), "set_base_radius", "get_base_radius");
 
 	ADD_SIGNAL(MethodInfo("trophy_taken", PropertyInfo(Variant::OBJECT, "participant", PROPERTY_HINT_NODE_TYPE, "Participant")));
 	ADD_SIGNAL(MethodInfo("trophy_dropped", PropertyInfo(Variant::OBJECT, "participant", PROPERTY_HINT_NODE_TYPE, "Participant"), PropertyInfo(Variant::VECTOR2, "world_position")));
@@ -58,19 +55,19 @@ void TrophyController::start(Maze *p_maze, const TypedArray<Participant> &p_part
 		participants_.push_back(Object::cast_to<Participant>(p_participants[i]));
 	}
 
-	std::vector<lv::core::Cell> bases;
-	const TypedArray<Vector2i> base_cells = maze_->get_base_cells(static_cast<int>(participants_.size()));
-	for (int i = 0; i < base_cells.size(); i++) {
-		const Vector2i b = base_cells[i];
-		bases.push_back({ b.x, b.y });
+	// Zonas de resguardo: el cuadro de pasillo completo de cada base (se ajusta al ancho de pasillo).
+	std::vector<lv::core::TileRect> zones;
+	const TypedArray<Rect2i> base_zones = maze_->get_base_zones(static_cast<int>(participants_.size()));
+	for (int i = 0; i < base_zones.size(); i++) {
+		const Rect2i z = base_zones[i];
+		zones.push_back({ z.position.x, z.position.y, z.size.x, z.size.y });
 	}
 	maze_->connect("map_changed", callable_mp(this, &TrophyController::on_map_changed));
 	const Vector2i center = maze_->get_center_cell();
-	tracker_.setup({ center.x, center.y }, bases, 1, base_radius_);
+	tracker_.setup({ center.x, center.y }, zones, 1);
 
-	// Vistas: una base por participante (con su color) y el trofeo.
-	const float tile = maze_->get_tile_px();
-	for (size_t i = 0; i < bases.size(); i++) {
+	// Vistas: una base por participante (con su color, del tamaño exacto de su zona) y el trofeo.
+	for (size_t i = 0; i < zones.size(); i++) {
 		if (base_scene_.is_null()) {
 			break;
 		}
@@ -78,8 +75,9 @@ void TrophyController::start(Maze *p_maze, const TypedArray<Participant> &p_part
 		if (view == nullptr) {
 			continue;
 		}
-		view->set_position(to_local(cell_center(bases[i])));
-		view->set("size_px", (base_radius_ * 2 + 1) * tile);
+		const Rect2 world = zone_world_rect(zones[i]);
+		view->set_position(to_local(world.get_center()));
+		view->set("size_px", world.size.x);
 		if (participants_[i] != nullptr) {
 			view->set("color", participants_[i]->get_color());
 		}
@@ -175,7 +173,7 @@ Vector2 TrophyController::get_trophy_position() const {
 Vector2 TrophyController::get_base_position(Participant *p_participant) const {
 	for (size_t i = 0; i < participants_.size(); i++) {
 		if (participants_[i] == p_participant && maze_ != nullptr) {
-			return cell_center(tracker_.base_of(static_cast<int>(i)));
+			return zone_world_rect(tracker_.base_of(static_cast<int>(i))).get_center();
 		}
 	}
 	return Vector2();
@@ -195,6 +193,10 @@ Participant *TrophyController::participant(int p_index) const {
 
 Vector2 TrophyController::cell_center(const lv::core::Cell &p_cell) const {
 	return maze_->cell_to_world(Vector2i(p_cell.x, p_cell.y));
+}
+
+Rect2 TrophyController::zone_world_rect(const lv::core::TileRect &p_zone) const {
+	return maze_->tile_rect_to_world(Rect2i(p_zone.x, p_zone.y, p_zone.w, p_zone.h));
 }
 
 void TrophyController::clear_views() {

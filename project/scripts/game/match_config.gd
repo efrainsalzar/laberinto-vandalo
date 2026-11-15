@@ -9,6 +9,12 @@ extends Resource
 ## Laberinto vivo: 0 apagado, 1 lento, 2 normal, 3 caótico.
 @export_enum("Apagado", "Lento", "Normal", "Caótico") var live_maze := 2
 
+## Duración de la partida en minutos. 0 = sin límite (las fases avanzan, pero no hay fin por tiempo).
+@export_range(0.0, 60.0, 0.5, "suffix:min") var duration_minutes := 8.0
+
+## Duraciones rápidas del menú (minutos; 0 = sin límite). Además hay "Personalizada" (1–60 min).
+const DURATIONS := [5.0, 8.0, 12.0, 20.0, 0.0]
+
 ## Ritmo del laberinto vivo por nivel: [segundos entre cambios, pares (abrir+cerrar) por cambio].
 const LIVE_MAZE_LEVELS := [[0.0, 0], [25.0, 1], [15.0, 2], [7.0, 4]]
 

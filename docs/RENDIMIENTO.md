@@ -37,6 +37,7 @@ Escenario de referencia para medir: **mapa Gigante, Difícil, laberinto vivo Ca�
 | `pickups.remove` | Retirar objetos tapados por una pared | `game/pickup_factory.cpp` |
 | `trophy.update` | Reglas del trofeo por frame de física | `game/trophy_controller.cpp` |
 | `entities.update` | Índice espacial de entidades por frame de física | `game/entity_index.cpp` |
+| `match.tick` | Reloj y fases de la partida por frame de física | `game/match_controller.cpp` |
 
 **Agregar una medición** (C++): `#include "core/perf.h"` y al inicio del bloque `lv::core::PerfScope perf("sistema.tarea");`.
 Aparece sola en el panel F3 y en los monitores. Nombre: `<sistema>.<tarea>` en minúsculas.

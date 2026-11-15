@@ -3,6 +3,7 @@
 #include "version.h"
 
 #include "game/entity_index.h"
+#include "game/match_controller.h"
 #include "game/maze.h"
 #include "game/maze_profile.h"
 #include "game/maze_shifter.h"
@@ -65,6 +66,10 @@ void initialize_laberinto_module(ModuleInitializationLevel p_level) {
 
 	// Trofeo y bases
 	GDREGISTER_CLASS(TrophyController);
+
+	// Partida: reloj y fases
+	GDREGISTER_CLASS(MatchRules);
+	GDREGISTER_CLASS(MatchController);
 
 	UtilityFunctions::print("[laberinto] Extension C++ cargada (v", LV_VERSION, ")");
 }

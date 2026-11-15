@@ -36,8 +36,11 @@ public:
 
 	static constexpr int NO_ONE = -1;
 
-	// p_bases[i] es la base del participante i. p_pickup_range y p_base_radius en casillas (Chebyshev).
-	void setup(const Cell &p_trophy_cell, const std::vector<Cell> &p_bases, int p_pickup_range = 1, int p_base_radius = 1);
+	// p_zones[i] es la zona de resguardo del participante i (rectángulo de casillas: mide lo que mide el
+	// pasillo, ver MazeGrid::base_zones). p_pickup_range en casillas (Chebyshev).
+	void setup(const Cell &p_trophy_cell, const std::vector<TileRect> &p_zones, int p_pickup_range = 1);
+	// Atajo: bases como casilla + radio (cuadro de (2r+1)x(2r+1)).
+	void setup(const Cell &p_trophy_cell, const std::vector<Cell> &p_bases, int p_pickup_range, int p_base_radius);
 
 	// Informa dónde está un participante; devuelve los eventos que eso produjo.
 	std::vector<Event> update(int p_participant, const Cell &p_cell);
@@ -52,18 +55,17 @@ public:
 	int carrier() const { return carrier_; }
 	int winner() const { return winner_; }
 	const Cell &trophy_cell() const { return trophy_cell_; } // válido en InVault / Dropped
-	const Cell &base_of(int p_participant) const { return bases_[p_participant]; }
-	int participant_count() const { return static_cast<int>(bases_.size()); }
+	const TileRect &base_of(int p_participant) const { return zones_[p_participant]; }
+	int participant_count() const { return static_cast<int>(zones_.size()); }
 	bool is_in_own_base(int p_participant, const Cell &p_cell) const;
 
 private:
 	State state_ = State::InVault;
 	Cell trophy_cell_;
-	std::vector<Cell> bases_;
+	std::vector<TileRect> zones_;
 	int carrier_ = NO_ONE;
 	int winner_ = NO_ONE;
 	int pickup_range_ = 1;
-	int base_radius_ = 1;
 
 	bool valid(int p_participant) const { return p_participant >= 0 && p_participant < participant_count(); }
 };

@@ -1,0 +1,10 @@
+[gd_resource type="MatchRules" format=3]
+
+[resource]
+preparation_share = 0.4
+assault_share = 0.35
+heist_share = 0.25
+warnings = PackedFloat32Array(60, 10)
+preparation_maze_speed = 1.0
+assault_maze_speed = 1.0
+heist_maze_speed = 2.0

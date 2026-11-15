@@ -92,6 +92,13 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 - [x] Ejecución automática (`-- --stress --quit-after-stress`) y `verificar.ps1 -Estres`.
 - [x] Dirty flag en participantes: prueba de estrés 5,2 → **1,2 ms** por frame (p99 ≈ 2,3 ms). DENTRO del presupuesto.
 
+### v0.0.16 — Etapa 1.2: Partida (reloj y fases) + bases ajustadas al pasillo ✅
+- [x] `MatchFlow` (core, State): Preparación → Asalto → Golpe de los vándalos → fin; victoria o tiempo agotado. 10 tests.
+- [x] `MatchController` + `MatchRules` (.tres): 40/35/25, avisos a 60 y 10 s, laberinto vivo ×2 en el Golpe.
+- [x] Reloj en el HUD, avisos de fase y tiempo, resultado "TIEMPO AGOTADO". Duración en el menú: 5/8/12/20 min, sin límite o personalizada (1–60).
+- [x] Arreglo: la base mide el pasillo completo (antes 3×3 fijo, se metía en las paredes); el cuerpo del participante cabe en pasillos de 1. 2 tests (82 en total).
+- [x] Tecla de prueba N: saltar a la siguiente fase.
+
 ## Plan acordado (etapas, una pieza a la vez)
 
 Bloques de interfaz ya hechos: ~~objetos infinitos~~ ✅ · ~~HUD limpio + textos flotantes~~ ✅.
@@ -100,10 +107,13 @@ Ideas del mapa en detalle: [`DISENO_MAPA.md`](DISENO_MAPA.md).
 
 ### Etapa 1 — Jugable de principio a fin
 1. ~~Bases + trofeo + ganar~~ ✅
-2. **Partida**: reloj, fases (State: Preparación → Asalto → Golpe de los vándalos), victoria y fin por tiempo. ← siguiente
+2. ~~Partida: reloj, fases, victoria y fin por tiempo~~ ✅ (v0.0.16)
 3. ~~Pantallas: inicio, configurar, pausa, resultados, opciones~~ ✅
 
 ~~Mapas que cambian en tiempo real~~ ✅ (v0.0.12, en prueba en vivo).
+
+**Etapa 1 completa.** Siguiente paso: **Etapa 2.1 — `MapConfig` + formas de contorno**, o adelantar la
+Etapa 3 — Bots para tener rivales (decisión del dueño del proyecto).
 
 ### Etapa 2 — El mundo
 1. `MapConfig` + formas de contorno (cuadrado, círculo, hexágono...). (Algoritmos, dificultad y tamaños ✅ en v0.0.10.)
@@ -135,4 +145,6 @@ Demo en itch.io · aliados · torneo con rondas · multijugador local · en lín
 - **Más tipos de objeto** (pociones, escudos, bombas): solo nuevos .tres + los efectos que falten en la fase de combate.
 
 - **Multijugador local y visión:** solo hay una luz/oscuridad por pantalla; con varios humanos en la misma máquina hará falta pantalla dividida u otra solución.
-
+- **Partes de cada fase en el menú:** hoy se ajustan en `data/match/default_rules.tres`; se podría exponer en "Personalizado".
+- **Bóveda proporcional al pasillo:** el radio de la bóveda está en casillas; con pasillos de 5, una bóveda de radio 2 mide lo mismo que un pasillo. Podría medirse en celdas.
+- **Qué pasa en cada fase:** vándalos y guardianes por fase (Etapas 5–6), bases que se mueven en el Golpe.

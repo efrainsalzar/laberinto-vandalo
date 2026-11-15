@@ -2,14 +2,21 @@
 
 namespace lv::core {
 
-void TrophyTracker::setup(const Cell &p_trophy_cell, const std::vector<Cell> &p_bases, int p_pickup_range, int p_base_radius) {
+void TrophyTracker::setup(const Cell &p_trophy_cell, const std::vector<TileRect> &p_zones, int p_pickup_range) {
 	state_ = State::InVault;
 	trophy_cell_ = p_trophy_cell;
-	bases_ = p_bases;
+	zones_ = p_zones;
 	carrier_ = NO_ONE;
 	winner_ = NO_ONE;
 	pickup_range_ = p_pickup_range < 0 ? 0 : p_pickup_range;
-	base_radius_ = p_base_radius < 0 ? 0 : p_base_radius;
+}
+
+void TrophyTracker::setup(const Cell &p_trophy_cell, const std::vector<Cell> &p_bases, int p_pickup_range, int p_base_radius) {
+	std::vector<TileRect> zones;
+	for (const Cell &base : p_bases) {
+		zones.push_back(TileRect::around(base, p_base_radius));
+	}
+	setup(p_trophy_cell, zones, p_pickup_range);
 }
 
 std::vector<TrophyTracker::Event> TrophyTracker::update(int p_participant, const Cell &p_cell) {
@@ -62,7 +69,7 @@ bool TrophyTracker::relocate(const Cell &p_cell) {
 }
 
 bool TrophyTracker::is_in_own_base(int p_participant, const Cell &p_cell) const {
-	return valid(p_participant) && chebyshev_distance(p_cell, bases_[p_participant]) <= base_radius_;
+	return valid(p_participant) && zones_[p_participant].contains(p_cell);
 }
 
 } // namespace lv::core

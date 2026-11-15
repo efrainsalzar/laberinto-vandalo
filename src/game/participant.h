@@ -39,6 +39,11 @@ public:
 	// Componente de stats (primer hijo de tipo StatsComponent). Puede ser nullptr.
 	StatsComponent *get_stats() const { return stats_; }
 
+	// Radio del cuerpo (px): ajusta el círculo de colisión y avisa a la vista (señal body_radius_changed).
+	// La partida lo adapta al ancho de pasillo para que el participante siempre quepa.
+	void set_body_radius(float p_value);
+	float get_body_radius() const { return body_radius_; }
+
 	// Última dirección en la que se movió (para orientar sprites o la visión).
 	Vector2 get_facing() const { return facing_; }
 
@@ -52,4 +57,7 @@ private:
 	Color color_ = Color(0.35f, 0.75f, 1.0f);
 	StatsComponent *stats_ = nullptr;
 	Vector2 facing_ = Vector2(0, 1);
+	float body_radius_ = 11.0f;
+
+	void apply_body_radius();
 };

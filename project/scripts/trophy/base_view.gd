@@ -1,6 +1,7 @@
 extends Node2D
 ## Vista provisional de una zona de resguardo (base): cuadro del color de su dueño con borde que late.
 ## Tiene una luz tenue para poder reconocer tu base en la oscuridad. Solo dibuja.
+## `size_px` = tamaño exacto de la zona (el cuadro de pasillo de la base): se ajusta al ancho de pasillo.
 
 var color := Color(0.35, 0.75, 1.0):
 	set(value):
@@ -33,8 +34,9 @@ func _draw() -> void:
 	var pulse := 0.55 + 0.35 * sin(_time * 2.0)
 	draw_rect(rect.grow(-1.0), Color(color, pulse), false, 2.0)
 	# Esquinas marcadas, como una zona de aterrizaje.
-	var c := 8.0
-	for corner in [Vector2(-half, -half), Vector2(half, -half), Vector2(half, half), Vector2(-half, half)]:
+	var c := minf(8.0, size_px * 0.3)
+	var h := half - 1.5  # las líneas miden 3 px: se meten 1,5 px para no pisar las paredes
+	for corner in [Vector2(-h, -h), Vector2(h, -h), Vector2(h, h), Vector2(-h, h)]:
 		var sx := -signf(corner.x)
 		var sy := -signf(corner.y)
 		draw_line(corner, corner + Vector2(sx * c, 0), color, 3.0)

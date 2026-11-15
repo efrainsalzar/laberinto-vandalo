@@ -26,3 +26,12 @@ signal maze_shift_warned(closing: Array, opening: Array, seconds: float)
 
 ## Casillas del laberinto que cambiaron (now_wall = true: se cerraron).
 signal maze_changed(tiles: Array, now_wall: bool)
+
+## Empezó una fase de la partida (MatchController.PHASE_*). También al empezar (Preparación).
+signal match_phase_changed(phase: int, phase_name: String)
+
+## Aviso de tiempo: quedan `seconds_left` segundos de partida.
+signal match_time_warning(seconds_left: float)
+
+## Terminó la partida. outcome = MatchController.OUTCOME_VICTORY (winner = quien ganó) u OUTCOME_TIME_UP (winner = null).
+signal match_ended(outcome: int, winner: Participant)

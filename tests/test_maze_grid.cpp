@@ -125,4 +125,32 @@ TEST_SUITE("MazeGrid") {
 			}
 		}
 	}
+
+	TEST_CASE("Las zonas de base miden lo que el pasillo y nunca pisan paredes (anchos 1 a 5)") {
+		for (int width = 1; width <= 5; width++) {
+			CAPTURE(width);
+			MazeGrid grid;
+			MazeGrid::Options options;
+			options.cells_w = 10;
+			options.cells_h = 8;
+			options.corridor_width = width;
+			options.seed = 42;
+			grid.generate(options);
+			const auto zones = grid.base_zones(8);
+			const auto cells = grid.base_cells(8);
+			REQUIRE(zones.size() == cells.size());
+			for (size_t i = 0; i < zones.size(); i++) {
+				CHECK(zones[i].w == width);
+				CHECK(zones[i].h == width);
+				CHECK(zones[i].contains(cells[i]));
+				for (int y = zones[i].y; y < zones[i].y + zones[i].h; y++) {
+					for (int x = zones[i].x; x < zones[i].x + zones[i].w; x++) {
+						CHECK_FALSE(grid.is_wall({ x, y }));
+					}
+				}
+				// Rodeada por pared o pasaje: la casilla en diagonal fuera de la esquina es pared.
+				CHECK(grid.is_wall({ zones[i].x - 1, zones[i].y - 1 }));
+			}
+		}
+	}
 }

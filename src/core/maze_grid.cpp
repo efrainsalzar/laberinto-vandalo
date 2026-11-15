@@ -172,6 +172,16 @@ std::vector<Cell> MazeGrid::base_cells(int p_count) const {
 	return result;
 }
 
+std::vector<TileRect> MazeGrid::base_zones(int p_count) const {
+	// base_cells devuelve la casilla k*step + 1 + cw/2; el pasillo empieza en k*step + 1.
+	std::vector<TileRect> result;
+	const int half = corridor_width_ / 2;
+	for (const Cell &c : base_cells(p_count)) {
+		result.push_back({ c.x - half, c.y - half, corridor_width_, corridor_width_ });
+	}
+	return result;
+}
+
 bool MazeGrid::is_fully_connected() const {
 	const std::vector<Cell> floors = floor_cells();
 	if (floors.empty()) {

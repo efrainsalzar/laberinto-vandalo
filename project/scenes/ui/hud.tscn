@@ -86,6 +86,34 @@ theme_override_colors/font_color = Color(0.8, 0.78, 0.9, 1)
 theme_override_font_sizes/font_size = 18
 text = "OBJ 0"
 
+[node name="Clock" type="VBoxContainer" parent="."]
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -110.0
+offset_right = 110.0
+offset_bottom = 38.0
+grow_horizontal = 2
+mouse_filter = 2
+alignment = 1
+theme_override_constants/separation = -4
+
+[node name="Time" type="Label" parent="Clock"]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0.05, 0.02, 0.05, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 20
+text = "8:00"
+horizontal_alignment = 1
+
+[node name="Phase" type="Label" parent="Clock"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.72, 0.85, 1)
+theme_override_font_sizes/font_size = 11
+text = "PREPARACIÓN"
+horizontal_alignment = 1
+
 [node name="Objective" type="Control" parent="."]
 layout_mode = 3
 anchors_preset = 15

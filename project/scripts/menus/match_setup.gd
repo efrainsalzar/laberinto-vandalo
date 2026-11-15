@@ -22,6 +22,13 @@ const LIVE_LEVELS := [
 	["Normal", "Cada 15 s cambian varios pasajes. Las rutas que conocías pueden dejar de existir."],
 	["Caótico", "Cada 7 s el laberinto se transforma. Nada es seguro por mucho tiempo."],
 ]
+const DURATION_HINTS := {
+	5.0: "Partida corta: fases rápidas, hay que ir directo al trofeo.",
+	8.0: "Duración estándar del torneo (VISION: reloj de 8 minutos).",
+	12.0: "Partida larga: más tiempo para explorar y juntar mejoras.",
+	20.0: "Muy larga: ideal para mapas Enormes o Gigantes.",
+	0.0: "Sin límite: las fases avanzan, pero el tiempo nunca se acaba. Para practicar.",
+}
 const ALGORITHMS := ["Backtracking", "Growing Tree", "Prim", "Kruskal", "Wilson", "Hunt-and-Kill"]
 const ALGORITHM_HINTS := [
 	"Backtracking: pasillos muy largos y sinuosos, pocos callejones.",
@@ -40,6 +47,7 @@ var _refresh_pending := false
 var _difficulty_group := ButtonGroup.new()
 var _size_group := ButtonGroup.new()
 var _live_group := ButtonGroup.new()
+var _duration_group := ButtonGroup.new()
 
 
 func _ready() -> void:
@@ -49,6 +57,7 @@ func _ready() -> void:
 	_build_difficulty_buttons()
 	_build_size_buttons()
 	_build_live_buttons()
+	_build_duration_buttons()
 	_build_custom_controls()
 	UiFx.hint(%Seed, "Número que define el mapa. Vacío = uno al azar. Escribe la semilla de un mapa para repetirlo o compartirlo.")
 	UiFx.hint(%RandomSeed, "Genera otro mapa al azar con la misma configuración.")
@@ -84,6 +93,57 @@ func _build_difficulty_buttons() -> void:
 		b.set_meta("difficulty", entry[0])
 		UiFx.hint(b, entry[2])
 		%Difficulty.add_child(b)
+
+
+func _build_duration_buttons() -> void:
+	var custom := not MatchConfig.DURATIONS.has(_config.duration_minutes)
+	for minutes: float in MatchConfig.DURATIONS:
+		var b := Button.new()
+		b.text = "Sin límite" if minutes == 0.0 else "%d min" % minutes
+		b.toggle_mode = true
+		b.button_group = _duration_group
+		b.set_pressed_no_signal(not custom and _config.duration_minutes == minutes)
+		b.pressed.connect(func() -> void:
+			_config.duration_minutes = minutes
+			%DurationCustom.visible = false)
+		UiFx.hint(b, DURATION_HINTS[minutes])
+		%Duration.add_child(b)
+	var b := Button.new()
+	b.text = "Personalizada"
+	b.toggle_mode = true
+	b.button_group = _duration_group
+	b.set_pressed_no_signal(custom)
+	UiFx.hint(b, "Elige los minutos exactos con la barra (de 1 a 60).")
+	%Duration.add_child(b)
+	# Barra de minutos (solo visible en "Personalizada").
+	var row := HBoxContainer.new()
+	var label := Label.new()
+	label.text = "Minutos"
+	label.custom_minimum_size.x = 170
+	label.add_theme_font_size_override("font_size", 15)
+	var slider := HSlider.new()
+	slider.min_value = 1
+	slider.max_value = 60
+	slider.step = 1
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var value := Label.new()
+	value.custom_minimum_size.x = 60
+	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	slider.value_changed.connect(func(v: float) -> void:
+		value.text = "%d min" % v
+		_config.duration_minutes = v)
+	slider.value = _config.duration_minutes if custom else 10.0
+	value.text = "%d min" % slider.value
+	UiFx.hint(slider, "Duración total de la partida. Las fases se reparten: 40% Preparación, 35% Asalto, 25% Golpe.")
+	row.add_child(label)
+	row.add_child(slider)
+	row.add_child(value)
+	%DurationCustom.add_child(row)
+	%DurationCustom.visible = custom
+	b.pressed.connect(func() -> void:
+		_config.duration_minutes = slider.value
+		%DurationCustom.visible = true)
 
 
 func _build_live_buttons() -> void:
