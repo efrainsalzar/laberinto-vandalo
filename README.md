@@ -1,5 +1,8 @@
 # 🏆 Laberinto Vándalo
 
+[![CI](https://github.com/efrainsalzar/laberinto-vandalo/actions/workflows/ci.yml/badge.svg)](https://github.com/efrainsalzar/laberinto-vandalo/actions/workflows/ci.yml)
+[![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE)
+
 > Nombre provisional · **En desarrollo temprano (v0.0.4)**
 
 **Un torneo en un laberinto vivo donde varios participantes compiten por un trofeo, pero unos vándalos
@@ -54,7 +57,7 @@ Detalle y siguiente paso: [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ```bash
 # 1. Clonar con el submódulo godot-cpp
-git clone --recurse-submodules <URL-del-repositorio>
+git clone --recurse-submodules https://github.com/efrainsalzar/laberinto-vandalo.git
 cd laberinto-vandalo
 
 # 2. Compilar la extensión C++ (la primera vez tarda varios minutos)
