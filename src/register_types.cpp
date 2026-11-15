@@ -5,6 +5,9 @@
 #include "game/maze.h"
 #include "game/participant.h"
 #include "game/participant_controller.h"
+#include "game/pickup.h"
+#include "game/pickup_factory.h"
+#include "game/pickup_type.h"
 #include "game/stats_component.h"
 #include "game/stats_profile.h"
 #include "game/vision.h"
@@ -36,6 +39,12 @@ void initialize_laberinto_module(ModuleInitializationLevel p_level) {
 
 	// Visión
 	GDREGISTER_CLASS(Vision);
+
+	// Objetos recolectables
+	GDREGISTER_CLASS(PickupEffect);
+	GDREGISTER_CLASS(PickupType);
+	GDREGISTER_CLASS(Pickup);
+	GDREGISTER_CLASS(PickupFactory);
 
 	UtilityFunctions::print("[laberinto] Extension C++ cargada (v", LV_VERSION, ")");
 }

@@ -1,5 +1,5 @@
 extends Node2D
-## Escena de prueba de las piezas 2, 3 y 4 (participante + stats + visión). No es parte del juego final.
+## Escena de prueba de las piezas 2 a 5 (participante, stats, visión, objetos). No es parte del juego final.
 ## WASD/flechas = moverse · 1/2/3 = efectos de prueba · 0 = quitar efectos
 ## V = niebla on/off · Tab = ver mapa completo · R = otro laberinto · Esc = salir
 
@@ -11,13 +11,18 @@ const DEBUG_SOURCE := "prueba"
 @onready var _camera: Camera2D = $Camera
 @onready var _help: Label = $UI/Help
 @onready var _darkness: CanvasModulate = $Darkness
+@onready var _pickups: PickupFactory = $Pickups
+@onready var _panel = $UI/StatsPanel
+
+var _collected := 0
 
 var _overview := false
 
 
 func _ready() -> void:
 	_participant.set_controller(HumanController.new())
-	$UI/StatsPanel.bind(_participant)
+	_panel.bind(_participant)
+	_pickups.pickup_collected.connect(_on_pickup_collected)
 	_maze.generated.connect(_on_maze_generated)
 	if _maze.get_last_seed() != 0:
 		_on_maze_generated(_maze.get_last_seed())
@@ -53,7 +58,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_tree().quit()
 
 
-func _on_maze_generated(_seed: int) -> void:
+func _on_maze_generated(seed_value: int) -> void:
+	# Objetos: misma semilla que el laberinto (determinista). Se dejan libres las 4 esquinas (bases).
+	var placed := _pickups.populate(_maze, _maze.get_base_cells(4), seed_value)
+	print("[sandbox] objetos colocados: ", placed)
+	_collected = 0
+	_panel.set_collected(_collected)
 	var base: Vector2i = _maze.get_base_cells(1)[0]
 	_participant.position = _maze.cell_to_world(base)
 	_camera.position = _participant.position
@@ -72,3 +82,9 @@ func _update_camera() -> void:
 	var view := get_viewport_rect().size * 0.95
 	var z := minf(view.x / world_size.x, view.y / world_size.y)
 	_camera.zoom = Vector2(z, z)
+
+
+func _on_pickup_collected(pickup: Pickup, _participant: Participant) -> void:
+	_collected += 1
+	_panel.set_collected(_collected)
+	print("[sandbox] recogido: ", pickup.type.display_name)

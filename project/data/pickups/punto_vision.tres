@@ -1,0 +1,16 @@
+[gd_resource type="PickupType" load_steps=2 format=3]
+
+[sub_resource type="PickupEffect" id="e1"]
+stat = 1
+op = 0
+value = 0.5
+duration = -1.0
+
+[resource]
+id = "punto_vision"
+display_name = "Punto de visión"
+color = Color(1, 0.85, 0.3, 1)
+radius = 4
+weight = 10
+effects = Array[PickupEffect]([SubResource("e1")])
+

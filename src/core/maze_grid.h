@@ -1,9 +1,9 @@
 #pragma once
 
 #include "core/cell.h"
+#include "core/random.h"
 
 #include <cstdint>
-#include <random>
 #include <vector>
 
 namespace lv::core {
@@ -57,8 +57,8 @@ private:
 
 	// Pasos de la generación (en orden). Los pasos 1 y 2 trabajan sobre la cuadrícula
 	// compacta (pasillos de 1 casilla); el paso 3 la escala al ancho de pasillo final.
-	void carve_perfect_maze(int p_cells_w, int p_cells_h, std::mt19937 &r_rng);
-	void open_loops(float p_chance, std::mt19937 &r_rng);
+	void carve_perfect_maze(int p_cells_w, int p_cells_h, Rng &r_rng);
+	void open_loops(float p_chance, Rng &r_rng);
 	void widen_corridors(int p_corridor_width);
 	void open_vault();
 

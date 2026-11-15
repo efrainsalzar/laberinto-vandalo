@@ -1,13 +1,21 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/sandbox/participant_sandbox.gd" id="1_sbx"]
 [ext_resource type="PackedScene" path="res://scenes/participant/participant.tscn" id="2_part"]
 [ext_resource type="PackedScene" path="res://scenes/ui/stats_panel.tscn" id="3_panel"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/pickup.tscn" id="4_pickup"]
+[ext_resource type="PickupType" path="res://data/pickups/punto_velocidad.tres" id="5_pv"]
+[ext_resource type="PickupType" path="res://data/pickups/punto_vision.tres" id="6_pvi"]
+[ext_resource type="PickupType" path="res://data/pickups/powerup_rapidez.tres" id="7_pr"]
 
 [node name="ParticipantSandbox" type="Node2D"]
 script = ExtResource("1_sbx")
 
 [node name="Maze" type="Maze" parent="."]
+
+[node name="Pickups" type="PickupFactory" parent="."]
+pickup_scene = ExtResource("4_pickup")
+types = Array[PickupType]([ExtResource("5_pv"), ExtResource("6_pvi"), ExtResource("7_pr")])
 
 [node name="Participant" parent="." instance=ExtResource("2_part")]
 

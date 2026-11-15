@@ -42,6 +42,11 @@ text = "Velocidad: -"
 layout_mode = 2
 text = "Visión: -"
 
+[node name="Collected" type="Label" parent="Rows"]
+visible = false
+layout_mode = 2
+text = "Objetos: 0"
+
 [node name="Effects" type="Label" parent="Rows"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)

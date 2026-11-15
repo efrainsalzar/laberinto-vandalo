@@ -11,7 +11,7 @@ Leer antes: `CLAUDE.md`, `docs/ROADMAP.md` (qué sigue) y la sección del módul
 ## Fase A — Diseño (sin código)
 
 1. Identificar la pieza en `docs/ROADMAP.md` y lo que dice `docs/VISION.md` sobre ella.
-2. Revisar qué existe y se puede reutilizar (`docs/ARQUITECTURA.md` §8 tiene el índice de patrones).
+2. Revisar qué existe y se puede reutilizar (la última sección de `docs/ARQUITECTURA.md` es el índice de patrones).
 3. Escribir la propuesta con [`plantilla-diseno.md`](plantilla-diseno.md): problema, solución,
    patrones **con su porqué**, clases, qué va en `core` y qué en `game`, cómo se prueba en pantalla.
    - Un patrón solo si resuelve un problema de esta pieza o de una fase cercana ya planificada. Si es la

@@ -20,7 +20,7 @@ void MazeGrid::generate(const Options &p_options) {
 
 	corridor_width_ = std::max(1, p_options.corridor_width);
 
-	std::mt19937 rng(p_options.seed);
+	Rng rng(p_options.seed);
 	carve_perfect_maze(cells_w, cells_h, rng);
 	open_loops(p_options.loop_chance, rng);
 	widen_corridors(corridor_width_);
@@ -64,7 +64,7 @@ int MazeGrid::compact_to_final(int p_compact) const {
 
 // Paso 1: backtracking iterativo. Recorre las celdas al azar abriendo paredes;
 // el resultado tiene exactamente un camino entre cualquier par de celdas.
-void MazeGrid::carve_perfect_maze(int p_cells_w, int p_cells_h, std::mt19937 &r_rng) {
+void MazeGrid::carve_perfect_maze(int p_cells_w, int p_cells_h, Rng &r_rng) {
 	std::vector<uint8_t> visited(static_cast<size_t>(p_cells_w) * p_cells_h, 0);
 	std::vector<Cell> stack;
 	stack.push_back({ 0, 0 });
@@ -85,7 +85,7 @@ void MazeGrid::carve_perfect_maze(int p_cells_w, int p_cells_h, std::mt19937 &r_
 			stack.pop_back();
 			continue;
 		}
-		const Cell next = options[std::uniform_int_distribution<int>(0, option_count - 1)(r_rng)];
+		const Cell next = options[r_rng.range(option_count)];
 		visited[next.y * p_cells_w + next.x] = 1;
 		set_wall({ next.x * 2 + 1, next.y * 2 + 1 }, false); // celda destino
 		set_wall({ current.x + next.x + 1, current.y + next.y + 1 }, false); // pared entre ambas
@@ -94,11 +94,11 @@ void MazeGrid::carve_perfect_maze(int p_cells_w, int p_cells_h, std::mt19937 &r_
 }
 
 // Paso 2: abre algunas paredes que separan dos pasillos, creando rutas alternativas.
-void MazeGrid::open_loops(float p_chance, std::mt19937 &r_rng) {
+void MazeGrid::open_loops(float p_chance, Rng &r_rng) {
 	if (p_chance <= 0.0f) {
 		return;
 	}
-	std::uniform_real_distribution<float> roll(0.0f, 1.0f);
+
 	for (int y = 1; y < height_ - 1; y++) {
 		for (int x = 1; x < width_ - 1; x++) {
 			if (!is_wall({ x, y })) {
@@ -106,7 +106,7 @@ void MazeGrid::open_loops(float p_chance, std::mt19937 &r_rng) {
 			}
 			const bool between_horizontal = !is_wall({ x - 1, y }) && !is_wall({ x + 1, y }) && is_wall({ x, y - 1 }) && is_wall({ x, y + 1 });
 			const bool between_vertical = !is_wall({ x, y - 1 }) && !is_wall({ x, y + 1 }) && is_wall({ x - 1, y }) && is_wall({ x + 1, y });
-			if ((between_horizontal || between_vertical) && roll(r_rng) < p_chance) {
+			if ((between_horizontal || between_vertical) && r_rng.chance(p_chance)) {
 				set_wall({ x, y }, false);
 			}
 		}

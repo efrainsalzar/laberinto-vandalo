@@ -38,18 +38,26 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 - [x] Paredes con oclusores en su propia capa: se ven las cercanas, lo de detrás queda oculto.
 - [x] Sandbox con oscuridad (tecla V la apaga).
 
-## Siguiente paso: Pieza 5 — Puntos recolectables
+### v0.0.6 — Pieza 5: Objetos recolectables ✅
+- [x] Tipos de objeto como datos (`PickupType` + `PickupEffect`, `.tres`) y `PickupFactory` (Factory).
+- [x] `place_pickups` (core): suelo, fuera de la bóveda, lejos de bases, separación y rareza. 5 tests.
+- [x] `lv::core::Rng`: aleatorio portable (misma semilla = mismo resultado en todas las plataformas); `MazeGrid` migrado. 3 tests.
+- [x] 3 tipos: punto de velocidad, punto de visión, power-up de rapidez (raro). Contador en el panel.
 
-Diseñar y aprobar antes de programar (Factory + datos; aplican modificadores de Stats).
+## Siguiente paso: Pieza 6 — Trofeo y zonas de resguardo
+
+Diseñar y aprobar antes de programar.
 
 ## Después (fase 1 — prototipo), un módulo a la vez
 
-5. Puntos recolectables.
 6. Trofeo y zonas de resguardo.
 7. Gestor de partida: reloj, victoria y fin por tiempo.
 8. Arte CC0 (Kenney) reemplazando las formas de colores.
 
 ## Ideas anotadas (no implementar todavía)
+
+- **Reaparición de objetos:** que los puntos vuelvan a aparecer con el tiempo; lo decidirá el Director de IA (fase 5).
+- **Más tipos de objeto** (pociones, escudos, bombas): solo nuevos .tres + los efectos que falten en la fase de combate.
 
 - **Multijugador local y visión:** solo hay una luz/oscuridad por pantalla; con varios humanos en la misma máquina hará falta pantalla dividida u otra solución.
 

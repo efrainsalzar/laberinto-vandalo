@@ -33,7 +33,7 @@ Gana quien lleva el trofeo a su zona de resguardo antes de que acabe el tiempo.
 - **Idea central: el participante no sabe quién lo controla** (humano, bot o red).
 - Sin sobreingeniería: no se diseña para "cambiar de motor". Se aplica un patrón cuando resuelve un problema real.
 - **Todo módulo nuevo se documenta en `docs/ARQUITECTURA.md`**: problema, patrón elegido y por qué,
-  diagrama de clases (Mermaid), archivos y decisiones pendientes. Y se agrega al índice de patrones (§8).
+  diagrama de clases (Mermaid), archivos y decisiones pendientes. Y se agrega al índice de patrones (última sección).
 - Lógica y vista separadas: los nodos C++ no dibujan; la vista (escena/GDScript) no decide.
 
 ## Estructura de carpetas
@@ -85,6 +85,7 @@ Si se repite una tarea varias veces, se convierte en skill (y su parte ejecutabl
 - Parámetros con prefijo `p_`, miembros privados con sufijo `_` en `core/`.
 - Lógica pura en el namespace `lv::core`. Clases de Godot sin namespace (Godot las registra por nombre).
 - Toda clase nueva de Godot se registra en `src/register_types.cpp`.
+- En `core/`, lo aleatorio usa siempre `lv::core::Rng` (nunca `std::uniform_*_distribution` ni `std::shuffle`): misma semilla = mismo resultado en todas las plataformas.
 - Nada de lógica de reglas dentro de nodos visuales: el nodo delega en `core/`.
 
 ## Reglas que no se rompen

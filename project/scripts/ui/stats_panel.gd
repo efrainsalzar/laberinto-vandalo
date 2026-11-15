@@ -9,6 +9,7 @@ const STAT_NAMES := {StatsComponent.STAT_SPEED: "Velocidad", StatsComponent.STAT
 @onready var _speed: Label = $Rows/Speed
 @onready var _vision: Label = $Rows/Vision
 @onready var _effects: Label = $Rows/Effects
+@onready var _collected: Label = $Rows/Collected
 
 var _stats: StatsComponent
 
@@ -23,6 +24,12 @@ func bind(participant: Participant) -> void:
 	_stats.stat_changed.connect(_on_stat_changed)
 	_on_stat_changed(StatsComponent.STAT_SPEED, _stats.get_speed())
 	_on_stat_changed(StatsComponent.STAT_VISION, _stats.get_vision())
+
+
+## Muestra el contador de objetos recogidos (lo actualiza quien escucha a PickupFactory).
+func set_collected(count: int) -> void:
+	_collected.visible = true
+	_collected.text = "Objetos: %d" % count
 
 
 func _process(_delta: float) -> void:

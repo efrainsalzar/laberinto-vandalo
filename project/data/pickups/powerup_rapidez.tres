@@ -1,0 +1,16 @@
+[gd_resource type="PickupType" load_steps=2 format=3]
+
+[sub_resource type="PickupEffect" id="e1"]
+stat = 0
+op = 1
+value = 1.5
+duration = 6.0
+
+[resource]
+id = "powerup_rapidez"
+display_name = "Power-up de rapidez"
+color = Color(1, 0.35, 0.85, 1)
+radius = 6.5
+weight = 2
+effects = Array[PickupEffect]([SubResource("e1")])
+

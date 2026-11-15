@@ -1,0 +1,16 @@
+[gd_resource type="PickupType" load_steps=2 format=3]
+
+[sub_resource type="PickupEffect" id="e1"]
+stat = 0
+op = 0
+value = 8.0
+duration = -1.0
+
+[resource]
+id = "punto_velocidad"
+display_name = "Punto de velocidad"
+color = Color(0.3, 0.95, 0.55, 1)
+radius = 4
+weight = 10
+effects = Array[PickupEffect]([SubResource("e1")])
+
