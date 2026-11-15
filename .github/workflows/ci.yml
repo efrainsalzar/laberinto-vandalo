@@ -8,6 +8,11 @@ on:
   pull_request:
   merge_group:
 
+# Si llega un commit nuevo a la misma rama, se cancela la ejecución anterior (ahorra tiempo de CI).
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   tests:
     name: Tests unitarios (doctest)
