@@ -36,6 +36,8 @@ public:
 	// Opciones efectivas (preset o personalizadas). La semilla la pone Maze.
 	lv::core::MazeGrid::Options to_options() const;
 	String get_display_name() const;
+	// Copia los valores de un nivel a los campos personalizados (punto de partida para editar).
+	void load_preset_values(Difficulty p_difficulty);
 
 	void set_difficulty(Difficulty p_value);
 	Difficulty get_difficulty() const { return difficulty_; }

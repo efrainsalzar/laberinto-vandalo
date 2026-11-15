@@ -4,6 +4,7 @@
 
 void MazeProfile::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_display_name"), &MazeProfile::get_display_name);
+	ClassDB::bind_method(D_METHOD("load_preset_values", "difficulty"), &MazeProfile::load_preset_values);
 	ClassDB::bind_method(D_METHOD("set_difficulty", "value"), &MazeProfile::set_difficulty);
 	ClassDB::bind_method(D_METHOD("get_difficulty"), &MazeProfile::get_difficulty);
 	ClassDB::bind_method(D_METHOD("set_cells_width", "value"), &MazeProfile::set_cells_width);
@@ -90,4 +91,13 @@ int MazeProfile::get_pickup_count() const {
 	// Densidad constante: ~1 objeto cada 9 celdas lógicas.
 	const lv::core::MazeGrid::Options o = to_options();
 	return (o.cells_w * o.cells_h) / 9;
+}
+
+void MazeProfile::load_preset_values(Difficulty p_difficulty) {
+	if (p_difficulty == DIFFICULTY_CUSTOM) {
+		return;
+	}
+	custom_ = lv::core::maze_preset(static_cast<lv::core::MazeDifficulty>(p_difficulty));
+	pickup_count_ = (custom_.cells_w * custom_.cells_h) / 9;
+	notify_property_list_changed();
 }

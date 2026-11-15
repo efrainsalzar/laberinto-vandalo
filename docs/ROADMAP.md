@@ -66,6 +66,12 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 - [x] 4 niveles (Fácil, Normal, Difícil, Extremo) + personalizado como datos (`MazeProfile`). Tecla M en el sandbox.
 - [x] 6 tests (52 en total), incluido uno que verifica que los niveles están ordenados por dificultad.
 
+### v0.0.11 — Etapa 1.3: Menús, flujo del juego y opciones ✅
+- [x] Menú principal (fondo de laberinto animado), configurar partida con **vista previa del mapa en vivo**, pausa, resultados, opciones persistentes.
+- [x] Flujo del juego con **State** (`App`), opciones (`Settings`), `MatchConfig`, tema único (`ui/theme.tres`).
+- [x] Todo con mouse, teclado y mando; teclas de prueba solo si se activan en Opciones.
+- [x] La escena de prueba pasó a ser la partida real (`scenes/game/match.tscn`).
+
 ## Plan acordado (etapas, una pieza a la vez)
 
 Bloques de interfaz ya hechos: ~~objetos infinitos~~ ✅ · ~~HUD limpio + textos flotantes~~ ✅.
@@ -74,8 +80,10 @@ Ideas del mapa en detalle: [`DISENO_MAPA.md`](DISENO_MAPA.md).
 
 ### Etapa 1 — Jugable de principio a fin
 1. ~~Bases + trofeo + ganar~~ ✅
-2. **Partida**: reloj, fases (State: Preparación → Asalto → Golpe de los vándalos), victoria y fin por tiempo. ← siguiente
-3. Pantallas mínimas: inicio, pausa, fin de partida (flujo del juego con State).
+2. Partida: reloj, fases (State: Preparación → Asalto → Golpe de los vándalos), victoria y fin por tiempo.
+3. ~~Pantallas: inicio, configurar, pausa, resultados, opciones~~ ✅
+
+**Siguiente (pedido del dueño): mapas que cambian en tiempo real** (etapa 2.4 adelantada): modelo del mapa mutable con evento "el mapa cambió" → colisión, sombras, visión, objetos y caminos se actualizan solos; paredes que se abren/cierran con aviso.
 
 ### Etapa 2 — El mundo
 1. `MapConfig` + formas de contorno (cuadrado, círculo, hexágono...). (Algoritmos, dificultad y tamaños ✅ en v0.0.10.)

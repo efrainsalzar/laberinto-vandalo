@@ -52,7 +52,11 @@ thirdparty/            Dependencias incluidas (doctest)
 godot-cpp/             Submódulo: bindings C++ de Godot (no editar)
 project/               Proyecto de Godot (escenas, scripts GDScript, assets)
   bin/                 laberinto.gdextension + DLL compiladas (las DLL no se suben)
-  scenes/sandbox/      Escenas de prueba por módulo (no son parte del juego final)
+  scenes/menus/        Menú principal, configurar partida, opciones, pausa, resultados
+  scenes/game/         La partida (match.tscn)
+  scripts/autoload/    Events (Event Bus), Settings (opciones), App (flujo del juego: State)
+  data/                Datos (.tres): mapas, objetos, stats, reglas de aparición
+  ui/theme.tres        Tema único de la interfaz
 docs/                  Visión, arquitectura, hoja de ruta
 ```
 
@@ -64,7 +68,8 @@ Entorno local (Windows): activar con `. D:\Github\gamedev\env.ps1` (scons, clang
 |---|---|
 | Compilar extensión (debug) | `scons platform=windows target=template_debug compiledb=yes` |
 | Tests unitarios | `scons tests=yes` |
-| Ejecutar juego | `godot --path project` |
+| Ejecutar juego (abre el menú) | `godot --path project` |
+| Ejecutar la partida directamente | `godot --path project res://scenes/game/match.tscn` |
 | Ejecutar sin ventana (verificación) | `godot --headless --path project --quit-after 5` |
 | Formatear C++ | `clang-format -i src/**/*.cpp src/**/*.h tests/*.cpp` |
 | **Verificar todo** (compilar + tests + Godot) | `./tools/verificar.ps1` (opciones: `-SinCompilar`, `-SinGodot`, `-Captura <carpeta>`, `-Escena res://...`) |

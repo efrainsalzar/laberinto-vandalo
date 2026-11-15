@@ -4,6 +4,7 @@
 #include "core/maze_grid.h"
 #include "game/maze_profile.h"
 
+#include <godot_cpp/classes/image.hpp>
 #include <godot_cpp/classes/tile_map_layer.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/variant/typed_array.hpp>
@@ -68,6 +69,10 @@ public:
 	Ref<MazeProfile> get_profile() const { return profile_; }
 	// {algorithm, cells, dead_ends, junctions, dead_end_ratio, route_length} del último laberinto.
 	Dictionary get_metrics() const;
+
+	// Vista previa sin crear un nivel (para el menú de configuración): genera el laberinto del perfil
+	// con esa semilla (0 = aleatoria) y devuelve {image: Image (1 px por casilla), metrics, seed, size}.
+	static Dictionary build_preview(const Ref<MazeProfile> &p_profile, int p_seed);
 
 protected:
 	static void _bind_methods();

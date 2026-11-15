@@ -24,6 +24,29 @@ Vector2i to_vector(const lv::core::Cell &p_c) {
 }
 } // namespace
 
+namespace {
+Dictionary metrics_to_dictionary(const lv::core::MazeGrid::Metrics &m) {
+	Dictionary d;
+	d["algorithm"] = String::utf8(lv::core::maze_algorithm_name(m.algorithm));
+	d["cells"] = m.cells;
+	d["dead_ends"] = m.dead_ends;
+	d["junctions"] = m.junctions;
+	d["dead_end_ratio"] = m.dead_end_ratio;
+	d["route_length"] = m.route_length;
+	return d;
+}
+
+uint32_t pick_seed(int p_seed) {
+	if (p_seed != 0) {
+		return static_cast<uint32_t>(p_seed);
+	}
+	Ref<RandomNumberGenerator> rng;
+	rng.instantiate();
+	rng->randomize();
+	return static_cast<uint32_t>(rng->randi_range(1, 2147483647));
+}
+} // namespace
+
 void Maze::_bind_methods() {
 	BIND_CONSTANT(WALLS_LIGHT_MASK);
 	ClassDB::bind_method(D_METHOD("generate"), &Maze::generate);
@@ -38,6 +61,7 @@ void Maze::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_profile", "value"), &Maze::set_profile);
 	ClassDB::bind_method(D_METHOD("get_profile"), &Maze::get_profile);
 	ClassDB::bind_method(D_METHOD("get_metrics"), &Maze::get_metrics);
+	ClassDB::bind_static_method("Maze", D_METHOD("build_preview", "profile", "seed"), &Maze::build_preview);
 	ClassDB::bind_method(D_METHOD("has_line_of_sight", "from", "to"), &Maze::has_line_of_sight);
 	ClassDB::bind_method(D_METHOD("can_see", "from", "to", "radius_tiles"), &Maze::can_see);
 
@@ -79,14 +103,7 @@ void Maze::_ready() {
 }
 
 void Maze::generate() {
-	if (seed_ != 0) {
-		last_seed_ = static_cast<uint32_t>(seed_);
-	} else {
-		Ref<RandomNumberGenerator> rng;
-		rng.instantiate();
-		rng->randomize();
-		last_seed_ = rng->randi_range(1, 2147483647);
-	}
+	last_seed_ = pick_seed(seed_);
 
 	lv::core::MazeGrid::Options options = profile_.is_valid() ? profile_->to_options() : options_;
 	options.seed = last_seed_;
@@ -208,14 +225,44 @@ bool Maze::has_line_of_sight(const Vector2 &p_from, const Vector2 &p_to) const {
 bool Maze::can_see(const Vector2 &p_from, const Vector2 &p_to, float p_radius_tiles) const {
 	return lv::core::can_see(grid_, world_to_grid_point(p_from), world_to_grid_point(p_to), p_radius_tiles);
 }
+
 Dictionary Maze::get_metrics() const {
-	const lv::core::MazeGrid::Metrics &m = grid_.metrics();
-	Dictionary d;
-	d["algorithm"] = String::utf8(lv::core::maze_algorithm_name(m.algorithm));
-	d["cells"] = m.cells;
-	d["dead_ends"] = m.dead_ends;
-	d["junctions"] = m.junctions;
-	d["dead_end_ratio"] = m.dead_end_ratio;
-	d["route_length"] = m.route_length;
-	return d;
+	return metrics_to_dictionary(grid_.metrics());
+}
+
+Dictionary Maze::build_preview(const Ref<MazeProfile> &p_profile, int p_seed) {
+	lv::core::MazeGrid::Options options = p_profile.is_valid() ? p_profile->to_options() : lv::core::maze_preset(lv::core::MazeDifficulty::Normal);
+	options.seed = pick_seed(p_seed);
+	lv::core::MazeGrid grid;
+	grid.generate(options);
+
+	const Color wall(0.40f, 0.35f, 0.55f);
+	const Color floor(0.10f, 0.09f, 0.14f);
+	const Color vault(0.30f, 0.26f, 0.12f);
+	const Color base(0.35f, 0.75f, 1.0f);
+	Ref<Image> image = Image::create_empty(grid.width(), grid.height(), false, Image::FORMAT_RGBA8);
+	for (int y = 0; y < grid.height(); y++) {
+		for (int x = 0; x < grid.width(); x++) {
+			const lv::core::Cell cell{ x, y };
+			image->set_pixel(x, y, grid.is_wall(cell) ? wall : (grid.is_in_vault(cell) ? vault : floor));
+		}
+	}
+	for (const lv::core::Cell &b : grid.base_cells(4)) {
+		for (int dy = -1; dy <= 1; dy++) {
+			for (int dx = -1; dx <= 1; dx++) {
+				if (!grid.is_wall({ b.x + dx, b.y + dy })) {
+					image->set_pixel(b.x + dx, b.y + dy, base);
+				}
+			}
+		}
+	}
+	const lv::core::Cell c = grid.center();
+	image->set_pixel(c.x, c.y, Color(1.0f, 0.82f, 0.25f));
+
+	Dictionary result;
+	result["image"] = image;
+	result["metrics"] = metrics_to_dictionary(grid.metrics());
+	result["seed"] = static_cast<int64_t>(options.seed);
+	result["size"] = Vector2i(grid.width(), grid.height());
+	return result;
 }

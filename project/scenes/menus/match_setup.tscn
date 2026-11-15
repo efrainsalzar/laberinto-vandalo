@@ -1,0 +1,155 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/menus/match_setup.gd" id="1_s"]
+
+[node name="MatchSetup" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_s")
+
+[node name="Bg" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.03, 0.025, 0.06, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 24
+
+[node name="Rows" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="Margin/Rows"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Configurar partida"
+
+[node name="Body" type="HBoxContainer" parent="Margin/Rows"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 20
+
+[node name="Options" type="PanelContainer" parent="Margin/Rows/Body"]
+custom_minimum_size = Vector2(470, 0)
+layout_mode = 2
+
+[node name="Scroll" type="ScrollContainer" parent="Margin/Rows/Body/Options"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="List" type="VBoxContainer" parent="Margin/Rows/Body/Options/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="DifficultyLabel" type="Label" parent="Margin/Rows/Body/Options/Scroll/List"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.25, 1)
+text = "Dificultad del mapa"
+
+[node name="Difficulty" type="HFlowContainer" parent="Margin/Rows/Body/Options/Scroll/List"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Description" type="Label" parent="Margin/Rows/Body/Options/Scroll/List"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.72, 0.85, 1)
+theme_override_font_sizes/font_size = 15
+text = "..."
+autowrap_mode = 3
+
+[node name="Custom" type="VBoxContainer" parent="Margin/Rows/Body/Options/Scroll/List"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="SeedLabel" type="Label" parent="Margin/Rows/Body/Options/Scroll/List"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.25, 1)
+text = "Semilla"
+
+[node name="SeedRow" type="HBoxContainer" parent="Margin/Rows/Body/Options/Scroll/List"]
+layout_mode = 2
+
+[node name="Seed" type="LineEdit" parent="Margin/Rows/Body/Options/Scroll/List/SeedRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "vacío = aleatoria"
+
+[node name="RandomSeed" type="Button" parent="Margin/Rows/Body/Options/Scroll/List/SeedRow"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Otro mapa al azar"
+text = "Otro mapa"
+
+[node name="SeedHint" type="Label" parent="Margin/Rows/Body/Options/Scroll/List"]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.57, 0.7, 1)
+theme_override_font_sizes/font_size = 13
+text = "El mapa de la vista previa es el que vas a jugar. Escribe una semilla para repetir o compartir un mapa."
+autowrap_mode = 3
+
+[node name="Preview" type="PanelContainer" parent="Margin/Rows/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Rows" type="VBoxContainer" parent="Margin/Rows/Body/Preview"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Image" type="TextureRect" parent="Margin/Rows/Body/Preview/Rows"]
+unique_name_in_owner = true
+texture_filter = 1
+layout_mode = 2
+size_flags_vertical = 3
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Metrics" type="Label" parent="Margin/Rows/Body/Preview/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.77, 0.92, 1)
+theme_override_font_sizes/font_size = 15
+text = "..."
+horizontal_alignment = 1
+
+[node name="Footer" type="HBoxContainer" parent="Margin/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Back" type="Button" parent="Margin/Rows/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Volver"
+
+[node name="Spacer" type="Control" parent="Margin/Rows/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Start" type="Button" parent="Margin/Rows/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "¡Jugar!"

@@ -29,6 +29,7 @@ const HINT_SECONDS := 5.0
 @onready var _banner_title: Label = $Banner/Rows/Title
 @onready var _banner_subtitle: Label = $Banner/Rows/Subtitle
 @onready var _map_info: Label = $MapInfo
+@onready var _fps: Label = $TopBar/Row/Fps
 
 var _participant: Participant
 var _stats: StatsComponent
@@ -140,6 +141,9 @@ func _process(_delta: float) -> void:
 	if _stats != null:
 		_sync_effect_chips()
 	_update_objective()
+	_fps.visible = Settings.get_value("show_fps")
+	if _fps.visible:
+		_fps.text = "%d FPS" % Engine.get_frames_per_second()
 
 
 # --- Objetivo: trofeo o base -------------------------------------------------------------

@@ -32,8 +32,9 @@ Leer antes: `CLAUDE.md`, `docs/ROADMAP.md` (qué sigue) y la sección del módul
    - Registrar en `src/register_types.cpp` (las clases base antes que sus derivadas;
      `GDREGISTER_ABSTRACT_CLASS` para las abstractas).
 4. **Escena/vista** en `project/` (GDScript solo para vista e interfaz) y datos en `project/data/` si aplica.
-5. **Sandbox**: agregar la pieza a la escena de prueba actual (o crear `scenes/sandbox/<modulo>_sandbox.tscn`)
-   con teclas de prueba documentadas en la línea de ayuda.
+5. **En la partida**: integrar la pieza en `scenes/game/match.tscn` (+ `scripts/game/match.gd`). Si necesita
+   teclas de prueba, van en el bloque de `Settings.debug_keys` y en `DEBUG_CONTROLS` (ayuda F1). Si necesita
+   opciones o configuración, van en `Settings` / `MatchConfig` y en su menú.
 6. `clang-format -i` sobre los `.cpp/.h` tocados.
 
 ## Fase C — Verificación

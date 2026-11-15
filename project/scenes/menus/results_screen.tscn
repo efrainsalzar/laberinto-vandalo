@@ -1,0 +1,69 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/menus/results_screen.gd" id="1_r"]
+
+[node name="ResultsScreen" type="CanvasLayer"]
+process_mode = 3
+layer = 40
+script = ExtResource("1_r")
+
+[node name="Dim" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.5)
+
+[node name="Center" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="Center"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(460, 0)
+
+[node name="Rows" type="VBoxContainer" parent="Center/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Center/Panel/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 44
+text = "¡VICTORIA!"
+horizontal_alignment = 1
+
+[node name="Details" type="Label" parent="Center/Panel/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.82, 0.8, 0.92, 1)
+text = "..."
+horizontal_alignment = 1
+
+[node name="Gap" type="Control" parent="Center/Panel/Rows"]
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+
+[node name="Again" type="Button" parent="Center/Panel/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Jugar otra vez (mismo mapa)"
+
+[node name="NewMap" type="Button" parent="Center/Panel/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Nuevo mapa"
+
+[node name="Setup" type="Button" parent="Center/Panel/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Configurar partida"
+
+[node name="Menu" type="Button" parent="Center/Panel/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Menú principal"

@@ -1,0 +1,83 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/menus/settings_menu.gd" id="1_s"]
+
+[node name="SettingsMenu" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_s")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.55)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="Center"]
+custom_minimum_size = Vector2(440, 0)
+layout_mode = 2
+
+[node name="Rows" type="VBoxContainer" parent="Center/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Center/Panel/Rows"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Opciones"
+horizontal_alignment = 1
+
+[node name="Fullscreen" type="CheckButton" parent="Center/Panel/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Pantalla completa"
+
+[node name="VSync" type="CheckButton" parent="Center/Panel/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Sincronización vertical (VSync)"
+
+[node name="ShowFps" type="CheckButton" parent="Center/Panel/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Mostrar FPS"
+
+[node name="DebugKeys" type="CheckButton" parent="Center/Panel/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Teclas de prueba en la partida"
+
+[node name="ZoomLabel" type="Label" parent="Center/Panel/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Zoom de la cámara: 2.0"
+
+[node name="Zoom" type="HSlider" parent="Center/Panel/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 3.5
+step = 0.25
+value = 2.0
+
+[node name="Back" type="Button" parent="Center/Panel/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Volver"
