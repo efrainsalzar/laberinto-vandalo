@@ -64,8 +64,19 @@ Entorno local (Windows): activar con `. D:\Github\gamedev\env.ps1` (scons, clang
 | Ejecutar juego | `godot --path project` |
 | Ejecutar sin ventana (verificación) | `godot --headless --path project --quit-after 5` |
 | Formatear C++ | `clang-format -i src/**/*.cpp src/**/*.h tests/*.cpp` |
+| **Verificar todo** (compilar + tests + Godot) | `./tools/verificar.ps1` (opciones: `-SinCompilar`, `-SinGodot`, `-Captura <carpeta>`, `-Escena res://...`) |
 
 Después de cambiar C++ hay que **recompilar y reabrir el editor de Godot** (la extensión no se recarga sola).
+
+## Skills del proyecto (`.claude/skills/`)
+
+| Skill | Cuándo |
+|---|---|
+| `/nuevo-modulo` | Construir la siguiente pieza del ROADMAP o un sistema nuevo: diseño → aprobación → core + tests → Godot → sandbox → verificar → documentar → commit. Incluye plantillas. |
+| `/verificar` | Antes de cada commit o tras cualquier cambio: ejecuta `tools/verificar.ps1` y reporta con honestidad. |
+
+Las skills describen el **proceso**; la lógica ejecutable vive en `tools/` para que también la usen personas y CI.
+Si se repite una tarea varias veces, se convierte en skill (y su parte ejecutable, en un script de `tools/`).
 
 ## Convenciones de código C++
 

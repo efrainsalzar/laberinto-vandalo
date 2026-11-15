@@ -56,3 +56,6 @@ CMakeUserPresets.json
 
 # Librerías compiladas copiadas al proyecto de Godot
 /project/bin/*/
+
+# Configuración local de Claude Code (las skills de .claude/skills sí se suben)
+.claude/settings.local.json

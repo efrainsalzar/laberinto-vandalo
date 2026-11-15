@@ -18,8 +18,8 @@ lo más valioso ahora es seguir el plan paso a paso.
    - `feat:` funcionalidad nueva · `fix:` corrección · `docs:` documentación
    - `test:` tests · `refactor:` reorganización sin cambiar comportamiento · `build:` compilación/CI · `chore:` mantenimiento
 4. Antes de abrir el *pull request*:
-   - `scons target=template_debug` compila sin errores.
-   - `scons tests=yes` pasa.
+   - En Windows: `./tools/verificar.ps1` termina con todo en **OK** (compila, tests y Godot sin errores).
+   - En otros sistemas: `scons target=template_debug` compila y `scons tests=yes` pasa.
    - El código está formateado: `clang-format -i` sobre los archivos que tocaste.
    - Probaste el cambio en Godot.
 5. Abre el *pull request* explicando **qué** cambia y **por qué**.
