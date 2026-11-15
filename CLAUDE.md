@@ -10,6 +10,7 @@ varios participantes compiten por un trofeo mientras unos vándalos sabotean tod
 Gana quien lleva el trofeo a su zona de resguardo antes de que acabe el tiempo.
 
 - Visión completa del juego: [`docs/VISION.md`](docs/VISION.md) — **fuente de verdad del diseño.**
+- Arquitectura y patrones: [`docs/ARQUITECTURA.md`](docs/ARQUITECTURA.md).
 - Estado y siguiente paso: [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## Forma de trabajar (OBLIGATORIO)
@@ -45,7 +46,8 @@ thirdparty/            Dependencias incluidas (doctest)
 godot-cpp/             Submódulo: bindings C++ de Godot (no editar)
 project/               Proyecto de Godot (escenas, scripts GDScript, assets)
   bin/                 laberinto.gdextension + DLL compiladas (las DLL no se suben)
-docs/                  Visión, hoja de ruta, decisiones
+  scenes/sandbox/      Escenas de prueba por módulo (no son parte del juego final)
+docs/                  Visión, arquitectura, hoja de ruta
 ```
 
 ## Comandos
