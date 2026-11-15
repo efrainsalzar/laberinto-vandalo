@@ -10,7 +10,21 @@ const DIFFICULTIES := [
 	[MazeProfile.DIFFICULTY_EXTREME, "Extremo", "Enorme, pasillos estrechos y muy ramificado. Fácil perderse."],
 	[MazeProfile.DIFFICULTY_CUSTOM, "Personalizado", "Elige tú el algoritmo, el tamaño y la forma del laberinto."],
 ]
+const SIZES := [
+	[1.0, "Normal", "Tamaño estándar del nivel."],
+	[1.5, "Grande", "×1,5: más pasillos y una ruta más larga hasta el centro."],
+	[2.0, "Enorme", "×2: partidas largas, ideal para muchos jugadores."],
+	[3.0, "Gigante", "×3: un laberinto inmenso. Fácil perderse; la flecha de objetivo es tu aliada."],
+]
 const ALGORITHMS := ["Backtracking", "Growing Tree", "Prim", "Kruskal", "Wilson", "Hunt-and-Kill"]
+const ALGORITHM_HINTS := [
+	"Backtracking: pasillos muy largos y sinuosos, pocos callejones.",
+	"Growing Tree: mezcla ajustable entre pasillos largos y ramificaciones (barra «Growing Tree: largo»).",
+	"Prim: muy ramificado, muchos callejones cortos. Confunde.",
+	"Kruskal: uniforme, con muchos cruces.",
+	"Wilson: uniforme y sin sesgo: cualquier laberinto es igual de probable.",
+	"Hunt-and-Kill: parecido a Backtracking, algo más ramificado.",
+]
 const PREVIEW_DELAY := 0.15  # espera tras un cambio antes de regenerar (evita trabar al arrastrar)
 
 var _config: MatchConfig
@@ -18,6 +32,7 @@ var _profile: MazeProfile
 var _preview_seed := 0
 var _refresh_pending := false
 var _difficulty_group := ButtonGroup.new()
+var _size_group := ButtonGroup.new()
 
 
 func _ready() -> void:
@@ -25,7 +40,12 @@ func _ready() -> void:
 	_profile = _config.profile.duplicate() if _config.profile else load("res://data/maps/normal.tres").duplicate()
 	_config.profile = _profile
 	_build_difficulty_buttons()
+	_build_size_buttons()
 	_build_custom_controls()
+	UiFx.hint(%Seed, "Número que define el mapa. Vacío = uno al azar. Escribe la semilla de un mapa para repetirlo o compartirlo.")
+	UiFx.hint(%RandomSeed, "Genera otro mapa al azar con la misma configuración.")
+	UiFx.hint(%Start, "Empieza la partida con el mapa de la vista previa.")
+	UiFx.hint(%Back, "Volver al menú principal.")
 	%Seed.text = str(_config.seed) if _config.seed != 0 else ""
 	%Seed.text_submitted.connect(func(_t: String) -> void: _request_preview())
 	%Seed.focus_exited.connect(_request_preview)
@@ -54,7 +74,22 @@ func _build_difficulty_buttons() -> void:
 		b.button_group = _difficulty_group
 		b.pressed.connect(_select_difficulty.bind(entry[0]))
 		b.set_meta("difficulty", entry[0])
+		UiFx.hint(b, entry[2])
 		%Difficulty.add_child(b)
+
+
+func _build_size_buttons() -> void:
+	for entry in SIZES:
+		var b := Button.new()
+		b.text = entry[1]
+		b.toggle_mode = true
+		b.button_group = _size_group
+		b.set_pressed_no_signal(is_equal_approx(_profile.size_scale, entry[0]))
+		b.pressed.connect(func() -> void:
+			_profile.size_scale = entry[0]
+			_request_preview())
+		UiFx.hint(b, entry[2])
+		%Size.add_child(b)
 
 
 func _select_difficulty(difficulty: int) -> void:
@@ -64,10 +99,10 @@ func _select_difficulty(difficulty: int) -> void:
 	_profile.difficulty = difficulty
 	for b: Button in %Difficulty.get_children():
 		b.set_pressed_no_signal(b.get_meta("difficulty") == difficulty)
-	for entry in DIFFICULTIES:
-		if entry[0] == difficulty:
-			%Description.text = entry[2]
-	%Custom.visible = difficulty == MazeProfile.DIFFICULTY_CUSTOM
+	var custom := difficulty == MazeProfile.DIFFICULTY_CUSTOM
+	%Custom.visible = custom
+	%Size.visible = not custom  # en personalizado el tamaño se elige con las barras
+	%SizeLabel.visible = not custom
 	_request_preview()
 
 
@@ -88,26 +123,28 @@ func _build_custom_controls() -> void:
 	algo.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	algo.item_selected.connect(func(i: int) -> void:
 		_profile.algorithm = i
+		UiFx.hint(algo, ALGORITHM_HINTS[i])
 		_request_preview())
+	UiFx.hint(algo, ALGORITHM_HINTS[_profile.algorithm])
 	algo_row.add_child(algo_label)
 	algo_row.add_child(algo)
 	%Custom.add_child(algo_row)
-	# [propiedad, etiqueta, mín, máx, paso, formato]
+	# [propiedad, etiqueta, mín, máx, paso, formato, descripción]
 	for spec in [
-		["cells_width", "Ancho (celdas)", 6, 60, 1, "%d"],
-		["cells_height", "Alto (celdas)", 5, 40, 1, "%d"],
-		["corridor_width", "Ancho de pasillo", 1, 5, 1, "%d"],
-		["loop_chance", "Atajos (bucles)", 0.0, 0.5, 0.01, "%d%%"],
-		["braid_chance", "Quitar callejones", 0.0, 1.0, 0.05, "%d%%"],
-		["growing_tree_bias", "Growing Tree: largo", 0.0, 1.0, 0.05, "%d%%"],
-		["vault_radius", "Tamaño de bóveda", 2, 8, 1, "%d"],
-		["pickup_count", "Objetos", 0, 200, 1, "%d"],
+		["cells_width", "Ancho (celdas)", 6, 160, 1, "%d", "Celdas de ancho. Cada celda es un tramo de pasillo con su pared."],
+		["cells_height", "Alto (celdas)", 5, 110, 1, "%d", "Celdas de alto."],
+		["corridor_width", "Ancho de pasillo", 1, 5, 1, "%d", "Casillas de ancho de cada pasillo. Más ancho = más espacio para esquivar."],
+		["loop_chance", "Atajos (bucles)", 0.0, 0.5, 0.01, "%d%%", "Probabilidad de abrir paredes extra: más rutas alternativas para huir o emboscar."],
+		["braid_chance", "Quitar callejones", 0.0, 1.0, 0.05, "%d%%", "Probabilidad de eliminar cada callejón sin salida. 100% = sin callejones."],
+		["growing_tree_bias", "Growing Tree: largo", 0.0, 1.0, 0.05, "%d%%", "Solo para Growing Tree: alto = pasillos largos; bajo = muy ramificado."],
+		["vault_radius", "Tamaño de bóveda", 2, 8, 1, "%d", "Radio de la sala central donde está el trofeo."],
+		["pickup_count", "Objetos", 0, 300, 1, "%d", "Cuántos objetos hay a la vez en el mapa (reaparecen al recogerlos)."],
 	]:
-		_add_slider_row(spec[0], spec[1], spec[2], spec[3], spec[4], spec[5])
+		_add_slider_row(spec[0], spec[1], spec[2], spec[3], spec[4], spec[5], spec[6])
 	_sync_custom_controls()
 
 
-func _add_slider_row(prop: String, text: String, min_v: float, max_v: float, step: float, fmt: String) -> void:
+func _add_slider_row(prop: String, text: String, min_v: float, max_v: float, step: float, fmt: String, hint: String) -> void:
 	var row := HBoxContainer.new()
 	var label := Label.new()
 	label.text = text
@@ -127,6 +164,7 @@ func _add_slider_row(prop: String, text: String, min_v: float, max_v: float, ste
 		_profile.set(prop, int(v) if step >= 1 else v)
 		value_label.text = _format(fmt, v)
 		_request_preview())
+	UiFx.hint(slider, hint)
 	row.add_child(label)
 	row.add_child(slider)
 	row.add_child(value_label)

@@ -68,14 +68,15 @@ text = "Dificultad del mapa"
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="Description" type="Label" parent="Margin/Rows/Body/Options/Scroll/List"]
+[node name="SizeLabel" type="Label" parent="Margin/Rows/Body/Options/Scroll/List"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.75, 0.72, 0.85, 1)
-theme_override_font_sizes/font_size = 15
-text = "..."
-autowrap_mode = 3
+theme_override_colors/font_color = Color(1, 0.82, 0.25, 1)
+text = "Tamaño del mapa"
+
+[node name="Size" type="HFlowContainer" parent="Margin/Rows/Body/Options/Scroll/List"]
+unique_name_in_owner = true
+layout_mode = 2
 
 [node name="Custom" type="VBoxContainer" parent="Margin/Rows/Body/Options/Scroll/List"]
 unique_name_in_owner = true
@@ -100,16 +101,8 @@ placeholder_text = "vacío = aleatoria"
 [node name="RandomSeed" type="Button" parent="Margin/Rows/Body/Options/Scroll/List/SeedRow"]
 unique_name_in_owner = true
 layout_mode = 2
-tooltip_text = "Otro mapa al azar"
 text = "Otro mapa"
 
-[node name="SeedHint" type="Label" parent="Margin/Rows/Body/Options/Scroll/List"]
-custom_minimum_size = Vector2(400, 0)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 0.57, 0.7, 1)
-theme_override_font_sizes/font_size = 13
-text = "El mapa de la vista previa es el que vas a jugar. Escribe una semilla para repetir o compartir un mapa."
-autowrap_mode = 3
 
 [node name="Preview" type="PanelContainer" parent="Margin/Rows/Body"]
 layout_mode = 2

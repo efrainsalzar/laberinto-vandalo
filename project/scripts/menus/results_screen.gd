@@ -8,6 +8,9 @@ func _ready() -> void:
 		App.restart_match())
 	%Setup.pressed.connect(App.go_to_setup)
 	%Menu.pressed.connect(App.go_to_main_menu)
+	UiFx.hint(%Again, "Repite este mismo mapa: ¿puedes hacerlo más rápido?")
+	UiFx.hint(%NewMap, "Otro mapa con la misma dificultad y tamaño.")
+	UiFx.hint(%Setup, "Cambiar dificultad, tamaño o configuración del mapa.")
 
 
 ## Muestra el resultado con una animación de entrada.

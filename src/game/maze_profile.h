@@ -57,6 +57,10 @@ public:
 	float get_braid_chance() const { return custom_.braid_chance; }
 	void set_vault_radius(int p_value) { custom_.vault_radius = p_value; }
 	int get_vault_radius() const { return custom_.vault_radius; }
+	// Multiplicador de tamaño para los niveles (Normal ×1, Grande ×1.5, Enorme ×2, Gigante ×3).
+	// En PERSONALIZADO el tamaño se elige directamente con cells_width/height.
+	void set_size_scale(float p_value) { size_scale_ = p_value < 0.5f ? 0.5f : (p_value > 4.0f ? 4.0f : p_value); }
+	float get_size_scale() const { return size_scale_; }
 	void set_pickup_count(int p_value) { pickup_count_ = p_value; }
 	int get_pickup_count() const;
 
@@ -68,6 +72,7 @@ private:
 	Difficulty difficulty_ = DIFFICULTY_NORMAL;
 	lv::core::MazeGrid::Options custom_ = lv::core::maze_preset(lv::core::MazeDifficulty::Normal);
 	int pickup_count_ = 30; // solo en PERSONALIZADO; los niveles escalan con el tamaño
+	float size_scale_ = 1.0f;
 };
 
 VARIANT_ENUM_CAST(MazeProfile::Difficulty);

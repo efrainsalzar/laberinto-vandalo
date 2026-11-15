@@ -16,6 +16,9 @@ func _ready() -> void:
 	%Options.pressed.connect(_open_settings)
 	%Menu.pressed.connect(App.go_to_main_menu)
 	%Quit.pressed.connect(App.quit_game)
+	UiFx.hint(%Restart, "Empieza de nuevo en este mismo mapa.")
+	UiFx.hint(%NewMap, "Empieza de nuevo con otro mapa de la misma dificultad y tamaño.")
+	UiFx.hint(%Menu, "Abandona la partida y vuelve al menú principal.")
 	var panel: Control = %Panel
 	panel.pivot_offset = panel.size / 2.0
 	panel.scale = Vector2(0.92, 0.92)

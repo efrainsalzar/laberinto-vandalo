@@ -23,13 +23,16 @@ void MazeProfile::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_braid_chance"), &MazeProfile::get_braid_chance);
 	ClassDB::bind_method(D_METHOD("set_vault_radius", "value"), &MazeProfile::set_vault_radius);
 	ClassDB::bind_method(D_METHOD("get_vault_radius"), &MazeProfile::get_vault_radius);
+	ClassDB::bind_method(D_METHOD("set_size_scale", "value"), &MazeProfile::set_size_scale);
+	ClassDB::bind_method(D_METHOD("get_size_scale"), &MazeProfile::get_size_scale);
 	ClassDB::bind_method(D_METHOD("set_pickup_count", "value"), &MazeProfile::set_pickup_count);
 	ClassDB::bind_method(D_METHOD("get_pickup_count"), &MazeProfile::get_pickup_count);
 
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "difficulty", PROPERTY_HINT_ENUM, "Fácil:0,Normal:1,Difícil:2,Extremo:3,Personalizado:100"), "set_difficulty", "get_difficulty");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "size_scale", PROPERTY_HINT_RANGE, "0.5,4,0.25,suffix:×"), "set_size_scale", "get_size_scale");
 	ADD_GROUP("Personalizado", "");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "cells_width", PROPERTY_HINT_RANGE, "2,120,1"), "set_cells_width", "get_cells_width");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "cells_height", PROPERTY_HINT_RANGE, "2,120,1"), "set_cells_height", "get_cells_height");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "cells_width", PROPERTY_HINT_RANGE, "2,160,1"), "set_cells_width", "get_cells_width");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "cells_height", PROPERTY_HINT_RANGE, "2,110,1"), "set_cells_height", "get_cells_height");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "corridor_width", PROPERTY_HINT_RANGE, "1,8,1,suffix:casillas"), "set_corridor_width", "get_corridor_width");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "algorithm", PROPERTY_HINT_ENUM, "Backtracking,Growing Tree,Prim,Kruskal,Wilson,Hunt-and-Kill"), "set_algorithm", "get_algorithm");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "growing_tree_bias", PROPERTY_HINT_RANGE, "0,1,0.05"), "set_growing_tree_bias", "get_growing_tree_bias");
@@ -74,7 +77,10 @@ lv::core::MazeGrid::Options MazeProfile::to_options() const {
 	if (difficulty_ == DIFFICULTY_CUSTOM) {
 		return custom_;
 	}
-	return lv::core::maze_preset(static_cast<lv::core::MazeDifficulty>(difficulty_));
+	lv::core::MazeGrid::Options options = lv::core::maze_preset(static_cast<lv::core::MazeDifficulty>(difficulty_));
+	options.cells_w = static_cast<int>(options.cells_w * size_scale_ + 0.5f);
+	options.cells_h = static_cast<int>(options.cells_h * size_scale_ + 0.5f);
+	return options;
 }
 
 String MazeProfile::get_display_name() const {

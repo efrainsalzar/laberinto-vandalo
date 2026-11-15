@@ -38,6 +38,8 @@ Gana quien lleva el trofeo a su zona de resguardo antes de que acabe el tiempo.
 - **Eventos de juego por el Event Bus** (`Events`, autoload): los niveles publican ahí lo que ocurrió;
   la interfaz, los sonidos y el Director escuchan ahí. La lógica C++ no conoce la interfaz.
 - **Interfaz:** el centro de la pantalla queda libre; HUD en los bordes; ayuda en F1; textos flotantes para feedback.
+  Cada opción de menú lleva descripción con `UiFx.hint(control, "...")` (globo flotante, no texto fijo).
+- **Rendimiento:** ninguna vista que exista en cantidad (objetos, enemigos...) se redibuja cada frame.
 
 ## Estructura de carpetas
 
@@ -54,7 +56,7 @@ project/               Proyecto de Godot (escenas, scripts GDScript, assets)
   bin/                 laberinto.gdextension + DLL compiladas (las DLL no se suben)
   scenes/menus/        Menú principal, configurar partida, opciones, pausa, resultados
   scenes/game/         La partida (match.tscn)
-  scripts/autoload/    Events (Event Bus), Settings (opciones), App (flujo del juego: State)
+  scripts/autoload/    Events (Event Bus), Settings (opciones), App (flujo del juego: State), UiFx (efectos de interfaz)
   data/                Datos (.tres): mapas, objetos, stats, reglas de aparición
   ui/theme.tres        Tema único de la interfaz
 docs/                  Visión, arquitectura, hoja de ruta
