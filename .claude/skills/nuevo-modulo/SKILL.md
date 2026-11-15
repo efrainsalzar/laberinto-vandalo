@@ -36,7 +36,8 @@ Leer antes: `CLAUDE.md`, `docs/ROADMAP.md` (qué sigue) y la sección del módul
    teclas de prueba, van en el bloque de `Settings.debug_keys` y en `DEBUG_CONTROLS` (ayuda F1). Si necesita
    opciones o configuración, van en `Settings` / `MatchConfig` y en su menú.
 6. **Medición**: todo trabajo que corra durante la partida lleva `lv::core::PerfScope perf("<sistema>.<tarea>")`
-   (aparece solo en el panel F3) y se agrega a la tabla de `docs/RENDIMIENTO.md`. Respetar las reglas de ese documento.
+   (aparece solo en el panel F3) y se agrega a la tabla de `docs/RENDIMIENTO.md`. Respetar las reglas de ese documento
+   y completar su **checklist de escalabilidad** en la propuesta de diseño (Fase A) y al cerrar (Fase C).
 7. `clang-format -i` sobre los `.cpp/.h` tocados.
 
 ## Fase C — Verificación

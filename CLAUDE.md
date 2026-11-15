@@ -42,6 +42,9 @@ Gana quien lleva el trofeo a su zona de resguardo antes de que acabe el tiempo.
 - **Rendimiento** ([`docs/RENDIMIENTO.md`](docs/RENDIMIENTO.md)): medir antes de optimizar. **Todo sistema nuevo trae su medición**
   (`lv::core::PerfScope perf("sistema.tarea")`) y se revisa en el panel F3 contra el presupuesto. Ninguna vista
   que exista en cantidad se redibuja cada frame. Todo cambio del mapa va por `Maze.queue_passage_change`.
+- **Escalabilidad** (obligatorio para todo lo que corra en tiempo real): presupuesto por área, colas con presupuesto,
+  topes con política, reservas y prioridades ante conflictos, pools, LOD de lógica, índices espaciales, eventos agrupados,
+  trabajo pesado en hilos, y prueba de estrés al cerrar cada etapa. Ver el checklist en `docs/RENDIMIENTO.md`.
 
 ## Estructura de carpetas
 

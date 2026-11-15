@@ -20,6 +20,12 @@
 ### Patrones y por qué
 - **<Patrón>**: <por qué aquí, en una frase; si es una variante "de juegos" de un patrón clásico, decirlo>.
 
+### Rendimiento y escalabilidad
+- **Presupuesto:** <área de RENDIMIENTO.md y ms esperados>. **Medición:** `<sistema.tarea>`.
+- **Tope y política:** <cuántos como máximo y qué pasa al superarlo>.
+- **Simultaneidad:** <qué pasa si varias fuentes lo activan a la vez: cola, reserva, prioridad>.
+- **Pool / LOD / índice espacial:** <si aplica>.
+
 ### Cómo se prueba
 - **Tests (core):** <lista de casos>.
 - **En pantalla:** <teclas/acciones en el sandbox y qué se debería ver>.
