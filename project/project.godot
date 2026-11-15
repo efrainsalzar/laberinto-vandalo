@@ -1,0 +1,24 @@
+; Archivo de configuración de Godot. Se recomienda editarlo desde el editor (Proyecto > Configuración del proyecto).
+
+config_version=5
+
+[application]
+
+config/name="Laberinto Vándalo"
+config/description="Torneo en un laberinto vivo: consigue el trofeo y vuelve a tu base antes de que los vándalos lo roben."
+config/version="0.0.1"
+run/main_scene="res://scenes/boot.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=0
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

@@ -1,0 +1,16 @@
+name: 💡 Proponer una idea o mejora
+description: Una mecánica, personaje, objeto o mejora técnica.
+labels: ["idea"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: La idea
+      description: ¿Qué propones y qué problema resuelve o qué hace más divertido?
+    validations:
+      required: true
+  - type: textarea
+    id: vision
+    attributes:
+      label: ¿Cómo encaja con la visión?
+      description: Si aplica, indica la sección de docs/VISION.md relacionada.

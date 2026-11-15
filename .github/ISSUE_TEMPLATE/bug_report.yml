@@ -1,0 +1,31 @@
+name: 🐞 Reportar un error
+description: Algo no funciona como debería.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: que-paso
+    attributes:
+      label: ¿Qué pasó?
+      description: Describe el error. Si puedes, agrega capturas o el texto del error.
+    validations:
+      required: true
+  - type: textarea
+    id: pasos
+    attributes:
+      label: Pasos para reproducirlo
+      placeholder: |
+        1. Abrir el proyecto...
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: esperado
+    attributes:
+      label: ¿Qué esperabas que pasara?
+  - type: input
+    id: entorno
+    attributes:
+      label: Sistema operativo y versión de Godot
+      placeholder: "Windows 11, Godot 4.7.2"
+    validations:
+      required: true
