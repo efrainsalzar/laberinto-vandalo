@@ -5,6 +5,8 @@
 #include "game/maze.h"
 #include "game/participant.h"
 #include "game/participant_controller.h"
+#include "game/stats_component.h"
+#include "game/stats_profile.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
@@ -21,6 +23,10 @@ void initialize_laberinto_module(ModuleInitializationLevel p_level) {
 	}
 	// Laberinto
 	GDREGISTER_CLASS(Maze);
+
+	// Stats
+	GDREGISTER_CLASS(StatsProfile);
+	GDREGISTER_CLASS(StatsComponent);
 
 	// Participantes (la clase base va antes que sus derivadas)
 	GDREGISTER_ABSTRACT_CLASS(ParticipantController);

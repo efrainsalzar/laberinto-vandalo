@@ -1,42 +1,53 @@
 extends Node2D
-## Escena de prueba de la pieza 2 (participante). No es parte del juego final.
-## WASD/flechas = moverse · Tab = ver mapa completo · R = otro laberinto · Esc = salir
+## Escena de prueba de las piezas 2 y 3 (participante + stats). No es parte del juego final.
+## WASD/flechas = moverse · 1/2/3 = efectos de prueba · 0 = quitar efectos
+## Tab = ver mapa completo · R = otro laberinto · Esc = salir
 
 const FOLLOW_ZOOM := Vector2(2.0, 2.0)
+const DEBUG_SOURCE := "prueba"
 
 @onready var _maze: Maze = $Maze
 @onready var _participant: Participant = $Participant
 @onready var _camera: Camera2D = $Camera
-@onready var _info: Label = $UI/Info
+@onready var _help: Label = $UI/Help
 
 var _overview := false
 
 
 func _ready() -> void:
 	_participant.set_controller(HumanController.new())
+	$UI/StatsPanel.bind(_participant)
 	_maze.generated.connect(_on_maze_generated)
 	if _maze.get_last_seed() != 0:
 		_on_maze_generated(_maze.get_last_seed())
+	_help.text = "[WASD/flechas] moverse   [1] power-up ×1.5 vel 5s   [2] punto +10 vel   [3] +2 visión 5s   [0] quitar efectos   [Tab] mapa   [R] otro laberinto   [Esc] salir"
 
 
 func _process(_delta: float) -> void:
 	if not _overview:
 		_camera.position = _participant.position
-	var cell: Vector2i = _maze.world_to_cell(_participant.position)
-	_info.text = "Semilla %d · casilla %s · velocidad %d px/s   [WASD/flechas] moverse  [Tab] mapa  [R] otro laberinto  [Esc] salir" % [
-		_maze.get_last_seed(), cell, _participant.move_speed]
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo:
-		match event.keycode:
-			KEY_R:
-				_maze.generate()
-			KEY_TAB:
-				_overview = not _overview
-				_update_camera()
-			KEY_ESCAPE:
-				get_tree().quit()
+	if not (event is InputEventKey and event.pressed and not event.echo):
+		return
+	var stats: StatsComponent = _participant.get_stats()
+	match event.keycode:
+		KEY_1:
+			stats.add_modifier(StatsComponent.STAT_SPEED, StatsComponent.OP_MULTIPLY, 1.5, 5.0, DEBUG_SOURCE)
+		KEY_2:
+			stats.add_modifier(StatsComponent.STAT_SPEED, StatsComponent.OP_ADD, 10.0, -1.0, DEBUG_SOURCE)
+		KEY_3:
+			stats.add_modifier(StatsComponent.STAT_VISION, StatsComponent.OP_ADD, 2.0, 5.0, DEBUG_SOURCE)
+		KEY_0:
+			stats.remove_modifiers_from(DEBUG_SOURCE)
+		KEY_R:
+			_maze.generate()
+		KEY_TAB:
+			_overview = not _overview
+			_update_camera()
+		KEY_ESCAPE:
+			get_tree().quit()
 
 
 func _on_maze_generated(_seed: int) -> void:

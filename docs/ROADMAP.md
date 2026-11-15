@@ -27,13 +27,17 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 - [x] `HumanController`: WASD y flechas.
 - [x] Vista provisional separada de la lógica; escena de prueba con cámara que sigue al participante (Tab = mapa completo).
 
-## Siguiente paso: Pieza 3 — Stats (componente + modificadores, Decorator)
+### v0.0.4 — Pieza 3: Stats ✅
+- [x] `lv::core::Stats`: valor base + pila de modificadores (suma/multiplica, temporales/permanentes, por origen, límites). 6 tests.
+- [x] `StatsComponent` (hijo del participante) + `StatsProfile` (datos .tres). El participante toma su velocidad de ahí.
+- [x] Panel de stats arriba a la izquierda (Observer de las señales). Teclas 1/2/3/0 para probar efectos.
 
-Diseñar y aprobar antes de programar.
+## Siguiente paso: Pieza 4 — Visión limitada (niebla de guerra)
+
+Diseñar y aprobar antes de programar. Usa la stat `vision`.
 
 ## Después (fase 1 — prototipo), un módulo a la vez
 
-4. Visión limitada (niebla de guerra).
 5. Puntos recolectables.
 6. Trofeo y zonas de resguardo.
 7. Gestor de partida: reloj, victoria y fin por tiempo.

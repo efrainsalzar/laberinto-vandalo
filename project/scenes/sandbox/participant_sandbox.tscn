@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/sandbox/participant_sandbox.gd" id="1_sbx"]
 [ext_resource type="PackedScene" path="res://scenes/participant/participant.tscn" id="2_part"]
+[ext_resource type="PackedScene" path="res://scenes/ui/stats_panel.tscn" id="3_panel"]
 
 [node name="ParticipantSandbox" type="Node2D"]
 script = ExtResource("1_sbx")
@@ -16,10 +17,19 @@ position_smoothing_speed = 8.0
 
 [node name="UI" type="CanvasLayer" parent="."]
 
-[node name="Info" type="Label" parent="UI"]
+[node name="StatsPanel" parent="UI" instance=ExtResource("3_panel")]
+
+[node name="Help" type="Label" parent="UI"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
 offset_left = 16.0
-offset_top = 12.0
-offset_right = 1260.0
-offset_bottom = 60.0
-theme_override_font_sizes/font_size = 18
+offset_top = -40.0
+offset_right = -16.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.75, 0.72, 0.85, 1)
+theme_override_font_sizes/font_size = 15
 text = "..."
