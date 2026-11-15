@@ -9,6 +9,7 @@ duration = 6.0
 [resource]
 id = "powerup_rapidez"
 display_name = "Power-up de rapidez"
+popup_title = "¡RAPIDEZ!"
 color = Color(1, 0.35, 0.85, 1)
 radius = 6.5
 weight = 2

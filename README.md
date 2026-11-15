@@ -3,7 +3,7 @@
 [![CI](https://github.com/efrainsalzar/laberinto-vandalo/actions/workflows/ci.yml/badge.svg)](https://github.com/efrainsalzar/laberinto-vandalo/actions/workflows/ci.yml)
 [![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE)
 
-> Nombre provisional · **En desarrollo temprano (v0.0.7)**
+> Nombre provisional · **En desarrollo temprano (v0.0.8)**
 
 **Un torneo en un laberinto vivo donde varios participantes compiten por un trofeo, pero unos vándalos
 sabotean todo para robárselo. Solo gana uno: quien consiga el trofeo y vuelva con él a su zona de
@@ -21,7 +21,7 @@ Juego 2D top-down hecho con **Godot 4** y **C++ (GDExtension)**. Código abierto
 |---|---|
 | Base del proyecto (entorno, compilación, tests, CI, documentación) | ✅ Lista |
 | Diseño de arquitectura ([ARQUITECTURA.md](docs/ARQUITECTURA.md)) | ✅ Lista |
-| Fase 1 — Prototipo: laberinto ✅ · participante ✅ · stats ✅ · visión ✅ · objetos ✅ (infinitos) · HUD ⏳ · trofeo · base | 🚧 En curso |
+| Fase 1 — Prototipo: laberinto ✅ · participante ✅ · stats ✅ · visión ✅ · objetos ✅ (infinitos) · HUD ✅ · identidad visual ⏳ · trofeo · base | 🚧 En curso |
 | Bots · Combate · Soldados · Vándalos · Mapa vivo | 🔜 |
 
 Detalle y siguiente paso: [`docs/ROADMAP.md`](docs/ROADMAP.md).
@@ -72,7 +72,7 @@ godot --editor --path project
 
 Si ya clonaste sin `--recurse-submodules`: `git submodule update --init --recursive`.
 
-Al ejecutar verás un laberinto generado por C++ y un participante. Muévete con **WASD** o las flechas, prueba efectos con **1/2/3** (y **0** para quitarlos), **V** apaga la niebla, **Tab** muestra el mapa completo, **R** genera otro laberinto y **Esc** sale.
+Al ejecutar verás un laberinto generado por C++ y un participante. Muévete con **WASD** o las flechas y recoge objetos. **F1** muestra todos los controles (incluidas las teclas de prueba).
 
 ---
 

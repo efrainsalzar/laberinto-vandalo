@@ -49,11 +49,17 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 - [x] `pick_spawn_cell` (core): nunca aparece a la vista de un participante. 7 tests.
 - [x] Animación de aparición.
 
+### v0.0.8 — Bloque UX-2: HUD limpio y textos flotantes ✅
+- [x] Event Bus `Events` (autoload); los niveles publican, la interfaz escucha.
+- [x] HUD: barra superior delgada (stats que cuentan y destellan, fichas de efectos temporales con barra, contador); centro libre.
+- [x] Textos flotantes con Object Pool (`+8 VEL`, `+0.5 VIS`, `¡RAPIDEZ! ×1.5 VEL`), visibles en la oscuridad.
+- [x] Ayuda de controles en F1 (pista que se desvanece).
+
 ## Plan acordado (bloques, uno a la vez)
 
 1. ~~Objetos infinitos~~ ✅
-2. **HUD que no tapa el juego + textos flotantes** (Event Bus, Object Pool, números animados, temporizadores de efectos, ayuda con F1). ← siguiente
-3. Identidad visual (Theme, fuente, paleta; recomendado: neón arcade con glow).
+2. ~~HUD que no tapa el juego + textos flotantes~~ ✅
+3. **Identidad visual** (Theme, fuente, paleta; recomendado: neón arcade con glow, renderer Forward+; Phantom Camera). ← siguiente
 4. Pieza 6 — Trofeo y zonas de resguardo.
 5. Pieza 7 — Partida: reloj, fases (State), victoria y fin por tiempo.
 6. Menús: principal, pausa, fin de partida; flujo del juego (State).

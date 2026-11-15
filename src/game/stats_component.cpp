@@ -106,6 +106,7 @@ Array StatsComponent::get_modifiers() const {
 		d["op"] = static_cast<int>(active.modifier.op);
 		d["value"] = active.modifier.value;
 		d["remaining"] = active.remaining;
+		d["duration"] = active.modifier.duration;
 		d["source"] = String::utf8(active.modifier.source.c_str());
 		result.push_back(d);
 	}

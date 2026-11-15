@@ -39,7 +39,7 @@ public:
 	int add_modifier(Stat p_stat, Op p_op, float p_value, double p_duration, const String &p_source);
 	bool remove_modifier(int p_id);
 	int remove_modifiers_from(const String &p_source);
-	// Lista de diccionarios {id, stat, op, value, remaining, source} (para la interfaz).
+	// Lista de diccionarios {id, stat, op, value, remaining, duration, source} (para la interfaz).
 	Array get_modifiers() const;
 
 	void set_profile(const Ref<StatsProfile> &p_profile);

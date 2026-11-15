@@ -46,6 +46,9 @@ public:
 	String get_id() const { return id_; }
 	void set_display_name(const String &p_value) { display_name_ = p_value; }
 	String get_display_name() const { return display_name_; }
+	// Título del texto flotante al recogerlo (ej. "¡RAPIDEZ!"). Vacío = solo se muestran los efectos.
+	void set_popup_title(const String &p_value) { popup_title_ = p_value; }
+	String get_popup_title() const { return popup_title_; }
 	void set_color(const Color &p_value) { color_ = p_value; }
 	Color get_color() const { return color_; }
 	void set_radius(float p_value) { radius_ = p_value; }
@@ -63,6 +66,7 @@ protected:
 private:
 	String id_ = "pickup";
 	String display_name_ = "Objeto";
+	String popup_title_;
 	Color color_ = Color(1, 1, 1);
 	float radius_ = 5.0f; // tamaño visual provisional (px)
 	Ref<Texture2D> icon_; // arte (pieza 8); si no hay, la vista dibuja una forma de color

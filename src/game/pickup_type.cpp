@@ -24,6 +24,8 @@ void PickupType::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_id"), &PickupType::get_id);
 	ClassDB::bind_method(D_METHOD("set_display_name", "value"), &PickupType::set_display_name);
 	ClassDB::bind_method(D_METHOD("get_display_name"), &PickupType::get_display_name);
+	ClassDB::bind_method(D_METHOD("set_popup_title", "value"), &PickupType::set_popup_title);
+	ClassDB::bind_method(D_METHOD("get_popup_title"), &PickupType::get_popup_title);
 	ClassDB::bind_method(D_METHOD("set_color", "value"), &PickupType::set_color);
 	ClassDB::bind_method(D_METHOD("get_color"), &PickupType::get_color);
 	ClassDB::bind_method(D_METHOD("set_radius", "value"), &PickupType::set_radius);
@@ -37,6 +39,7 @@ void PickupType::_bind_methods() {
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "id"), "set_id", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "display_name"), "set_display_name", "get_display_name");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "popup_title"), "set_popup_title", "get_popup_title");
 	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "color"), "set_color", "get_color");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "radius", PROPERTY_HINT_RANGE, "1,32,0.5,suffix:px"), "set_radius", "get_radius");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "icon", PROPERTY_HINT_RESOURCE_TYPE, "Texture2D"), "set_icon", "get_icon");

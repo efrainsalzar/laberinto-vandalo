@@ -59,3 +59,6 @@ CMakeUserPresets.json
 
 # Configuración local de Claude Code (las skills de .claude/skills sí se suben)
 .claude/settings.local.json
+
+# Pruebas temporales de agentes (ver skill nuevo-modulo)
+/project/zz_tmp_test/

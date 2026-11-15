@@ -39,9 +39,15 @@ Leer antes: `CLAUDE.md`, `docs/ROADMAP.md` (qué sigue) y la sección del módul
 ## Fase C — Verificación
 
 1. `/verificar -Captura <scratchpad>` y **mirar la captura**.
-2. Si la pieza tiene comportamiento (movimiento, tiempos, efectos), escribir un script temporal de
-   prueba en el scratchpad (`extends SceneTree`, ejecutar con `godot --headless --path project -s <script>`)
-   que mida el resultado real. No dejar esos scripts en el repo.
+2. Si la pieza tiene comportamiento (movimiento, tiempos, efectos), escribir una prueba temporal que mida
+   el resultado real. No dejar esas pruebas en el repo.
+   - **Sin autoloads** (solo C++ y escenas): script `extends SceneTree` en el scratchpad y
+     `godot --headless --path project -s <script>`.
+   - **Con autoloads** (p. ej. `Events`): `-s` NO los carga y el script no compila. Crear una escena temporal en
+     `project/zz_tmp_test/` (ignorada por git) con un script `extends Node`, ejecutarla con
+     `godot --headless --path project res://zz_tmp_test/<escena>.tscn`, y borrar la carpeta al terminar.
+     Para capturas, la misma escena sin `--headless` y `get_tree().root.get_texture().get_image().save_png(...)`.
+   - Ejecutar con límite de tiempo (por ejemplo `Start-Job` + `Wait-Job -Timeout 60`) para que un error no lo cuelgue.
 3. Corregir hasta que todo esté OK. Reportar con honestidad lo que se verificó y lo que no.
 
 ## Fase D — Documentación y cierre

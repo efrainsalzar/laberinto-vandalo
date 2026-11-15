@@ -35,6 +35,9 @@ Gana quien lleva el trofeo a su zona de resguardo antes de que acabe el tiempo.
 - **Todo módulo nuevo se documenta en `docs/ARQUITECTURA.md`**: problema, patrón elegido y por qué,
   diagrama de clases (Mermaid), archivos y decisiones pendientes. Y se agrega al índice de patrones (última sección).
 - Lógica y vista separadas: los nodos C++ no dibujan; la vista (escena/GDScript) no decide.
+- **Eventos de juego por el Event Bus** (`Events`, autoload): los niveles publican ahí lo que ocurrió;
+  la interfaz, los sonidos y el Director escuchan ahí. La lógica C++ no conoce la interfaz.
+- **Interfaz:** el centro de la pantalla queda libre; HUD en los bordes; ayuda en F1; textos flotantes para feedback.
 
 ## Estructura de carpetas
 

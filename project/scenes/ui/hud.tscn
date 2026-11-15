@@ -1,0 +1,127 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_topbar"]
+bg_color = Color(0.04, 0.03, 0.07, 0.72)
+border_width_bottom = 1
+border_color = Color(0.45, 0.4, 0.65, 0.35)
+content_margin_left = 16.0
+content_margin_top = 6.0
+content_margin_right = 16.0
+content_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_overlay"]
+bg_color = Color(0.04, 0.03, 0.07, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.45, 0.4, 0.65, 0.6)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 24.0
+content_margin_top = 18.0
+content_margin_right = 24.0
+content_margin_bottom = 18.0
+
+[node name="HUD" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_hud")
+
+[node name="TopBar" type="PanelContainer" parent="."]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 38.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBox_topbar")
+
+[node name="Row" type="HBoxContainer" parent="TopBar"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Dot" type="ColorRect" parent="TopBar/Row"]
+custom_minimum_size = Vector2(12, 12)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Speed" type="Label" parent="TopBar/Row"]
+custom_minimum_size = Vector2(92, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "VEL 0"
+
+[node name="Vision" type="Label" parent="TopBar/Row"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "VIS 0"
+
+[node name="Effects" type="HBoxContainer" parent="TopBar/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="Collected" type="Label" parent="TopBar/Row"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.78, 0.9, 1)
+theme_override_font_sizes/font_size = 18
+text = "OBJ 0"
+
+[node name="HintF1" type="Label" parent="."]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -220.0
+offset_top = -38.0
+offset_right = -16.0
+offset_bottom = -12.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.75, 0.72, 0.85, 0.85)
+theme_override_font_sizes/font_size = 15
+text = "F1 · controles"
+horizontal_alignment = 2
+
+[node name="Controls" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -230.0
+offset_top = -150.0
+offset_right = 230.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBox_overlay")
+
+[node name="Rows" type="VBoxContainer" parent="Controls"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Controls/Rows"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Controles"
+horizontal_alignment = 1
+
+[node name="List" type="Label" parent="Controls/Rows"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "..."
+
+[node name="Close" type="Label" parent="Controls/Rows"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.72, 0.85, 0.85)
+theme_override_font_sizes/font_size = 14
+text = "F1 para cerrar"
+horizontal_alignment = 1
