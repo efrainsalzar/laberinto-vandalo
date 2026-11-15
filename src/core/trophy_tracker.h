@@ -64,6 +64,9 @@ public:
 	// p_thief le quita el trofeo al portador (en p_cell). Vacío si no se puede.
 	std::vector<Event> steal(int p_thief, const Cell &p_cell);
 	float immunity_left() const { return immunity_left_; }
+	// Tras caer al piso, nadie puede tomarlo durante estos segundos (que no lo agarre siempre quien estaba encima).
+	void set_drop_lock(float p_seconds) { drop_lock_ = p_seconds < 0.0f ? 0.0f : p_seconds; }
+	float drop_lock_left() const { return drop_lock_left_; }
 
 	// Mueve el trofeo que está en el piso o en la bóveda (p. ej. una pared se cerró encima).
 	// No hace nada si alguien lo lleva o ya fue entregado. Devuelve true si lo movió.
@@ -86,6 +89,8 @@ private:
 	int pickup_range_ = 1;
 	float steal_immunity_ = 3.0f;
 	float immunity_left_ = 0.0f;
+	float drop_lock_ = 0.0f;
+	float drop_lock_left_ = 0.0f;
 
 	bool valid(int p_participant) const { return p_participant >= 0 && p_participant < participant_count(); }
 };

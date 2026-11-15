@@ -22,6 +22,12 @@ signal trophy_dropped(participant: Participant, world_position: Vector2)
 ## `thief` le quitó el trofeo a `victim` (robo por contacto).
 signal trophy_stolen(thief: Participant, victim: Participant)
 
+## `victim` quedó eliminado (hoy: lo atraparon llevando el trofeo). `by` = quién lo atrapó.
+signal participant_eliminated(victim: Participant, by: Participant)
+
+## `participant` volvió a su base tras ser eliminado (empieza su protección).
+signal participant_respawned(participant: Participant)
+
 ## Un participante llevó el trofeo a su base: ganó.
 signal trophy_delivered(participant: Participant)
 ## El laberinto vivo anunció un cambio (casillas que se cerrarán / abrirán en `seconds`).

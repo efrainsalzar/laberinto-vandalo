@@ -59,12 +59,16 @@ class BotController : public ParticipantController {
 
 public:
 	lv::core::ParticipantCommand compute_command(const Participant &p_participant, double p_delta) override;
+	// Volvió a su base tras ser eliminado: descarta el camino viejo y piensa de nuevo.
+	void on_respawned(const Participant &p_participant) override;
 
 	// --- Usado por BotCoordinator ---
 	void setup(BotCoordinator *p_coordinator, const Ref<BotProfile> &p_profile, const Rect2i &p_base_zone, uint32_t p_seed);
 	void detach() { coordinator_ = nullptr; }
-	// Camino calculado (celdas) hacia p_target_world. Vacío = no hay camino.
-	void apply_path(const std::vector<int> &p_cells, const Vector2 &p_target_world);
+	// Camino calculado (celdas) hacia p_target_world. Vacío = no hay camino. p_generation: la del pedido
+	// (si el bot reapareció entre medio, el camino es de antes y se descarta).
+	void apply_path(const std::vector<int> &p_cells, const Vector2 &p_target_world, int p_generation);
+	int get_generation() const { return generation_; }
 	// ¿El mapa cambió y su camino ya no sirve? Entonces pide otro.
 	void validate_path();
 	void clear_path_request() { path_requested_ = false; }
@@ -95,6 +99,7 @@ private:
 	int previous_cell_ = -1;
 	Vector2 target_world_;
 	bool path_requested_ = false;
+	int generation_ = 0; // sube al reaparecer
 	bool replan_at_end_ = false; // se desvió por un error: al terminar el desvío, replantea
 
 	lv::core::Cell requested_target_; // destino del pedido en curso (si el objetivo cambia, se descarta)

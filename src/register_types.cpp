@@ -5,6 +5,7 @@
 #include "game/bot_controller.h"
 #include "game/bot_coordinator.h"
 #include "game/entity_index.h"
+#include "game/life_component.h"
 #include "game/match_controller.h"
 #include "game/maze.h"
 #include "game/maze_profile.h"
@@ -47,6 +48,7 @@ void initialize_laberinto_module(ModuleInitializationLevel p_level) {
 	// Stats
 	GDREGISTER_CLASS(StatsProfile);
 	GDREGISTER_CLASS(StatsComponent);
+	GDREGISTER_CLASS(LifeComponent);
 
 	// Participantes (la clase base va antes que sus derivadas)
 	GDREGISTER_ABSTRACT_CLASS(ParticipantController);

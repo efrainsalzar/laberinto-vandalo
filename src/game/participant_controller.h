@@ -22,6 +22,8 @@ class ParticipantController : public RefCounted {
 public:
 	// Devuelve la orden para este frame. La implementación base no hace nada (quieto).
 	virtual lv::core::ParticipantCommand compute_command(const Participant &p_participant, double p_delta);
+	// El participante volvió a su base tras ser eliminado (p. ej. un bot debe replantear su camino).
+	virtual void on_respawned(const Participant &p_participant) {}
 
 protected:
 	static void _bind_methods() {}

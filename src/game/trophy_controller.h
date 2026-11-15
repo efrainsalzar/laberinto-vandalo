@@ -18,11 +18,19 @@ class TrophyRules : public Resource {
 	GDCLASS(TrophyRules, Resource)
 
 public:
-	float carrier_speed_multiplier = 0.6f; // lentitud del portador
+	// Qué pasa al tocar al portador (Strategy por datos; el combate agregará "por golpe").
+	enum StealMode {
+		STEAL_TRANSFER = 0, // el trofeo pasa a quien toca (con impulso y aturdimiento, abajo)
+		STEAL_ELIMINATE = 1, // el portador queda eliminado, reaparece en su base y el trofeo cae al piso
+	};
+
+	float carrier_speed_multiplier = 0.85f; // lentitud del portador
 	bool steal_enabled = true;
-	float steal_immunity = 3.0f; // s sin que se lo quiten tras tomarlo o robarlo
+	int steal_mode = STEAL_ELIMINATE;
+	float steal_immunity = 2.0f; // s sin que se lo quiten tras tomarlo o robarlo
 	float steal_margin = 2.0f; // px extra de alcance al tocar
-	// Anti-bucle (al robar): el ladrón escapa y la víctima queda aturdida.
+	float drop_lock = 0.5f; // s en que nadie puede tomar el trofeo recién caído
+	// Solo modo Transferir (anti-bucle): el ladrón escapa y la víctima queda aturdida.
 	float thief_boost_multiplier = 1.5f;
 	float thief_boost_seconds = 2.0f;
 	float victim_stun_multiplier = 0.2f;
@@ -35,6 +43,8 @@ public:
 	type get_##name() const { return name; }
 	LV_RULE(float, carrier_speed_multiplier)
 	LV_RULE(bool, steal_enabled)
+	LV_RULE(int, steal_mode)
+	LV_RULE(float, drop_lock)
 	LV_RULE(float, steal_immunity)
 	LV_RULE(float, steal_margin)
 	LV_RULE(float, thief_boost_multiplier)
@@ -48,6 +58,8 @@ protected:
 	static void _bind_methods();
 };
 
+VARIANT_ENUM_CAST(TrophyRules::StealMode);
+
 // Conecta las reglas del trofeo (lv::core::TrophyTracker) con el mundo de Godot.
 //
 // - Cada frame de física pasa la casilla de cada participante al tracker y traduce sus eventos
@@ -58,7 +70,8 @@ protected:
 //   no dibuja nada. A las vistas les pasa datos con set(): `color`, `size_px`, `carried`.
 // - Robo básico (`steal_enabled`): quien TOCA al portador (los cuerpos se superponen + `steal_margin` px) le
 //   quita el trofeo; el nuevo portador queda inmune `steal_immunity` s. Señal trophy_stolen(thief, victim).
-//   Anti-bucle: el ladrón gana velocidad un rato y la víctima queda aturdida (modificadores temporales de Stats).
+//   Modo según `rules.steal_mode`: ELIMINAR (por defecto: el portador sale del juego unos segundos, reaparece
+//   en su base y el trofeo cae al piso) o TRANSFERIR (el trofeo pasa al que toca, con impulso y aturdimiento).
 //   Todos los valores vienen de `rules` (TrophyRules, datos). El combate (Etapa 4) agregará otras formas de robo.
 // - No sabe dónde está la bóveda en el mundo: recibe la casilla del trofeo (DISENO_MAPA §3).
 // Ver docs/ARQUITECTURA.md §11.
@@ -112,6 +125,7 @@ private:
 	Ref<TrophyRules> default_rules_;
 
 	void check_steal();
+	void eliminate_carrier(Participant *p_carrier, Participant *p_by);
 
 	void clear_views();
 	void on_map_changed(const TypedArray<Vector2i> &p_tiles, bool p_now_wall);

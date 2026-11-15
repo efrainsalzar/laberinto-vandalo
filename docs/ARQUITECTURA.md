@@ -643,6 +643,19 @@ classDiagram
      `steal_stun`). Valen igual para humanos y bots.
   2. **Fichas de ataque** (`lv::core::TokenPool`, §19): solo `max_chasers` (2) bots persiguen al portador.
   3. **Emboscada** (`AmbushAction`, §19): los demás esperan 2 celdas antes de la base del portador.
+- **Atrapar al portador (v0.0.20, modo por defecto):** el traspaso seguía en bucle. Ahora `TrophyRules.steal_mode`
+  elige la regla (**Strategy por datos**): `Transferir` (lo anterior) o `Eliminar al portador` (VISION §16: "si muere
+  con el trofeo, cae al piso"; "al morir se reaparece en la base"). Al tocar al portador:
+  el trofeo cae al piso (nadie lo toma por `drop_lock` = 0,5 s) y el portador queda **eliminado**: desaparece,
+  reaparece en su base a los 3 s y queda **protegido** 2 s (parpadea). Portador a ×0,85; inmunidad al recoger: 2 s.
+  Quien pierde el trofeo queda lejos y fuera un rato: el grupo alrededor del trofeo se vacía solo.
+
+  | Pieza | Patrón | Por qué |
+  |---|---|---|
+  | `lv::core::LifeCycle` | **State** (Vivo → Eliminado → Protegido → Vivo) | Es la base de la "reaparición" de la Etapa 4: luego se le suman salud y vidas. 4 tests. |
+  | `LifeComponent` (hijo del participante) | **Composición** (como `StatsComponent`) | El participante no se mueve ni colisiona mientras está eliminado; la vista se oculta y parpadea al volver. |
+  | `ParticipantController.on_respawned` | Gancho del **Strategy** | El bot descarta su camino viejo; los pedidos de camino llevan "generación" para ignorar los de antes de morir. |
+  | `Events.participant_eliminated / participant_respawned` | **Event Bus** | Avisos del HUD; luego sonidos y Director. |
 - Se toma el trofeo a 1 casilla de distancia (Chebyshev).
 - **El trofeo tiene luz propia**: es "visible para todos" (VISION §6) aunque esté lejos o en la oscuridad.
 - Mientras no exista la pieza "Partida", el sandbox muestra el cartel de victoria con el tiempo y detiene al ganador.

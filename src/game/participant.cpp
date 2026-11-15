@@ -16,6 +16,9 @@ void Participant::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_color", "value"), &Participant::set_color);
 	ClassDB::bind_method(D_METHOD("get_color"), &Participant::get_color);
 	ClassDB::bind_method(D_METHOD("get_stats"), &Participant::get_stats);
+	ClassDB::bind_method(D_METHOD("get_life"), &Participant::get_life);
+	ClassDB::bind_method(D_METHOD("is_active"), &Participant::is_active);
+	ClassDB::bind_method(D_METHOD("is_vulnerable"), &Participant::is_vulnerable);
 	ClassDB::bind_method(D_METHOD("get_facing"), &Participant::get_facing);
 	ClassDB::bind_method(D_METHOD("set_body_radius", "value"), &Participant::set_body_radius);
 	ClassDB::bind_method(D_METHOD("get_body_radius"), &Participant::get_body_radius);
@@ -33,18 +36,28 @@ void Participant::_ready() {
 	add_to_group("participants"); // lo usan sistemas que necesitan a todos (p. ej. PickupSpawner)
 	apply_body_radius();
 	for (int i = 0; i < get_child_count(); i++) {
-		stats_ = Object::cast_to<StatsComponent>(get_child(i));
-		if (stats_ != nullptr) {
-			return;
+		if (stats_ == nullptr) {
+			stats_ = Object::cast_to<StatsComponent>(get_child(i));
+		}
+		if (life_ == nullptr) {
+			life_ = Object::cast_to<LifeComponent>(get_child(i));
 		}
 	}
-	if (!Engine::get_singleton()->is_editor_hint()) {
+	if (life_ != nullptr && !Engine::get_singleton()->is_editor_hint()) {
+		life_->connect("eliminated", callable_mp(this, &Participant::on_eliminated));
+		life_->connect("respawned", callable_mp(this, &Participant::on_respawned));
+	}
+	if (stats_ == nullptr && !Engine::get_singleton()->is_editor_hint()) {
 		UtilityFunctions::push_warning("Participant '", display_name_, "' no tiene StatsComponent: no se moverá.");
 	}
 }
 
 void Participant::_physics_process(double p_delta) {
 	if (Engine::get_singleton()->is_editor_hint() || controller_.is_null()) {
+		return;
+	}
+	if (!is_active()) {
+		set_velocity(Vector2()); // eliminado: fuera del juego hasta reaparecer
 		return;
 	}
 	execute_command(controller_->compute_command(*this, p_delta));
@@ -100,4 +113,20 @@ void Participant::apply_body_radius() {
 		break;
 	}
 	emit_signal("body_radius_changed", body_radius_);
+}
+
+// Eliminado: sin colisión (no toma objetos ni toca a nadie) hasta reaparecer.
+void Participant::on_eliminated(Object *) {
+	active_layer_ = get_collision_layer();
+	active_mask_ = get_collision_mask();
+	set_collision_layer(0);
+	set_collision_mask(0);
+}
+
+void Participant::on_respawned() {
+	set_collision_layer(active_layer_);
+	set_collision_mask(active_mask_);
+	if (controller_.is_valid()) {
+		controller_->on_respawned(*this);
+	}
 }

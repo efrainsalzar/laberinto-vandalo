@@ -67,6 +67,7 @@ private:
 		Ref<BotController> bot;
 		Vector2i from;
 		Vector2i to;
+		int generation = 0;
 	};
 
 	Maze *maze_ = nullptr;

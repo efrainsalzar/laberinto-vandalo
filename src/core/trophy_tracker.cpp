@@ -10,6 +10,7 @@ void TrophyTracker::setup(const Cell &p_trophy_cell, const std::vector<TileRect>
 	winner_ = NO_ONE;
 	pickup_range_ = p_pickup_range < 0 ? 0 : p_pickup_range;
 	immunity_left_ = 0.0f;
+	drop_lock_left_ = 0.0f;
 }
 
 void TrophyTracker::setup(const Cell &p_trophy_cell, const std::vector<Cell> &p_bases, int p_pickup_range, int p_base_radius) {
@@ -28,6 +29,9 @@ std::vector<TrophyTracker::Event> TrophyTracker::update(int p_participant, const
 	switch (state_) {
 		case State::InVault:
 		case State::Dropped:
+			if (state_ == State::Dropped && drop_lock_left_ > 0.0f) {
+				break; // recién caído: todavía no se puede tomar
+			}
 			if (chebyshev_distance(p_cell, trophy_cell_) <= pickup_range_) {
 				state_ = State::Carried;
 				carrier_ = p_participant;
@@ -58,11 +62,15 @@ std::vector<TrophyTracker::Event> TrophyTracker::drop(const Cell &p_cell) {
 	state_ = State::Dropped;
 	carrier_ = NO_ONE;
 	trophy_cell_ = p_cell;
+	drop_lock_left_ = drop_lock_;
 	events.push_back({ Event::Type::Dropped, previous, p_cell });
 	return events;
 }
 
 void TrophyTracker::tick(float p_delta) {
+	if (drop_lock_left_ > 0.0f) {
+		drop_lock_left_ = drop_lock_left_ - p_delta > 0.0f ? drop_lock_left_ - p_delta : 0.0f;
+	}
 	if (immunity_left_ > 0.0f) {
 		immunity_left_ = immunity_left_ - p_delta > 0.0f ? immunity_left_ - p_delta : 0.0f;
 	}

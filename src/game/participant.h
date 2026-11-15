@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/participant_command.h"
+#include "game/life_component.h"
 #include "game/participant_controller.h"
 #include "game/stats_component.h"
 
@@ -38,6 +39,10 @@ public:
 	Color get_color() const { return color_; }
 	// Componente de stats (primer hijo de tipo StatsComponent). Puede ser nullptr.
 	StatsComponent *get_stats() const { return stats_; }
+	// Ciclo de vida (eliminar / reaparecer). Puede ser nullptr: entonces siempre está activo.
+	LifeComponent *get_life() const { return life_; }
+	bool is_active() const { return life_ == nullptr || life_->is_active(); }
+	bool is_vulnerable() const { return life_ == nullptr || life_->is_vulnerable(); }
 
 	// Radio del cuerpo (px): ajusta el círculo de colisión y avisa a la vista (señal body_radius_changed).
 	// La partida lo adapta al ancho de pasillo para que el participante siempre quepa.
@@ -56,6 +61,12 @@ private:
 	String display_name_ = "Participante";
 	Color color_ = Color(0.35f, 0.75f, 1.0f);
 	StatsComponent *stats_ = nullptr;
+	LifeComponent *life_ = nullptr;
+	uint32_t active_layer_ = 2; // capas de física mientras está en juego (se apagan al ser eliminado)
+	uint32_t active_mask_ = 1;
+
+	void on_eliminated(Object *p_by);
+	void on_respawned();
 	Vector2 facing_ = Vector2(0, 1);
 	float body_radius_ = 11.0f;
 

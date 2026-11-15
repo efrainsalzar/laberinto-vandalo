@@ -7,7 +7,8 @@ const DEBUG_SOURCE := "prueba"
 const CONTROLS := """Objetivo: toma el TROFEO del centro y llévalo a TU BASE
 antes de que se acabe el tiempo (si no, los vándalos se lo llevan).
 La flecha del borde te indica a dónde ir.
-Si otro lleva el trofeo, TÓCALO para quitárselo (quien lo toma es inmune unos segundos).
+Si otro lleva el trofeo, TÓCALO: lo atrapas, vuelve a su base y el trofeo cae al piso.
+Si te atrapan a ti, reapareces en tu base a los pocos segundos.
 Fases: Preparación → Asalto → Golpe de los vándalos (el laberinto se acelera).
 
 WASD / flechas · moverse
@@ -67,6 +68,7 @@ func _ready() -> void:
 	_trophy.trophy_taken.connect(func(p: Participant) -> void: Events.trophy_taken.emit(p))
 	_trophy.trophy_stolen.connect(func(thief: Participant, victim: Participant) -> void: Events.trophy_stolen.emit(thief, victim))
 	Events.trophy_stolen.connect(_on_trophy_stolen)
+	Events.participant_eliminated.connect(_on_participant_eliminated)
 	Events.trophy_taken.connect(func(p: Participant) -> void:
 		if p != _participant:
 			_hud.toast("¡%s TOMÓ EL TROFEO!" % p.display_name.to_upper(), p.color, 2.5))
@@ -153,6 +155,8 @@ func _on_maze_generated(seed_value: int) -> void:
 	_participant.set_controller(HumanController.new())
 	var participants: Array[Participant] = [_participant]
 	participants.append_array(_spawn_bots(bot_count, zones, body_radius, seed_value))
+	for i in participants.size():
+		_setup_life(participants[i], _maze.tile_rect_to_world(zones[i]).get_center())
 	_trophy.start(_maze, participants)
 	_match.start(App.match_config.duration_minutes * 60.0)
 	_configure_live_maze(seed_value)
@@ -208,6 +212,33 @@ func _configure_live_maze(seed_value: int) -> void:
 	_shifter.interval = _live_interval / maxf(0.1, _match.get_maze_speed())
 	_shifter.pairs = int(level[1] * maxf(1.0, scale))
 	_shifter.start(_maze, seed_value)
+
+
+## Ciclo de vida: reaparece en el centro de su base; sus eventos van al Event Bus.
+func _setup_life(p: Participant, spawn: Vector2) -> void:
+	var life: LifeComponent = p.get_life()
+	if life == null:
+		return
+	life.reset()
+	life.spawn_position = spawn
+	if not life.eliminated.is_connected(_forward_eliminated):
+		life.eliminated.connect(_forward_eliminated.bind(p))
+		life.respawned.connect(func() -> void: Events.participant_respawned.emit(p))
+
+
+func _forward_eliminated(by: Object, victim: Participant) -> void:
+	Events.participant_eliminated.emit(victim, by as Participant)
+
+
+func _on_participant_eliminated(victim: Participant, by: Participant) -> void:
+	var seconds := roundi(victim.get_life().respawn_delay) if victim.get_life() else 0
+	var by_name := by.display_name.to_upper() if by else "ALGUIEN"
+	if victim == _participant:
+		_hud.toast("¡%s TE ATRAPÓ! · el trofeo cayó · vuelves a tu base en %d s" % [by_name, seconds], Color(1.0, 0.4, 0.35), 3.0)
+	elif by == _participant:
+		_hud.toast("¡ATRAPASTE A %s! · el trofeo cayó al piso: ¡tómalo!" % victim.display_name.to_upper(), Color(1.0, 0.82, 0.25), 3.0)
+	else:
+		_hud.toast("%s atrapó a %s · el trofeo cayó" % [by_name, victim.display_name.to_upper()], by.color if by else Color.WHITE, 2.0)
 
 
 func _on_trophy_stolen(thief: Participant, victim: Participant) -> void:

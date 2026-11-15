@@ -99,6 +99,12 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 - [x] Arreglo: la base mide el pasillo completo (antes 3×3 fijo, se metía en las paredes); el cuerpo del participante cabe en pasillos de 1. 2 tests (82 en total).
 - [x] Tecla de prueba N: saltar a la siguiente fase.
 
+### v0.0.20 — Atrapar al portador: eliminación y reaparición ✅
+- [x] Modo de robo como dato (`TrophyRules.steal_mode`): por defecto **Eliminar al portador** (el trofeo cae al piso; el portador reaparece en su base a los 3 s, protegido 2 s). El modo Transferir sigue disponible.
+- [x] `LifeCycle` (core, State) + `LifeComponent`: base de la reaparición de la Etapa 4. Vidas infinitas por ahora.
+- [x] Portador a ×0,85; inmunidad al recoger 2 s; trofeo recién caído bloqueado 0,5 s.
+- [x] 5 tests (108 en total).
+
 ### v0.0.19 — Anti-bucle del robo ✅
 - [x] `TrophyRules` (.tres): todas las reglas del trofeo como datos; impulso al ladrón (×1,5, 2 s) y aturdimiento a la víctima (×0,2, 1 s).
 - [x] Fichas de ataque (`TokenPool`): solo 2 bots persiguen al portador; los demás **emboscan** antes de su base.
@@ -146,7 +152,7 @@ Hecho: `BotController`, A* con costos, Utility AI, dificultades. Falta: personal
 árboles de comportamiento para vándalos/guardianes, bots que usen armas/portales (una `BotAction` por mecánica).
 
 ### Etapa 4 — Combate
-Salud, 3 vidas, reaparición (State), soltar el trofeo al morir; armas, bombas, minas, escudos, pociones como datos.
+Salud, 3 vidas (sobre `LifeCycle`, ya hay reaparición y soltar el trofeo al ser eliminado — v0.0.20); armas, bombas, minas, escudos, pociones como datos.
 
 ### Etapa 5 — Seguridad de la bóveda
 Soldados guardianes (mini jefes).

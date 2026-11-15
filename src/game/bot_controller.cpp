@@ -147,7 +147,22 @@ void BotController::request_path(const Participant &p_participant) {
 	last_radius_ = p_participant.get_body_radius();
 }
 
-void BotController::apply_path(const std::vector<int> &p_cells, const Vector2 &p_target_world) {
+void BotController::on_respawned(const Participant &) {
+	generation_++;
+	path_.clear();
+	path_requested_ = false;
+	replan_at_end_ = false;
+	stuck_timer_ = 0.0f;
+	world_ready_ = false;
+	if (brain_) {
+		brain_->think_soon();
+	}
+}
+
+void BotController::apply_path(const std::vector<int> &p_cells, const Vector2 &p_target_world, int p_generation) {
+	if (p_generation != generation_) {
+		return; // pedido de antes de ser eliminado: ya no sirve (y ya puede haber otro pedido en curso)
+	}
 	path_requested_ = false;
 	if (brain_ && brain_->current().target != requested_target_) {
 		path_.clear(); // el objetivo cambió mientras esperaba: compute_command pedirá otro

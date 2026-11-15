@@ -71,7 +71,7 @@ void BotCoordinator::clear() {
 }
 
 void BotCoordinator::request_path(const Ref<BotController> &p_bot, const Vector2i &p_from_tile, const Vector2i &p_to_tile) {
-	requests_.push_back({ p_bot, p_from_tile, p_to_tile });
+	requests_.push_back({ p_bot, p_from_tile, p_to_tile, p_bot.is_valid() ? p_bot->get_generation() : 0 });
 }
 
 void BotCoordinator::_physics_process(double p_delta) {
@@ -97,7 +97,7 @@ void BotCoordinator::_physics_process(double p_delta) {
 		}
 		const int from = grid.cell_index_of({ request.from.x, request.from.y });
 		const int to = grid.cell_index_of({ request.to.x, request.to.y });
-		request.bot->apply_path(lv::core::find_path(grid.passages(), from, to), maze_->cell_to_world(request.to));
+		request.bot->apply_path(lv::core::find_path(grid.passages(), from, to), maze_->cell_to_world(request.to), request.generation);
 	}
 }
 
@@ -171,7 +171,7 @@ void BotCoordinator::update_chase_tokens() {
 	const Vector2 at = carrier->get_global_position();
 	std::vector<lv::core::TokenPool::Candidate> candidates;
 	for (size_t i = 0; i < bot_bodies_.size(); i++) {
-		if (bot_bodies_[i] != nullptr && bot_bodies_[i] != carrier) {
+		if (bot_bodies_[i] != nullptr && bot_bodies_[i] != carrier && bot_bodies_[i]->is_active()) {
 			candidates.push_back({ static_cast<int>(i), bot_bodies_[i]->get_global_position().distance_to(at) });
 		}
 	}

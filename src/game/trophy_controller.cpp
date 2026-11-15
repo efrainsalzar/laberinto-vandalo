@@ -2,6 +2,7 @@
 
 #include "core/perf.h"
 
+#include "game/life_component.h"
 #include "game/maze.h"
 #include "game/participant.h"
 
@@ -22,9 +23,13 @@ void TrophyRules::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_steal_enabled", "value"), &TrophyRules::set_steal_enabled);
 	ClassDB::bind_method(D_METHOD("get_steal_enabled"), &TrophyRules::get_steal_enabled);
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "steal_enabled"), "set_steal_enabled", "get_steal_enabled");
+	ClassDB::bind_method(D_METHOD("set_steal_mode", "value"), &TrophyRules::set_steal_mode);
+	ClassDB::bind_method(D_METHOD("get_steal_mode"), &TrophyRules::get_steal_mode);
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "steal_mode", PROPERTY_HINT_ENUM, "Transferir,Eliminar al portador"), "set_steal_mode", "get_steal_mode");
 	LV_BIND(steal_immunity, FLOAT, "0,10,0.1,suffix:s")
+	LV_BIND(drop_lock, FLOAT, "0,5,0.05,suffix:s")
 	LV_BIND(steal_margin, FLOAT, "0,32,0.5,suffix:px")
-	ADD_GROUP("Anti-bucle al robar", "");
+	ADD_GROUP("Modo Transferir: anti-bucle", "");
 	LV_BIND(thief_boost_multiplier, FLOAT, "1,3,0.05")
 	LV_BIND(thief_boost_seconds, FLOAT, "0,10,0.1,suffix:s")
 	LV_BIND(victim_stun_multiplier, FLOAT, "0,1,0.05")
@@ -32,11 +37,14 @@ void TrophyRules::_bind_methods() {
 	ADD_GROUP("IA", "");
 	LV_BIND(max_chasers, INT, "0,7,1")
 #undef LV_BIND
+	BIND_ENUM_CONSTANT(STEAL_TRANSFER);
+	BIND_ENUM_CONSTANT(STEAL_ELIMINATE);
 }
 
 void TrophyController::set_rules(const Ref<TrophyRules> &p_value) {
 	rules_ = p_value;
 	tracker_.set_steal_immunity(rules().steal_immunity);
+	tracker_.set_drop_lock(rules().drop_lock);
 }
 
 const TrophyRules &TrophyController::rules() const {
@@ -109,6 +117,7 @@ void TrophyController::start(Maze *p_maze, const TypedArray<Participant> &p_part
 	const Vector2i center = maze_->get_center_cell();
 	tracker_.setup({ center.x, center.y }, zones, 1);
 	tracker_.set_steal_immunity(rules().steal_immunity);
+	tracker_.set_drop_lock(rules().drop_lock);
 
 	// Vistas: una base por participante (con su color, del tamaño exacto de su zona) y el trofeo.
 	for (size_t i = 0; i < zones.size(); i++) {
@@ -145,8 +154,8 @@ void TrophyController::_physics_process(double p_delta) {
 	tracker_.tick(static_cast<float>(p_delta));
 	for (size_t i = 0; i < participants_.size(); i++) {
 		Participant *p = participants_[i];
-		if (p == nullptr) {
-			continue;
+		if (p == nullptr || !p->is_active()) {
+			continue; // eliminado: no toma ni entrega nada hasta reaparecer
 		}
 		const Vector2i cell = maze_->world_to_cell(p->get_global_position());
 		handle(tracker_.update(static_cast<int>(i), { cell.x, cell.y }));
@@ -166,18 +175,36 @@ void TrophyController::check_steal() {
 	if (!rules().steal_enabled || carrier == nullptr || tracker_.immunity_left() > 0.0f) {
 		return;
 	}
+	const bool eliminate = rules().steal_mode == TrophyRules::STEAL_ELIMINATE;
+	if (eliminate && !carrier->is_vulnerable()) {
+		return; // recién reaparecido: protegido
+	}
 	const Vector2 at = carrier->get_global_position();
 	for (size_t i = 0; i < participants_.size(); i++) {
 		Participant *p = participants_[i];
-		if (p == nullptr || p == carrier || !tracker_.can_steal(static_cast<int>(i))) {
+		if (p == nullptr || p == carrier || !p->is_active() || !tracker_.can_steal(static_cast<int>(i))) {
 			continue;
 		}
 		const float reach = carrier->get_body_radius() + p->get_body_radius() + rules().steal_margin;
 		if (p->get_global_position().distance_squared_to(at) <= reach * reach) {
+			if (eliminate) {
+				eliminate_carrier(carrier, p);
+				return;
+			}
 			const Vector2i cell = maze_->world_to_cell(at);
 			handle(tracker_.steal(static_cast<int>(i), { cell.x, cell.y }));
 			return;
 		}
+	}
+}
+
+// Modo Eliminar: el trofeo cae donde estaba el portador y el portador sale del juego hasta reaparecer en su base.
+void TrophyController::eliminate_carrier(Participant *p_carrier, Participant *p_by) {
+	const Vector2i cell = maze_->world_to_cell(p_carrier->get_global_position());
+	const lv::core::Cell floor = maze_->get_grid().nearest_floor({ cell.x, cell.y });
+	handle(tracker_.drop(floor));
+	if (LifeComponent *life = p_carrier->get_life()) {
+		life->eliminate(p_by);
 	}
 }
 

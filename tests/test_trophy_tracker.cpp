@@ -171,4 +171,19 @@ TEST_SUITE("TrophyTracker") {
 		CHECK(events[0].type == Type::Delivered);
 		CHECK(t.winner() == 1);
 	}
+
+	TEST_CASE("Al caer, nadie lo toma durante el bloqueo; después sí") {
+		TrophyTracker t = make();
+		t.set_drop_lock(0.5f);
+		t.update(0, { 20, 20 });
+		t.drop({ 10, 10 });
+		CHECK(t.update(1, { 10, 10 }).empty());
+		t.tick(0.3f);
+		CHECK(t.update(1, { 10, 10 }).empty());
+		t.tick(0.3f);
+		const auto events = t.update(1, { 10, 10 });
+		REQUIRE(events.size() == 1);
+		CHECK(events[0].type == Type::Taken);
+		CHECK(t.carrier() == 1);
+	}
 }

@@ -10,12 +10,27 @@ func _ready() -> void:
 	_participant.color_changed.connect(func(_c: Color) -> void: queue_redraw())
 	# El cuerpo se ajusta al ancho de pasillo (ver match.gd): la vista lo sigue.
 	_participant.body_radius_changed.connect(func(_r: float) -> void: queue_redraw())
+	# Eliminado: desaparece. Al volver: parpadea mientras está protegido.
+	var life: LifeComponent = _participant.get_life()
+	if life:
+		life.eliminated.connect(func(_by: Object) -> void: visible = false)
+		life.respawned.connect(func() -> void:
+			visible = true
+			_blink = true)
+		life.protection_ended.connect(func() -> void:
+			_blink = false
+			modulate.a = 1.0)
+
+
+var _blink := false
 
 
 var _last_facing := Vector2.ZERO
 
 
 func _process(_delta: float) -> void:
+	if _blink:
+		modulate.a = 0.35 if int(Time.get_ticks_msec() / 120) % 2 == 0 else 1.0
 	var facing := _participant.get_facing()
 	if not facing.is_equal_approx(_last_facing):
 		_last_facing = facing
