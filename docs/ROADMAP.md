@@ -21,13 +21,18 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 - [x] Nodo `Maze` (`TileMapLayer`) con TileSet provisional de colores y colisión en las paredes.
 - [x] Escena de prueba `scenes/sandbox/maze_sandbox.tscn` (R = otro laberinto).
 
-## Siguiente paso: Módulo 2 — Participante + controladores (Strategy)
+### v0.0.3 — Laberinto grande + Módulo 2: Participante ✅
+- [x] Pasillos anchos (3 casillas) con paredes de 1; laberinto de 20×14 celdas (81×57 casillas). +1 test.
+- [x] `Participant` (`CharacterBody2D`) con controlador intercambiable (**Strategy**) que produce órdenes (**Command**).
+- [x] `HumanController`: WASD y flechas.
+- [x] Vista provisional separada de la lógica; escena de prueba con cámara que sigue al participante (Tab = mapa completo).
 
-Diseñar y aprobar antes de programar (ver ARQUITECTURA §2, filas 2 y 3).
+## Siguiente paso: Pieza 3 — Stats (componente + modificadores, Decorator)
+
+Diseñar y aprobar antes de programar.
 
 ## Después (fase 1 — prototipo), un módulo a la vez
 
-3. Stats del participante (componente + modificadores).
 4. Visión limitada (niebla de guerra).
 5. Puntos recolectables.
 6. Trofeo y zonas de resguardo.

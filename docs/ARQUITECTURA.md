@@ -61,21 +61,24 @@ Así las reglas viven en un solo lugar testeable, y Godot solo se encarga de mov
 ### `lv::core::MazeGrid`
 
 - Cuadrícula de `width × height` casillas; cada una es **pared** o **suelo**.
-- Se genera a partir de `cells_w × cells_h` celdas lógicas → cuadrícula de `(2·cells_w+1) × (2·cells_h+1)`
-  (las casillas impares son celdas; las pares, paredes entre ellas).
+- Se genera a partir de `cells_w × cells_h` celdas lógicas. Cada celda es un pasillo de
+  `corridor_width × corridor_width` casillas y **las paredes siempre miden 1 casilla** (paredes delgadas, pasillos anchos).
+  Tamaño final: `(cells_w·(corridor_width+1)+1) × (cells_h·(corridor_width+1)+1)`.
 - **Generación por pasos** (cada paso es una función separada, fácil de cambiar o probar):
-  1. *Backtracking iterativo* → laberinto "perfecto" (un solo camino entre dos puntos).
+  1. *Backtracking iterativo* → laberinto "perfecto" (un solo camino entre dos puntos), en una cuadrícula compacta.
   2. *Bucles*: abre paredes extra con probabilidad `loop_chance` → rutas alternativas para huir y emboscar.
-  3. *Bóveda*: sala abierta en el centro (donde estará el trofeo).
+  3. *Ensanchar*: escala la cuadrícula compacta al ancho de pasillo final.
+  4. *Bóveda*: sala abierta en el centro (donde estará el trofeo).
 - **Determinista por semilla:** misma semilla = mismo laberinto (útil para tests, repeticiones y multijugador).
 - Consultas: `is_wall`, `floor_cells`, `center`, `is_in_vault`, `base_cells(n)` (esquinas primero), `is_fully_connected`.
 
 **Tests:** dimensiones correctas; borde siempre pared; todo el suelo conectado; misma semilla → mismo resultado;
-bóveda abierta; bases en suelo y distintas entre sí.
+bóveda abierta; bases en suelo y distintas entre sí; pasillos anchos (2, 3 y 4 casillas) conectados.
 
 ### `Maze` (nodo Godot, hereda `TileMapLayer`)
 
-- Propiedades editables en el inspector: `cells_width`, `cells_height`, `seed` (0 = aleatoria), `loop_chance`, `vault_radius`.
+- Propiedades editables en el inspector: `cells_width` (20), `cells_height` (14), `corridor_width` (3),
+  `seed` (0 = aleatoria), `loop_chance` (0.12), `vault_radius` (4). Con los valores por defecto: 81×57 casillas de 16 px.
 - `generate()`: crea el `MazeGrid` y pinta las casillas. Emite la señal `generated`.
 - Si no tiene `TileSet` asignado, crea uno **provisional** (dos colores, con colisión en las paredes),
   para no depender de arte todavía. Con arte de Kenney solo se asigna otro `TileSet`.
@@ -84,3 +87,116 @@ bóveda abierta; bases en suelo y distintas entre sí.
 
 ### Fuera de alcance del módulo 1
 Mutación en tiempo real, portales, pasadizos secretos (fase 6 "Mapa vivo").
+
+
+---
+
+## 5. Módulo 2 — Participante (detalle)
+
+### Problema que resuelve el diseño
+Un participante puede ser controlado por una persona, un bot o (en el futuro) otro jugador por internet.
+Si el participante leyera el teclado directamente, habría que reescribirlo para cada caso.
+
+### Solución: Strategy + Command
+
+```mermaid
+classDiagram
+    direction LR
+    class CharacterBody2D {
+        <<Godot>>
+    }
+    class RefCounted {
+        <<Godot>>
+    }
+    class Participant {
+        +participant_id: int
+        +display_name: String
+        +color: Color
+        +move_speed: float
+        -controller: ParticipantController
+        +_physics_process(delta)
+        +execute_command(cmd)
+        +get_facing() Vector2
+    }
+    class ParticipantController {
+        <<abstracta>>
+        +compute_command(participant, delta) ParticipantCommand
+    }
+    class HumanController {
+        +compute_command() lee WASD/flechas
+    }
+    class BotController {
+        <<futuro: fase 2>>
+    }
+    class NetworkController {
+        <<futuro: online>>
+    }
+    class ParticipantCommand {
+        <<struct, core>>
+        +move_x: float
+        +move_y: float
+    }
+    CharacterBody2D <|-- Participant
+    RefCounted <|-- ParticipantController
+    ParticipantController <|-- HumanController
+    ParticipantController <|.. BotController
+    ParticipantController <|.. NetworkController
+    Participant o--> ParticipantController : tiene (Strategy)
+    ParticipantController ..> ParticipantCommand : produce (Command)
+    Participant ..> ParticipantCommand : ejecuta
+```
+
+Cada frame:
+
+```mermaid
+sequenceDiagram
+    participant G as Godot (física)
+    participant P as Participant
+    participant C as Controlador (Humano / Bot / Red)
+    G->>P: _physics_process(delta)
+    P->>C: compute_command(this, delta)
+    C-->>P: ParticipantCommand { move_x, move_y }
+    P->>P: execute_command(): velocidad = dirección × move_speed
+    P->>G: move_and_slide() (choca con las paredes del Maze)
+```
+
+| Pieza | Patrón | Por qué |
+|---|---|---|
+| `ParticipantController` → `HumanController` | **Strategy** | Cambiar quién controla sin tocar `Participant`. Los bots (fase 2) serán otra estrategia. |
+| `ParticipantCommand` | **Command** | La orden es un dato: se puede mandar por red, grabar para repeticiones o generar por la IA. |
+| `Participant` + escena con `View` | **Composición** y separación lógica/visual | La lógica (C++) no dibuja; la vista (`participant_view.gd`) no decide. Cambiar el arte no toca la lógica. |
+| Herencia | Corta, solo donde hay "es un" real | `HumanController` *es un* controlador. El resto se compone. |
+
+### Archivos
+| Archivo | Qué es |
+|---|---|
+| `src/core/participant_command.h` | La orden (Command), dato puro |
+| `src/game/participant_controller.{h,cpp}` | `ParticipantController` (base, registrada como abstracta) y `HumanController` |
+| `src/game/participant.{h,cpp}` | `Participant` (`CharacterBody2D`, movimiento flotante top-down) |
+| `project/scenes/participant/participant.tscn` | Escena: cuerpo + colisión circular (r = 11 px) + vista |
+| `project/scripts/participant/participant_view.gd` | Vista provisional (círculo + dirección) |
+| `project/scenes/sandbox/participant_sandbox.tscn` | Prueba: laberinto + participante + cámara que lo sigue |
+
+Controles (acciones del InputMap en `project.godot`): `move_left/right/up/down` = WASD y flechas.
+
+### Decisiones y pendientes
+- **La velocidad es una propiedad simple** por ahora. En la pieza 3 pasa a un componente `Stats` con modificadores (Decorator).
+- **`ParticipantController` hereda de `RefCounted`** (no de `Node`): no necesita estar en el árbol de escena
+  y cada participante tiene su propia instancia.
+- **Movimiento libre (no casilla por casilla)** con `motion_mode = floating`: se siente más fluido para persecuciones.
+- Verificado: se mueve a `move_speed` px/s y se detiene al chocar con las paredes.
+
+---
+
+## 6. Patrones aplicados (índice)
+
+| Patrón | Dónde | Estado |
+|---|---|---|
+| Builder (pasos de generación) | `MazeGrid::generate` | ✅ |
+| Strategy | `ParticipantController` | ✅ |
+| Command | `ParticipantCommand` | ✅ |
+| Composición / separación lógica-vista | `Participant` + `View`; `core` vs `game` | ✅ |
+| Decorator / modificadores | `Stats` | Pieza 3 |
+| Observer / señales | `MatchManager` | Pieza 7 |
+| State | Fases de la partida, estados del participante | Pieza 7 / fase 3 |
+| Factory + datos | Objetos recolectables | Pieza 5 |

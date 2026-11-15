@@ -3,6 +3,8 @@
 #include "version.h"
 
 #include "game/maze.h"
+#include "game/participant.h"
+#include "game/participant_controller.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
@@ -17,7 +19,13 @@ void initialize_laberinto_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;
 	}
+	// Laberinto
 	GDREGISTER_CLASS(Maze);
+
+	// Participantes (la clase base va antes que sus derivadas)
+	GDREGISTER_ABSTRACT_CLASS(ParticipantController);
+	GDREGISTER_CLASS(HumanController);
+	GDREGISTER_CLASS(Participant);
 
 	UtilityFunctions::print("[laberinto] Extension C++ cargada (v", LV_VERSION, ")");
 }

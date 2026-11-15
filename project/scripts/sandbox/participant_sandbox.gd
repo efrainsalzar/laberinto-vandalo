@@ -1,0 +1,60 @@
+extends Node2D
+## Escena de prueba de la pieza 2 (participante). No es parte del juego final.
+## WASD/flechas = moverse · Tab = ver mapa completo · R = otro laberinto · Esc = salir
+
+const FOLLOW_ZOOM := Vector2(2.0, 2.0)
+
+@onready var _maze: Maze = $Maze
+@onready var _participant: Participant = $Participant
+@onready var _camera: Camera2D = $Camera
+@onready var _info: Label = $UI/Info
+
+var _overview := false
+
+
+func _ready() -> void:
+	_participant.set_controller(HumanController.new())
+	_maze.generated.connect(_on_maze_generated)
+	if _maze.get_last_seed() != 0:
+		_on_maze_generated(_maze.get_last_seed())
+
+
+func _process(_delta: float) -> void:
+	if not _overview:
+		_camera.position = _participant.position
+	var cell: Vector2i = _maze.world_to_cell(_participant.position)
+	_info.text = "Semilla %d · casilla %s · velocidad %d px/s   [WASD/flechas] moverse  [Tab] mapa  [R] otro laberinto  [Esc] salir" % [
+		_maze.get_last_seed(), cell, _participant.move_speed]
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		match event.keycode:
+			KEY_R:
+				_maze.generate()
+			KEY_TAB:
+				_overview = not _overview
+				_update_camera()
+			KEY_ESCAPE:
+				get_tree().quit()
+
+
+func _on_maze_generated(_seed: int) -> void:
+	var base: Vector2i = _maze.get_base_cells(1)[0]
+	_participant.position = _maze.cell_to_world(base)
+	_camera.position = _participant.position
+	_camera.reset_smoothing()
+	_update_camera()
+
+
+func _update_camera() -> void:
+	if not _overview:
+		_camera.zoom = FOLLOW_ZOOM
+		return
+	var rect := _maze.get_used_rect()
+	var tile := Vector2(_maze.tile_set.tile_size)
+	var world_size := Vector2(rect.size) * tile
+	_camera.position = Vector2(rect.position) * tile + world_size / 2.0
+	var view := get_viewport_rect().size * 0.95
+	var z := minf(view.x / world_size.x, view.y / world_size.y)
+	_camera.zoom = Vector2(z, z)

@@ -1,0 +1,36 @@
+#pragma once
+
+#include "core/participant_command.h"
+
+#include <godot_cpp/classes/ref_counted.hpp>
+
+using namespace godot;
+
+class Participant;
+
+// Patrón Strategy: decide qué hace un participante en cada frame.
+//
+// Participant tiene un controlador y le pide una orden (ParticipantCommand) en cada frame,
+// sin saber si lo controla una persona, un bot o la red. Para un nuevo tipo de control
+// se hereda de esta clase; Participant no cambia. Ver docs/ARQUITECTURA.md §5.
+class ParticipantController : public RefCounted {
+	GDCLASS(ParticipantController, RefCounted)
+
+public:
+	// Devuelve la orden para este frame. La implementación base no hace nada (quieto).
+	virtual lv::core::ParticipantCommand compute_command(const Participant &p_participant, double p_delta);
+
+protected:
+	static void _bind_methods() {}
+};
+
+// Controlador de una persona con teclado (o mando): lee las acciones move_* del InputMap.
+class HumanController : public ParticipantController {
+	GDCLASS(HumanController, ParticipantController)
+
+public:
+	lv::core::ParticipantCommand compute_command(const Participant &p_participant, double p_delta) override;
+
+protected:
+	static void _bind_methods() {}
+};
