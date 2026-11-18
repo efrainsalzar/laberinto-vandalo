@@ -3,6 +3,10 @@
 > Lo ya terminado, de lo más nuevo a lo más viejo. El estado actual y lo que sigue están en
 > [ROADMAP.md](ROADMAP.md). Al cerrar una pieza se agrega su bloque **arriba**.
 
+### v0.0.27 — Muerte con desintegración ✅
+- [x] Corregido: el efecto de muerte quedaba debajo del piso y no se veía (parecía que el participante se congelaba).
+- [x] El cuerpo se desintegra en píxeles en su lugar (shader) mientras salen fragmentos de su color; marca en el piso.
+
 ### v0.0.26 — Armas en el mapa y HUD de armas ✅
 - [x] Escopeta, láser y bazuca aparecen en el mapa como cuadrados con su símbolo (categoría "armas" con cupo, reposición y caducidad).
 - [x] Al recogerla se equipa sola en la ranura especial; los bots también las recogen y las usan.

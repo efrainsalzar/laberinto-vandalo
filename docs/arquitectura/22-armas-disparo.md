@@ -65,9 +65,12 @@ alarga el alcance. Los bots usan el mismo alcance para decidir si disparan.
 **Balas rápidas (v0.0.24).** La pistola va a 50 casillas/s (antes 16, "globitos"). Se dibuja como bala trazadora:
 estela de lo recorrido en los últimos 0,03 s, que nunca sale del cuerpo del tirador (`Projectile.traveled`).
 
-**Muerte (v0.0.24, solo vista).** Al ser eliminado, el participante se infla y se desvanece (0,15 s) y deja un
-`death_effect.gd` en el mundo: anillo + 10 fragmentos de su color (0,45 s) y una "x" tenue en el piso (4 s). Al
-reaparecer crece desde chico con rebote y parpadea durante la protección.
+**Muerte (v0.0.27, solo vista): desintegración.** Al ser eliminado, el cuerpo se deshace en su lugar en 0,5 s con
+`shaders/dissolve.gdshader`: lo divide en cuadraditos que desaparecen al azar (de afuera hacia adentro) con un borde
+brillante de su color. A la vez, `death_effect.gd` suelta 26 "píxeles" de su color que se dispersan frenando, y deja
+una "x" tenue en el piso (4 s). Al reaparecer crece desde chico con rebote y parpadea durante la protección.
+*Error corregido:* en v0.0.24 el efecto tenía `z_index = -1` y quedaba **debajo del piso** (no se veía). Ahora el
+efecto va en z 0 al final del nivel (sobre el piso) y los participantes en z 1 (pasan por encima de la marca).
 
 **Humano.** Apunta con el mouse (o el stick derecho, acciones `aim_*`) y dispara con `fire` (clic izquierdo o gatillo
 derecho); manteniendo apretado dispara a la cadencia del arma. El cursor de la partida es una cruz.
@@ -102,7 +105,7 @@ derecho); manteniendo apretado dispara a la cadencia del arma. El cursor de la p
 | `src/game/bot_controller.*`, `bot_coordinator.*` | Gatillo del bot; `collect_visible_rivals`; `BotProfile.aim_error_deg` |
 | `src/game/trophy_controller.*` | `eliminate_participant`: elimina y, si era el portador, suelta el trofeo |
 | `project/data/weapons/pistol.tres` | Pistola: 0,35 s entre disparos, munición infinita, 50 casillas/s, alcance = visión |
-| `project/scripts/participant/death_effect.gd`, `participant_view.gd` | Animación de eliminación y reaparición |
+| `project/scripts/participant/death_effect.gd`, `participant_view.gd`, `project/shaders/dissolve.gdshader` | Desintegración y reaparición |
 | `project/scenes/participant/participant.tscn` | Nodo `Weapon` con la pistola |
 | `project/scenes/game/match.tscn`, `scripts/game/match.gd` | Nodo `Projectiles`; impacto = eliminar; avisos "TE DISPARÓ" / "LE DISTE A" |
 | `project/project.godot` | Acciones `fire`, `aim_left/right/up/down` |

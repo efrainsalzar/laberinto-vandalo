@@ -5,8 +5,8 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 
 ## Estado actual
 
-**v0.0.26** · 135 tests · Etapa 1 completa y Etapa 3 (bots) adelantada. Últimas piezas: lenguaje visual de objetos
-(v0.0.22) catálogo de armas (v0.0.25) y armas en el mapa + HUD (v0.0.26). Todo lo terminado, versión por versión: [HISTORIAL.md](HISTORIAL.md).
+**v0.0.27** · 135 tests · Etapa 1 completa y Etapa 3 (bots) adelantada. Últimas piezas: lenguaje visual de objetos
+(v0.0.22) armas en el mapa + HUD (v0.0.26) y muerte con desintegración (v0.0.27). En curso: láser sostenido + comportamientos de disparo, y tarjeta del participante (aprobados). Todo lo terminado, versión por versión: [HISTORIAL.md](HISTORIAL.md).
 
 ## Plan acordado (etapas, una pieza a la vez)
 
