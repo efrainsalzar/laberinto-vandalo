@@ -1,7 +1,7 @@
 extends Node2D
 ## Vista de un objeto recolectable con el lenguaje visual del juego (ARQUITECTURA §21):
 ## - La FORMA dice la categoría: círculo = mejora de stat, rombo = power-up, cuadrado = arma,
-##   hexágono = objeto que cambia el mapa, anillo = portal, frasco = poción.
+##   hexágono = objeto que cambia el mapa, anillo = portal, frasco = poción, triángulo = se guarda y se usa (§28).
 ## - El SÍMBOLO de adentro dice qué hace: » velocidad, ojo visión, rayo rapidez; armas: abanico (escopeta),
 ##   haz (láser), estrella (bazuca); cruz = cura; escudos (rombo): círculo burbuja, arco frontal, flecha espejo.
 ## - Halo suave del color del tipo y borde oscuro para que se lea sobre cualquier suelo.
@@ -60,6 +60,8 @@ func _draw_shape(shape: int, r: float, color: Color) -> void:
 			draw_rect(Rect2(-r * 0.42, -r * 1.55, r * 0.84, r * 0.22), color.darkened(0.35))  # tapón
 			draw_circle(Vector2(0, r * 0.15), r, color)
 			draw_circle(Vector2(-r * 0.32, -r * 0.15), r * 0.26, color.lightened(0.5))  # brillo
+		PickupType.SHAPE_TRIANGLE:  # objeto usable: triángulo con la punta arriba
+			_draw_polygon(_regular(3, r * 1.4, 0.0), color)
 		PickupType.SHAPE_RING:
 			draw_arc(Vector2.ZERO, r, 0.0, TAU, 32, OUTLINE, r * 0.55 + 2.0, true)
 			draw_arc(Vector2.ZERO, r, 0.0, TAU, 32, color, r * 0.55, true)
@@ -112,6 +114,16 @@ func _draw_symbol(symbol: int, s: float, ink: Color) -> void:
 			draw_polyline(PackedVector2Array([Vector2(-s * 0.7, -s * 0.5), Vector2(s * 0.25, 0), Vector2(-s * 0.7, s * 0.5)]), ink, w * 0.8, true)
 			var tip := Vector2(-s * 0.7, s * 0.5)  # punta de flecha: el disparo vuelve
 			draw_colored_polygon(PackedVector2Array([tip, tip + Vector2(s * 0.45, s * 0.05), tip + Vector2(s * 0.2, -s * 0.38)]), ink)
+		PickupType.SYMBOL_BOMB:  # bomba: bola con mecha (un poco más abajo, en el cuerpo del triángulo)
+			var c := Vector2(0, s * 0.35)
+			draw_circle(c, s * 0.5, ink)
+			draw_line(c + Vector2(s * 0.25, -s * 0.4), c + Vector2(s * 0.5, -s * 0.75), ink, w * 0.7, true)
+		PickupType.SYMBOL_MINE:  # mina: disco con púas
+			var c := Vector2(0, s * 0.35)
+			draw_circle(c, s * 0.38, ink)
+			for i in 6:
+				var d := Vector2.from_angle(TAU * i / 6.0)
+				draw_line(c + d * s * 0.3, c + d * s * 0.62, ink, w * 0.6, true)
 		PickupType.SYMBOL_BOLT:  # rayo
 			draw_colored_polygon(PackedVector2Array([
 				Vector2(s * 0.2, -s), Vector2(-s * 0.55, s * 0.12), Vector2(-s * 0.02, s * 0.12),

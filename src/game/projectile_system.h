@@ -1,7 +1,9 @@
 #pragma once
 
+#include "core/explosives.h"
 #include "core/health.h"
 #include "core/projectiles.h"
+#include "game/usable_item.h"
 #include "game/weapon_type.h"
 
 #include <godot_cpp/classes/node2d.hpp>
@@ -31,6 +33,9 @@ class Participant;
 //   devuelve: la bala vuelve como bala nueva de la víctima; el láser quema directo a quien lo disparó.
 // - Dibuja todo en un solo _draw (arte provisional): balas con estela, rayos y explosiones que se apagan.
 // - Tope `max_projectiles`: al superarlo, la bala nueva reemplaza a la más vieja.
+// - Bombas y minas en el piso (§28): lv::core::ExplosiveWorld (datos en bloque, tope 32). Explotan con la misma
+//   explosión que la bazuca (explode()). Las minas se dibujan para su dueño y, para el jugador de esta pantalla
+//   (viewer), solo si está muy cerca.
 // Hay uno por nivel; WeaponComponent lo encuentra con ProjectileSystem::find (grupo "projectile_system").
 // Ver docs/ARQUITECTURA.md §22 y §23.
 class ProjectileSystem : public Node2D {
@@ -48,8 +53,13 @@ public:
 	void spawn(Participant *p_owner, const Vector2 &p_from, const Vector2 &p_direction, const Ref<WeaponType> &p_weapon, float p_range);
 	// p_delta: segundos de este frame (el láser quita damage × delta).
 	void hold_beam(Participant *p_owner, const Vector2 &p_from, const Vector2 &p_direction, const Ref<WeaponType> &p_weapon, float p_range, float p_delta);
+	// Deja una bomba o mina donde está p_owner (ItemComponent lo llama al usar el objeto).
+	void place_explosive(Participant *p_owner, const Ref<UsableItem> &p_item);
+	// El jugador de esta pantalla: ve sus minas siempre y las de los rivales solo de muy cerca.
+	void set_viewer(Participant *p_viewer);
 	void clear();
 	int get_projectile_count() const { return world_.size(); }
+	int get_explosive_count() const { return explosives_.size(); }
 
 	void set_max_projectiles(int p_value);
 	int get_max_projectiles() const { return world_.max(); }
@@ -61,6 +71,8 @@ private:
 	static constexpr float TRAIL_SECONDS = 0.03f; // largo de la estela = lo que la bala recorre en este tiempo
 	static constexpr float EXPLOSION_SECONDS = 0.35f;
 	static constexpr float REFLECT_RANGE = 12.0f; // casillas que recorre una bala devuelta
+	static constexpr float MINE_REVEAL = 1.6f; // casillas: a esta distancia un rival ve la mina
+	static constexpr int MAX_EXPLOSIVES = 32;
 
 	// Explosión que se apaga sola. En coordenadas locales.
 	struct Flash {
@@ -90,6 +102,10 @@ private:
 	std::vector<lv::core::ExplosionVictim> victims_;
 	std::vector<Flash> flashes_;
 	std::vector<HeldBeam> held_beams_;
+	lv::core::ExplosiveWorld explosives_{ MAX_EXPLOSIVES };
+	std::vector<lv::core::ExplosiveEvent> explosive_events_; // reutilizado
+	std::vector<Ref<UsableItem>> items_; // tag del explosivo = índice aquí
+	int viewer_id_ = -1;
 
 	int weapon_tag(const Ref<WeaponType> &p_weapon);
 	Color weapon_color(int p_tag) const;
@@ -98,6 +114,10 @@ private:
 	// p_tag: arma de la bala (para devolverla con un espejo); -1 = no es una bala.
 	void hit(int p_victim, const lv::core::DamageInfo &p_info, int p_tag = -1);
 	void reflect(Participant *p_mirror, const lv::core::DamageInfo &p_info, int p_tag);
+	// Explosión (bazuca, bomba, mina): víctimas en el radio con línea de visión, daño de p_damage a p_edge, destello.
+	void explode(float p_x, float p_y, float p_radius, int p_owner, float p_damage, float p_edge, const Color &p_color);
+	int item_tag(const Ref<UsableItem> &p_item);
+	void draw_explosives();
 	Participant *body(int p_id) const;
 	Vector2 grid_to_local(float p_x, float p_y) const;
 };

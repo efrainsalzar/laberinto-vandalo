@@ -9,6 +9,7 @@
 #include <godot_cpp/variant/typed_array.hpp>
 
 #include <algorithm>
+#include <cmath>
 
 namespace {
 const char *GROUP_SELF = "projectile_system";
@@ -18,6 +19,9 @@ void ProjectileSystem::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("setup", "maze"), &ProjectileSystem::setup);
 	ClassDB::bind_method(D_METHOD("clear"), &ProjectileSystem::clear);
 	ClassDB::bind_method(D_METHOD("get_projectile_count"), &ProjectileSystem::get_projectile_count);
+	ClassDB::bind_method(D_METHOD("get_explosive_count"), &ProjectileSystem::get_explosive_count);
+	ClassDB::bind_method(D_METHOD("set_viewer", "viewer"), &ProjectileSystem::set_viewer);
+	ClassDB::bind_method(D_METHOD("place_explosive", "owner", "item"), &ProjectileSystem::place_explosive);
 	ClassDB::bind_method(D_METHOD("set_max_projectiles", "value"), &ProjectileSystem::set_max_projectiles);
 	ClassDB::bind_method(D_METHOD("get_max_projectiles"), &ProjectileSystem::get_max_projectiles);
 
@@ -48,6 +52,7 @@ void ProjectileSystem::setup(Maze *p_maze) {
 
 void ProjectileSystem::clear() {
 	world_.clear();
+	explosives_.clear();
 	flashes_.clear();
 	held_beams_.clear();
 	queue_redraw();
@@ -55,6 +60,57 @@ void ProjectileSystem::clear() {
 
 void ProjectileSystem::set_max_projectiles(int p_value) {
 	world_.set_max(p_value);
+}
+
+int ProjectileSystem::item_tag(const Ref<UsableItem> &p_item) {
+	for (size_t i = 0; i < items_.size(); i++) {
+		if (items_[i] == p_item) {
+			return static_cast<int>(i);
+		}
+	}
+	items_.push_back(p_item);
+	return static_cast<int>(items_.size()) - 1;
+}
+
+void ProjectileSystem::set_viewer(Participant *p_viewer) {
+	viewer_id_ = p_viewer != nullptr ? p_viewer->get_participant_id() : -1;
+}
+
+void ProjectileSystem::place_explosive(Participant *p_owner, const Ref<UsableItem> &p_item) {
+	if (maze_ == nullptr || p_owner == nullptr || p_item.is_null()) {
+		return;
+	}
+	const lv::core::GridPoint at = maze_->world_to_grid_point(p_owner->get_global_position());
+	explosives_.place(at.x, at.y, p_item->spec(), p_owner->get_participant_id(), item_tag(p_item));
+	queue_redraw();
+}
+
+void ProjectileSystem::explode(float p_x, float p_y, float p_radius, int p_owner, float p_damage, float p_edge, const Color &p_color) {
+	const float tile = maze_->get_tile_px();
+	victims_.clear();
+	lv::core::explosion_victims(maze_->get_grid(), p_x, p_y, p_radius, targets_, p_owner, victims_);
+	Flash flash;
+	flash.from = grid_to_local(p_x, p_y);
+	flash.radius = p_radius * tile;
+	flash.color = p_color;
+	flash.duration = EXPLOSION_SECONDS;
+	flashes_.push_back(flash);
+	emit_signal("exploded", to_global(flash.from), flash.radius);
+	for (const lv::core::ExplosionVictim &victim : victims_) {
+		lv::core::DamageInfo info;
+		info.amount = lv::core::explosion_damage(p_damage, p_edge, p_radius, victim.distance);
+		info.source = p_owner;
+		info.kind = lv::core::DamageKind::Explosion;
+		info.x = p_x;
+		info.y = p_y;
+		if (const Participant *p = body(victim.id)) { // empuja hacia afuera del centro
+			const lv::core::GridPoint at = maze_->world_to_grid_point(p->get_global_position());
+			const Vector2 away = Vector2(at.x - p_x, at.y - p_y).normalized();
+			info.dir_x = away.x;
+			info.dir_y = away.y;
+		}
+		hit(victim.id, info);
+	}
 }
 
 int ProjectileSystem::weapon_tag(const Ref<WeaponType> &p_weapon) {
@@ -202,7 +258,7 @@ void ProjectileSystem::gather_targets() {
 }
 
 void ProjectileSystem::_physics_process(double p_delta) {
-	if (maze_ == nullptr || (world_.size() == 0 && flashes_.empty() && held_beams_.empty())) {
+	if (maze_ == nullptr || (world_.size() == 0 && explosives_.size() == 0 && flashes_.empty() && held_beams_.empty())) {
 		return; // nada que mover ni dibujar (el último frame ya se redibujó vacío)
 	}
 	lv::core::PerfScope perf("weapons.projectiles");
@@ -221,38 +277,18 @@ void ProjectileSystem::_physics_process(double p_delta) {
 	}
 	flashes_.erase(std::remove_if(flashes_.begin(), flashes_.end(), [](const Flash &f) { return f.time >= f.duration; }), flashes_.end());
 
-	if (world_.size() > 0) {
+	if (world_.size() > 0 || explosives_.size() > 0) {
 		gather_targets();
+	}
+	if (world_.size() > 0) {
 		events_.clear();
 		world_.step(dt, maze_->get_grid(), targets_, events_);
-		const float tile = maze_->get_tile_px();
 		for (const lv::core::ProjectileEvent &event : events_) {
 			if (event.explosion_radius > 0.0f) {
 				// Bazuca: explota donde terminó y le pega a todos los del radio con línea de visión.
-				victims_.clear();
-				lv::core::explosion_victims(maze_->get_grid(), event.x, event.y, event.explosion_radius, targets_, event.owner, victims_);
-				Flash flash;
-				flash.from = grid_to_local(event.x, event.y);
-				flash.radius = event.explosion_radius * tile;
-				flash.color = weapon_color(event.tag);
-				flash.duration = EXPLOSION_SECONDS;
-				flashes_.push_back(flash);
-				emit_signal("exploded", to_global(flash.from), flash.radius);
 				const lv::core::WeaponSpec *spec = weapon_spec(event.tag);
-				for (const lv::core::ExplosionVictim &victim : victims_) {
-					lv::core::DamageInfo info;
-					info.amount = spec != nullptr ? lv::core::explosion_damage(spec->damage, spec->damage_edge, event.explosion_radius, victim.distance) : 0.0f;
-					info.source = event.owner;
-					info.kind = lv::core::DamageKind::Explosion;
-					info.x = event.x;
-					info.y = event.y;
-					if (const Participant *p = body(victim.id)) { // empuja hacia afuera del centro
-						const lv::core::GridPoint at = maze_->world_to_grid_point(p->get_global_position());
-						const Vector2 away = Vector2(at.x - event.x, at.y - event.y).normalized();
-						info.dir_x = away.x;
-						info.dir_y = away.y;
-					}
-					hit(victim.id, info);
+				if (spec != nullptr) {
+					explode(event.x, event.y, event.explosion_radius, event.owner, spec->damage, spec->damage_edge, weapon_color(event.tag));
 				}
 			} else if (event.kind == lv::core::ProjectileEvent::Kind::HitTarget) {
 				const lv::core::WeaponSpec *spec = weapon_spec(event.tag);
@@ -266,6 +302,17 @@ void ProjectileSystem::_physics_process(double p_delta) {
 				info.y = event.y;
 				info.reflected = event.reflected;
 				hit(event.target, info, event.tag);
+			}
+		}
+	}
+	if (explosives_.size() > 0) {
+		lv::core::PerfScope perf_explosives("weapons.explosives");
+		explosive_events_.clear();
+		explosives_.step(dt, targets_, explosive_events_);
+		for (const lv::core::ExplosiveEvent &event : explosive_events_) {
+			const Ref<UsableItem> item = (event.tag >= 0 && event.tag < static_cast<int>(items_.size())) ? items_[event.tag] : Ref<UsableItem>();
+			if (item.is_valid()) {
+				explode(event.x, event.y, event.explosion_radius, event.owner, item->get_damage(), item->get_damage_edge(), item->get_color());
 			}
 		}
 	}
@@ -293,6 +340,7 @@ void ProjectileSystem::_draw() {
 		draw_line(tail.lerp(at, 0.5f), at, Color(color, 0.8f), radius);
 		draw_circle(at, radius, color);
 	}
+	draw_explosives();
 	for (const Flash &flash : flashes_) {
 		const float fade = 1.0f - flash.time / flash.duration;
 		const float grow = 0.4f + 0.6f * (1.0f - fade * fade); // crece rápido al principio
@@ -306,5 +354,64 @@ void ProjectileSystem::_draw() {
 		draw_line(beam.from, beam.to, Color(1, 1, 1, 0.95f), beam.width * 0.7f);
 		draw_circle(beam.to, beam.width * 2.2f, Color(beam.color, 0.5f));
 		draw_circle(beam.to, beam.width * 1.1f, Color(1, 1, 1, 0.9f));
+	}
+}
+
+// Bombas y minas (arte provisional). Bomba: esfera oscura con anillo del color y una chispa en la mecha que parpadea
+// cada vez más rápido. Mina: disco chato; luz tenue mientras se arma y roja parpadeando lenta ya armada. Las minas
+// ajenas solo se dibujan si el jugador de esta pantalla está muy cerca (la niebla, además, las tapa de lejos).
+void ProjectileSystem::draw_explosives() {
+	if (explosives_.size() == 0) {
+		return;
+	}
+	const float tile = maze_->get_tile_px();
+	const Participant *viewer = body(viewer_id_);
+	lv::core::GridPoint viewer_at{ -1000.0f, -1000.0f };
+	if (viewer != nullptr) {
+		viewer_at = maze_->world_to_grid_point(viewer->get_global_position());
+	}
+	for (const lv::core::Explosive &e : explosives_.items()) {
+		const Ref<UsableItem> item = (e.tag >= 0 && e.tag < static_cast<int>(items_.size())) ? items_[e.tag] : Ref<UsableItem>();
+		const Color color = item.is_valid() ? item->get_color() : Color(1, 0.5f, 0.2f);
+		const Vector2 at = grid_to_local(e.x, e.y);
+		const float r = std::max(3.0f, 0.24f * tile);
+		if (e.spec.kind == lv::core::ExplosiveKind::Bomb) {
+			const float left = std::max(0.0f, e.timer);
+			const float period = 0.08f + 0.3f * std::min(1.0f, left / std::max(0.01f, e.spec.fuse));
+			const bool spark = std::fmod(e.age, period * 2.0f) < period;
+			draw_circle(at, r + 1.5f, Color(0.02f, 0.02f, 0.04f, 0.9f));
+			draw_circle(at, r, Color(0.16f, 0.15f, 0.2f));
+			draw_arc(at, r, 0.0f, 6.2831853f, 20, color, 1.5f);
+			const Vector2 fuse = at + Vector2(r * 0.55f, -r * 0.95f);
+			draw_line(at + Vector2(r * 0.3f, -r * 0.7f), fuse, Color(0.8f, 0.75f, 0.6f), 1.5f);
+			if (spark) {
+				draw_circle(fuse, r * 0.45f, Color(1.0f, 0.85f, 0.3f));
+				draw_circle(fuse, r * 0.22f, Color(1, 1, 1));
+			}
+			// Anillo del radio de la explosión que se cierra en el último medio segundo (aviso).
+			if (left < 0.5f) {
+				draw_arc(at, e.spec.explosion_radius * tile, 0.0f, 6.2831853f, 40, Color(color, 0.5f * (1.0f - left / 0.5f)), 1.5f);
+			}
+		} else {
+			float alpha = 1.0f;
+			if (e.owner != viewer_id_) {
+				const float dx = viewer_at.x - e.x;
+				const float dy = viewer_at.y - e.y;
+				if (dx * dx + dy * dy > MINE_REVEAL * MINE_REVEAL) {
+					continue; // mina ajena lejos: no se ve
+				}
+			} else {
+				alpha = 0.85f;
+			}
+			draw_circle(at, r * 1.15f + 1.5f, Color(0.02f, 0.02f, 0.04f, 0.8f * alpha));
+			draw_circle(at, r * 1.15f, Color(0.2f, 0.19f, 0.24f, alpha));
+			draw_arc(at, r * 1.15f, 0.0f, 6.2831853f, 20, Color(color, 0.8f * alpha), 1.5f);
+			const bool armed = e.is_armed();
+			const bool on = !armed || std::fmod(e.age, 1.0f) < 0.5f;
+			const Color light = armed ? Color(1.0f, 0.2f, 0.15f, alpha) : Color(color, 0.45f * alpha);
+			if (on) {
+				draw_circle(at, r * 0.35f, light);
+			}
+		}
 	}
 }

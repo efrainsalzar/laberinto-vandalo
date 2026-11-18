@@ -1,0 +1,18 @@
+[gd_resource type="PickupCategory" load_steps=4 format=3]
+
+[ext_resource type="PickupType" path="res://data/pickups/objeto_bomba.tres" id="1_bo"]
+[ext_resource type="PickupType" path="res://data/pickups/objeto_mina.tres" id="2_mi"]
+
+[sub_resource type="KeepDensityPolicy" id="pol"]
+
+[resource]
+id = "usables"
+types = Array[PickupType]([ExtResource("1_bo"), ExtResource("2_mi")])
+policy = SubResource("pol")
+share = 0.04
+min_count = 1
+max_count = 8
+refill_time = 35.0
+initial_fill = 0.5
+lifetime = 30.0
+warn_time = 5.0

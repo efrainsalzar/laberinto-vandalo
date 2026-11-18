@@ -1,0 +1,17 @@
+[gd_resource type="PickupType" load_steps=3 format=3]
+
+[ext_resource type="UsableItem" path="res://data/items/mina.tres" id="1_item"]
+
+[sub_resource type="GiveItemEffect" id="give"]
+item = ExtResource("1_item")
+
+[resource]
+id = "objeto_mina"
+display_name = "Mina"
+popup_title = "¡MINA!"
+color = Color(1, 0.4, 0.35, 1)
+radius = 8
+shape = 6
+symbol = 12
+weight = 1
+effects = Array[PickupEffect]([SubResource("give")])

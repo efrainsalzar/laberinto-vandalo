@@ -25,6 +25,7 @@ public:
 		SHAPE_HEXAGON, // objeto que cambia el mapa
 		SHAPE_RING, // portal
 		SHAPE_FLASK, // poción (curación, §26)
+		SHAPE_TRIANGLE, // objeto que se guarda y se usa después (bomba, mina; §28)
 	};
 	enum Symbol {
 		SYMBOL_NONE,
@@ -38,6 +39,8 @@ public:
 		SYMBOL_BUBBLE, // círculo (escudo burbuja)
 		SYMBOL_ARC, // arco (escudo frontal)
 		SYMBOL_MIRROR, // flecha que rebota (escudo espejo)
+		SYMBOL_BOMB, // bomba con mecha
+		SYMBOL_MINE, // mina: disco con púas
 	};
 	void set_shape(Shape p_value) { shape_ = p_value; }
 	Shape get_shape() const { return shape_; }

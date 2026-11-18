@@ -50,6 +50,7 @@
 | 8 | **Partida** | `MatchFlow`: reloj, fases, victoria/tiempo | `MatchController` + `MatchRules` (datos) | **State** (fases), Observer |
 | 9 | **Armas y disparo** | `WeaponState`, `ProjectileWorld`, `BotGunner`, `segment_hits_wall` | `WeaponType` (datos), `WeaponComponent`, `ProjectileSystem` | **Command**, Type Object, State, datos en bloque, Observer |
 | 10 | **Salud y daño** | `Health`, `DamageInfo`, `explosion_damage`, `DamageBatch` | `HealthComponent` | **Value Object**, Composición, datos |
+| 12 | **Bombas y minas** | `ExplosiveWorld`, `ExplosiveSpec` | `UsableItem` (datos), `ItemComponent`, `GiveItemEffect`; en `ProjectileSystem` | Command, Type Object, datos en bloque |
 | 11 | **Escudos** | `Shield` (Bubble/Frontal/Mirror), `ShieldChain` | `ShieldComponent`, `ShieldEffect` | **Chain of Responsibility**, Composición |
 
 Fases siguientes (bots, combate, vándalos, director) se diseñan cuando lleguemos; ver [ROADMAP](ROADMAP.md).
@@ -97,6 +98,7 @@ Cada módulo tiene su archivo en [`arquitectura/`](arquitectura/). Los comentari
 | §25 | [Etapa 4.1 — Salud y daño por arma](arquitectura/25-salud-dano.md) |
 | §26 | [Etapa 4.2 — Pociones y efectos de objeto (Strategy)](arquitectura/26-pociones-efectos.md) |
 | §27 | [Etapa 4.3 — Escudos (cadena de modificadores)](arquitectura/27-escudos.md) |
+| §28 | [Etapa 4.4 — Bombas y minas (objeto usable)](arquitectura/28-bombas-minas.md) |
 
 ## Patrones aplicados (índice)
 
@@ -108,7 +110,7 @@ Cada módulo tiene su archivo en [`arquitectura/`](arquitectura/). Los comentari
 | Utility AI (puntajes) | `BotBrain` | ✅ |
 | Fichas de ataque | `TokenPool` en `BotCoordinator` | ✅ |
 | A* (búsqueda de caminos) | `find_path` | ✅ |
-| Command | `ParticipantCommand` (moverse, apuntar, disparar) | ✅ |
+| Command | `ParticipantCommand` (moverse, apuntar, disparar, usar objeto) | ✅ |
 | Value Object | `DamageInfo` (un golpe como dato; pasa por los escudos) | ✅ |
 | Chain of Responsibility | `ShieldChain`: burbuja → frontal → espejo antes de la salud | ✅ |
 | Composición / separación lógica-vista | `Participant` + `View` + `StatsComponent` + `Vision` + `HealthComponent`; `core` vs `game`; `line_of_sight` vs luz | ✅ |
@@ -117,7 +119,7 @@ Cada módulo tiene su archivo en [`arquitectura/`](arquitectura/). Los comentari
 | State | `TrophyTracker` (estados del trofeo); `App` (flujo del juego); `MazeShifter` (laberinto vivo); `MatchFlow` (fases de la partida); luego estados del participante | ✅ (parcial) |
 | Datos fuera del código | `StatsProfile`, `MatchRules`, `BotProfile`, `TrophyRules`, `PickupCategory` (.tres) | ✅ |
 | Type Object (armas como datos) | `WeaponType` (catálogo en `data/weapons/`) + `WeaponState`; modo de disparo, perdigones, explosión y munición por dato | ✅ |
-| Datos en bloque (pool "de juegos") | `ProjectileWorld`: todas las balas en un arreglo, swap-remove, tope | ✅ |
+| Datos en bloque (pool "de juegos") | `ProjectileWorld`: todas las balas en un arreglo, swap-remove, tope; `ExplosiveWorld`: bombas y minas | ✅ |
 | Cola de prioridad (caducidad) | `ExpiryQueue` en `PickupSpawner` | ✅ |
 | Factory + datos | `PickupFactory` + `PickupType` (.tres); vistas de trofeo/bases en `TrophyController` | ✅ |
 | Event Bus | `Events` (autoload) | ✅ |

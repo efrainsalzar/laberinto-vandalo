@@ -17,6 +17,7 @@ lv::core::ParticipantCommand HumanController::compute_command(const Participant 
 	command.move_y = direction.y;
 
 	command.fire = input->is_action_pressed("fire");
+	command.use_item = input->is_action_pressed("use_item");
 	// Stick derecho si se está usando; si no, hacia el puntero del mouse.
 	Vector2 aim = input->get_vector("aim_left", "aim_right", "aim_up", "aim_down");
 	if (aim.is_zero_approx()) {

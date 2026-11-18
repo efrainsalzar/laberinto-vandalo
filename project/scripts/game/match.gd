@@ -16,10 +16,13 @@ Los FRASCOS verdes son pociones: curan al tomarlas (+25 la chica, +60 la grande)
 Con la salud llena no se recogen: quedan para después.
 Los ROMBOS azules son escudos: BURBUJA (para un golpe), FRONTAL (para lo que viene
 por delante, hacia donde apuntas) y ESPEJO (devuelve balas y láser). Se pierden al perder la vida.
+Los TRIÁNGULOS son objetos que guardas (hasta 3) y usas con Q: la BOMBA explota a los 2 s;
+la MINA se arma en 1 s y explota cuando pasa un rival (ellos solo la ven de muy cerca).
 Fases: Preparación → Asalto → Golpe de los vándalos (el laberinto se acelera).
 
 WASD / flechas · moverse
 Mouse · apuntar   Clic izquierdo · disparar (mantener = ráfaga)
+Q / clic derecho · usar el objeto (bomba o mina)
 Esc / P · pausa
 F1 · mostrar u ocultar esta ayuda"""
 const DEBUG_CONTROLS := """
@@ -29,7 +32,8 @@ Teclas de prueba (Opciones › Teclas de prueba)
 3 · +2 VIS (5 s)   0 · quitar efectos
 4 · escopeta   5 · láser   6 · bazuca   7 · volver a la pistola
 T · soltar el trofeo   V · niebla sí / no
-8 · recibir 25 de daño   9 · los tres escudos   K · mover el laberinto ya   Tab · ver el mapa completo
+8 · recibir 25 de daño   9 · los tres escudos   B · 3 bombas   M · 3 minas
+K · mover el laberinto ya   Tab · ver el mapa completo
 N · saltar a la siguiente fase"""
 const PARTICIPANT_SCENE := preload("res://scenes/participant/participant.tscn")
 const BOT_NAMES := ["Rojo", "Verde", "Naranja", "Violeta", "Rosa", "Turquesa", "Blanco"]
@@ -42,6 +46,10 @@ const DEBUG_WEAPONS := {
 	KEY_4: preload("res://data/weapons/shotgun.tres"),
 	KEY_5: preload("res://data/weapons/laser.tres"),
 	KEY_6: preload("res://data/weapons/bazooka.tres"),
+}
+const DEBUG_ITEMS := {
+	KEY_B: preload("res://data/items/bomba.tres"),
+	KEY_M: preload("res://data/items/mina.tres"),
 }
 const RESULTS_SCREEN := preload("res://scenes/menus/results_screen.tscn")
 
@@ -93,6 +101,7 @@ func _ready() -> void:
 	Events.participant_eliminated.connect(_on_participant_eliminated)
 	_projectiles.participant_hit.connect(_on_participant_hit)  # solo participantes sin HealthComponent
 	_projectiles.exploded.connect(_on_exploded)
+	_projectiles.set_viewer(_participant)  # ve sus minas siempre; las ajenas solo de cerca
 	Input.set_default_cursor_shape(Input.CURSOR_CROSS)  # se apunta con el mouse
 	Events.trophy_taken.connect(func(p: Participant) -> void:
 		if p != _participant:
@@ -162,6 +171,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			_participant.get_weapon().clear_special()
 		KEY_8:
 			_participant.get_health().apply_damage(25.0)
+		KEY_B, KEY_M:
+			var item: UsableItem = DEBUG_ITEMS[event.keycode]
+			_participant.get_items().give(item, item.max_carry)
 		KEY_9:
 			for kind in [ShieldComponent.SHIELD_BUBBLE, ShieldComponent.SHIELD_FRONTAL, ShieldComponent.SHIELD_MIRROR]:
 				_participant.get_shields().add_shield(kind)
@@ -275,6 +287,8 @@ func _setup_life(p: Participant, spawn: Vector2) -> void:
 	if health == null:
 		return
 	health.reset()
+	if p.get_items():
+		p.get_items().clear()
 	var shields: ShieldComponent = p.get_shields()
 	if shields:
 		shields.clear()

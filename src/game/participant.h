@@ -2,6 +2,7 @@
 
 #include "core/participant_command.h"
 #include "game/health_component.h"
+#include "game/item_component.h"
 #include "game/life_component.h"
 #include "game/participant_controller.h"
 #include "game/shield_component.h"
@@ -23,6 +24,7 @@ using namespace godot;
 // - Si tiene un WeaponComponent hijo, la orden de disparo (fire + aim) va a esa arma (§22).
 // - Su salud está en un HealthComponent hijo (§25); al reaparecer vuelve a la salud máxima.
 // - Sus escudos, en un ShieldComponent hijo (§27); se pierden al perder la vida.
+// - Su objeto usable (bomba, mina), en un ItemComponent hijo (§28): la orden use_item lo deja en el piso.
 // Ver docs/ARQUITECTURA.md §5.
 class Participant : public CharacterBody2D {
 	GDCLASS(Participant, CharacterBody2D)
@@ -55,6 +57,8 @@ public:
 	HealthComponent *get_health() const { return find_component(health_); }
 	// Escudos (primer hijo ShieldComponent, §27). Puede ser nullptr: entonces no tiene escudos.
 	ShieldComponent *get_shields() const { return find_component(shields_); }
+	// Mochila (primer hijo ItemComponent, §28): bomba o mina. Puede ser nullptr.
+	ItemComponent *get_items() const { return find_component(items_); }
 	// Arma (primer hijo WeaponComponent). Puede ser nullptr: entonces no dispara.
 	WeaponComponent *get_weapon() const { return find_component(weapon_); }
 
@@ -80,6 +84,7 @@ private:
 	mutable LifeComponent *life_ = nullptr;
 	mutable HealthComponent *health_ = nullptr;
 	mutable ShieldComponent *shields_ = nullptr;
+	mutable ItemComponent *items_ = nullptr;
 	mutable WeaponComponent *weapon_ = nullptr;
 
 	// Primer hijo del tipo T (se recuerda en r_cache). nullptr si no hay.

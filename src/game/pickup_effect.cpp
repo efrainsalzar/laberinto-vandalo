@@ -72,3 +72,23 @@ void ShieldEffect::apply(Participant *p_participant, const String &p_source) con
 		shields->add_shield(kind_, duration_);
 	}
 }
+
+void GiveItemEffect::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("set_item", "value"), &GiveItemEffect::set_item);
+	ClassDB::bind_method(D_METHOD("get_item"), &GiveItemEffect::get_item);
+	ClassDB::bind_method(D_METHOD("set_count", "value"), &GiveItemEffect::set_count);
+	ClassDB::bind_method(D_METHOD("get_count"), &GiveItemEffect::get_count);
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "item", PROPERTY_HINT_RESOURCE_TYPE, "UsableItem"), "set_item", "get_item");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "count", PROPERTY_HINT_RANGE, "1,10,1"), "set_count", "get_count");
+}
+
+bool GiveItemEffect::is_useful(Participant *p_participant) const {
+	const ItemComponent *items = p_participant != nullptr ? p_participant->get_items() : nullptr;
+	return items != nullptr && items->can_accept(item_);
+}
+
+void GiveItemEffect::apply(Participant *p_participant, const String &p_source) const {
+	if (ItemComponent *items = p_participant != nullptr ? p_participant->get_items() : nullptr) {
+		items->give(item_, count_);
+	}
+}

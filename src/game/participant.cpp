@@ -20,6 +20,7 @@ void Participant::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_weapon"), &Participant::get_weapon);
 	ClassDB::bind_method(D_METHOD("get_health"), &Participant::get_health);
 	ClassDB::bind_method(D_METHOD("get_shields"), &Participant::get_shields);
+	ClassDB::bind_method(D_METHOD("get_items"), &Participant::get_items);
 	ClassDB::bind_method(D_METHOD("get_aim"), &Participant::get_aim);
 	ClassDB::bind_method(D_METHOD("is_active"), &Participant::is_active);
 	ClassDB::bind_method(D_METHOD("is_vulnerable"), &Participant::is_vulnerable);
@@ -44,6 +45,7 @@ void Participant::_ready() {
 	get_weapon();
 	get_health();
 	get_shields();
+	get_items();
 	if (life_ != nullptr && !Engine::get_singleton()->is_editor_hint()) {
 		life_->connect("eliminated", callable_mp(this, &Participant::on_eliminated));
 		life_->connect("respawned", callable_mp(this, &Participant::on_respawned));
@@ -81,6 +83,9 @@ void Participant::execute_command(const lv::core::ParticipantCommand &p_command)
 	// El gatillo va al arma cada frame (abajo o arriba): así sabe si se apretó, se mantiene o se soltó.
 	if (weapon_ != nullptr) {
 		weapon_->update_trigger(this, p_command.fire, aim, static_cast<float>(get_physics_process_delta_time()));
+	}
+	if (items_ != nullptr) {
+		items_->update_use(this, p_command.use_item); // usa uno al apretar (§28)
 	}
 }
 
@@ -129,6 +134,9 @@ void Participant::apply_body_radius() {
 void Participant::on_eliminated(Object *) {
 	if (shields_ != nullptr) {
 		shields_->clear(); // al perder la vida se pierden los escudos
+	}
+	if (items_ != nullptr) {
+		items_->clear(); // y lo que llevaba en la mochila
 	}
 	active_layer_ = get_collision_layer();
 	active_mask_ = get_collision_mask();

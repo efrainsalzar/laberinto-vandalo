@@ -1,0 +1,17 @@
+[gd_resource type="PickupType" load_steps=3 format=3]
+
+[ext_resource type="UsableItem" path="res://data/items/bomba.tres" id="1_item"]
+
+[sub_resource type="GiveItemEffect" id="give"]
+item = ExtResource("1_item")
+
+[resource]
+id = "objeto_bomba"
+display_name = "Bomba"
+popup_title = "¡BOMBA!"
+color = Color(1, 0.6, 0.25, 1)
+radius = 8
+shape = 6
+symbol = 11
+weight = 2
+effects = Array[PickupEffect]([SubResource("give")])

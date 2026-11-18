@@ -1,0 +1,12 @@
+[gd_resource type="UsableItem" format=3]
+
+[resource]
+display_name = "Bomba"
+short_name = "BOMBA"
+kind = 0
+max_carry = 3
+fuse = 2.0
+explosion_radius = 2.0
+damage = 80.0
+damage_edge = 30.0
+color = Color(1, 0.55, 0.2, 1)

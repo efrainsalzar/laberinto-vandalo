@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/stats_component.h"
+#include "game/usable_item.h"
 #include "game/weapon_type.h"
 
 #include <godot_cpp/classes/resource.hpp>
@@ -17,7 +18,7 @@ class Participant;
 //   HealEffect   → cura (pociones)
 //   WeaponEffect → da un arma especial (escopeta, láser, bazuca)
 //   ShieldEffect → da un escudo (burbuja, frontal, espejo; §27)
-// Luego: dar bomba o mina (pieza 4).
+//   GiveItemEffect → guarda un objeto usable en la mochila (bomba, mina; §28)
 // Ver docs/ARQUITECTURA.md §26.
 class PickupEffect : public Resource {
 	GDCLASS(PickupEffect, Resource)
@@ -112,4 +113,26 @@ protected:
 private:
 	int kind_ = 0;
 	float duration_ = 0.0f;
+};
+
+// Guarda un objeto usable (bomba, mina) en la mochila del participante (ItemComponent). No se usa al recogerlo.
+// Si ya lleva el máximo de ese objeto, no sirve: queda en el piso. §28.
+class GiveItemEffect : public PickupEffect {
+	GDCLASS(GiveItemEffect, PickupEffect)
+
+public:
+	bool is_useful(Participant *p_participant) const override;
+	void apply(Participant *p_participant, const String &p_source) const override;
+
+	void set_item(const Ref<UsableItem> &p_value) { item_ = p_value; }
+	Ref<UsableItem> get_item() const { return item_; }
+	void set_count(int p_value) { count_ = p_value < 1 ? 1 : p_value; }
+	int get_count() const { return count_; }
+
+protected:
+	static void _bind_methods();
+
+private:
+	Ref<UsableItem> item_;
+	int count_ = 1;
 };

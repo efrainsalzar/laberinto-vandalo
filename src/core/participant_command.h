@@ -6,7 +6,7 @@ namespace lv::core {
 //
 // Cualquier controlador (humano, bot, red) produce un ParticipantCommand; el participante
 // solo sabe ejecutarlo. Al ser datos simples se puede enviar por red o grabar para repeticiones.
-// Crecerá con nuevas acciones (usar objeto...) cuando lleguen esas fases.
+// Crece con cada acción nueva (disparar §22, usar objeto §28).
 struct ParticipantCommand {
 	// Dirección deseada. Cada componente en [-1, 1]; (0, 0) = quieto.
 	float move_x = 0.0f;
@@ -17,6 +17,8 @@ struct ParticipantCommand {
 	float aim_y = 0.0f;
 	// Quiere disparar en este frame (el arma decide si puede: cadencia, munición). Ver §22.
 	bool fire = false;
+	// Quiere usar el objeto de su ranura (bomba, mina). Se usa uno al apretar, no al mantener. Ver §28.
+	bool use_item = false;
 
 	bool is_idle() const { return move_x == 0.0f && move_y == 0.0f; }
 	bool has_aim() const { return aim_x != 0.0f || aim_y != 0.0f; }

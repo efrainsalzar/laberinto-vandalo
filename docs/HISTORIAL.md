@@ -3,6 +3,12 @@
 > Lo ya terminado, de lo más nuevo a lo más viejo. El estado actual y lo que sigue están en
 > [ROADMAP.md](ROADMAP.md). Al cerrar una pieza se agrega su bloque **arriba**.
 
+### v0.0.36 — Etapa 4.4: bombas y minas ✅
+- [x] Objetos que se guardan (una ranura, hasta 3) y se usan con Q / clic derecho / RB: la bomba explota a los 2 s; la mina se arma en 1 s y explota cuando pasa un rival (la ven de muy cerca).
+- [x] Misma explosión que la bazuca, sin daño propio. Tope de 32 en el mapa. Se pierden al perder la vida.
+- [x] `use_item` en la orden del participante; `ExplosiveWorld` (datos en bloque) en `core`. 5 tests (165 en total).
+- [x] Triángulos en el mapa, ranura OBJETO en la tarjeta. Teclas de prueba B y M.
+
 ### v0.0.35 — Etapa 4.3: escudos ✅
 - [x] Burbuja (absorbe un golpe; contra el láser medio segundo), frontal (para lo de delante, ±60°, 8 s) y espejo (devuelve balas y láser, 5 s).
 - [x] Cadena de modificadores (Chain of Responsibility) en `core`, antes de la salud: la salud no cambió. 9 tests (160 en total).

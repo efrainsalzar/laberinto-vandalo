@@ -6,6 +6,7 @@
 #include "game/bot_coordinator.h"
 #include "game/entity_index.h"
 #include "game/health_component.h"
+#include "game/item_component.h"
 #include "game/life_component.h"
 #include "game/match_controller.h"
 #include "game/maze.h"
@@ -25,6 +26,7 @@
 #include "game/stats_component.h"
 #include "game/stats_profile.h"
 #include "game/trophy_controller.h"
+#include "game/usable_item.h"
 #include "game/vision.h"
 #include "game/weapon_component.h"
 #include "game/weapon_type.h"
@@ -57,6 +59,8 @@ void initialize_laberinto_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(LifeComponent);
 	GDREGISTER_CLASS(HealthComponent);
 	GDREGISTER_CLASS(ShieldComponent);
+	GDREGISTER_CLASS(UsableItem);
+	GDREGISTER_CLASS(ItemComponent);
 
 	// Armas y balas (antes que Participant, que tiene un WeaponComponent)
 	GDREGISTER_CLASS(WeaponType);
@@ -79,6 +83,7 @@ void initialize_laberinto_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(HealEffect);
 	GDREGISTER_CLASS(WeaponEffect);
 	GDREGISTER_CLASS(ShieldEffect);
+	GDREGISTER_CLASS(GiveItemEffect);
 	GDREGISTER_CLASS(PickupType);
 	GDREGISTER_CLASS(Pickup);
 	GDREGISTER_CLASS(PickupFactory);

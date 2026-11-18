@@ -6,7 +6,8 @@ extends PanelContainer
 ## Patrón Composite: la tarjeta es un contenedor con una lista de SECCIONES. Cada sección es independiente,
 ## escucha solo su fuente (Observer) y nunca modifica el juego:
 ##   cabecera → LifeComponent + HealthComponent (anillo) + eventos del trofeo · salud → HealthComponent
-##   · stats → StatsComponent · efectos → modificadores temporales · armas → WeaponComponent.
+##   · stats → StatsComponent · efectos → modificadores temporales · armas → WeaponComponent
+##   · objeto (bomba / mina) → ItemComponent.
 ## Agregar información nueva (p. ej. escudos o vidas) = una sección nueva en SECTIONS.
 ## API de una sección: bind(participant) y, si la necesita, set_trophy(trophy).
 ## Ver docs/arquitectura/24-tarjeta-participante.md.
@@ -18,9 +19,10 @@ const SECTIONS: Array[Script] = [
 	preload("res://scripts/ui/player_card/card_stats.gd"),
 	preload("res://scripts/ui/player_card/card_effects.gd"),
 	preload("res://scripts/ui/player_card/card_weapons.gd"),
+	preload("res://scripts/ui/player_card/card_item.gd"),
 ]
 ## Secciones que se apagan mientras el participante está eliminado (la cabecera sigue viva: cuenta la espera).
-const DIM_WHEN_DOWN := ["card_health", "card_stats", "card_effects", "card_weapons"]
+const DIM_WHEN_DOWN := ["card_health", "card_stats", "card_effects", "card_weapons", "card_item"]
 const MARGIN := 14
 const FADED_ALPHA := 0.3  # con algo detrás
 

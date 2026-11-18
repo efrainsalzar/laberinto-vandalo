@@ -5,9 +5,10 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 
 ## Estado actual
 
-**v0.0.35** · 160 tests · Etapa 1 completa y Etapa 3 (bots) adelantada. Últimas piezas: **Etapa 4.1 — salud y daño
-(v0.0.32)**, tarjeta del boceto arriba a la izquierda (v0.0.33), **4.2 — pociones (v0.0.34)** y **4.3 — escudos
-(v0.0.35)**, en prueba en vivo. **Siguiente: Etapa 4 — Pieza 4 (bombas y minas). Diseño ya aprobado: ver abajo.** Todo lo terminado, versión por versión: [HISTORIAL.md](HISTORIAL.md).
+**v0.0.36** · 165 tests · Etapa 1 completa y Etapa 3 (bots) adelantada. **Etapa 4 (combate) con sus 4 piezas
+hechas**, en prueba en vivo: salud y daño (v0.0.32), pociones (v0.0.34), escudos (v0.0.35), bombas y minas (v0.0.36);
+tarjeta del boceto (v0.0.33). **Siguiente: cerrar la Etapa 4 con la prueba de estrés del bloque de armas (ver "Ideas
+anotadas") y, después, objetos que cambian el mapa, paredes rompibles y portales (Etapa 2.2–2.4).** Todo lo terminado, versión por versión: [HISTORIAL.md](HISTORIAL.md).
 
 ## Plan acordado (etapas, una pieza a la vez)
 
@@ -95,7 +96,7 @@ recibe señales finales (`damaged`, `healed`, `died`) para la vista y el HUD. Me
 3. ~~**Escudos** (cadena de modificadores)~~ ✅ (v0.0.35, §27): burbuja (absorbe 1 golpe), frontal (±60° hacia donde apuntas, X s), espejo
    (devuelve el disparo, X s). Visual: anillo / arco / anillo plateado; fichas con tiempo en la tarjeta. El escudo
    anti-robo es regla del trofeo → etapa de vándalos.
-4. **Bombas y minas** (objeto usable): `ParticipantCommand.use_item` (clic derecho / Q / botón del mando), ranura de
+4. ~~**Bombas y minas** (objeto usable)~~ ✅ (v0.0.36, §28): `ParticipantCommand.use_item` (clic derecho / Q / botón del mando), ranura de
    objeto en la tarjeta con cantidad. Bomba: explota a los 2 s (mecha que parpadea). Mina: se arma en 1 s, explota
    cuando pasa un rival cerca; la ve su dueño, los rivales solo de muy cerca. Topes: 3 por jugador, 32 en el mapa
    (la más vieja desaparece). Explosión = la de la bazuca (radio, paredes protegen, daño que baja al borde).
@@ -123,7 +124,8 @@ Demo en itch.io · aliados · torneo con rondas · multijugador local · en lín
 - **Historia dinámica:** el Director de IA tendrá una política propia por categoría de objetos (más armas en el Golpe, etc.).
 
 - **Política del Director para objetos:** el Director de IA (fase 5) tendrá su propia `PickupSpawnPolicy` (p. ej. más objetos cerca de quien va perdiendo).
-- **Más tipos de objeto** (bombas, minas): un `PickupEffect` nuevo + sus .tres (las pociones ya usan este camino, §26).
+- **Más tipos de objeto usable** (granadas, trampas): un `PickupEffect` nuevo + sus .tres (las pociones ya usan este camino, §26).
+- **Bots que usan bombas y minas** (dejar una mina en el camino de quien lleva el trofeo): una `BotAction`.
 - **Bots que usan los escudos a propósito** (p. ej. apuntar hacia la amenaza con el frontal): una `BotAction` cuando haga falta.
 - **Recoger al quedar parado encima:** una poción con salud llena no se recoge; si después te dañan estando encima, hay que salir y volver a entrar. Se podría revisar los cuerpos superpuestos al cambiar la salud.
 
