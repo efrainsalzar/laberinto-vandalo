@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/participant/participant_view.gd" id="1_view"]
 [ext_resource type="StatsProfile" path="res://data/stats/default_participant.tres" id="2_prof"]
+[ext_resource type="WeaponType" path="res://data/weapons/pistol.tres" id="3_pistol"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 11.0
@@ -15,6 +16,9 @@ motion_mode = 1
 profile = ExtResource("2_prof")
 
 [node name="Life" type="LifeComponent" parent="."]
+
+[node name="Weapon" type="WeaponComponent" parent="."]
+weapon = ExtResource("3_pistol")
 
 [node name="Collision" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_body")

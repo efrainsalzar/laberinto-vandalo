@@ -19,10 +19,13 @@
 #include "game/pickup_spawn_policy.h"
 #include "game/pickup_spawner.h"
 #include "game/pickup_type.h"
+#include "game/projectile_system.h"
 #include "game/stats_component.h"
 #include "game/stats_profile.h"
 #include "game/trophy_controller.h"
 #include "game/vision.h"
+#include "game/weapon_component.h"
+#include "game/weapon_type.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
@@ -50,6 +53,11 @@ void initialize_laberinto_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(StatsProfile);
 	GDREGISTER_CLASS(StatsComponent);
 	GDREGISTER_CLASS(LifeComponent);
+
+	// Armas y balas (antes que Participant, que tiene un WeaponComponent)
+	GDREGISTER_CLASS(WeaponType);
+	GDREGISTER_CLASS(WeaponComponent);
+	GDREGISTER_CLASS(ProjectileSystem);
 
 	// Participantes (la clase base va antes que sus derivadas)
 	GDREGISTER_ABSTRACT_CLASS(ParticipantController);

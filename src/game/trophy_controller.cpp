@@ -60,6 +60,7 @@ const TrophyRules &TrophyController::rules() const {
 void TrophyController::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("start", "maze", "participants"), &TrophyController::start);
 	ClassDB::bind_method(D_METHOD("drop_trophy"), &TrophyController::drop_trophy);
+	ClassDB::bind_method(D_METHOD("eliminate_participant", "victim", "by"), &TrophyController::eliminate_participant);
 	ClassDB::bind_method(D_METHOD("get_carrier"), &TrophyController::get_carrier);
 	ClassDB::bind_method(D_METHOD("get_winner"), &TrophyController::get_winner);
 	ClassDB::bind_method(D_METHOD("is_finished"), &TrophyController::is_finished);
@@ -206,6 +207,18 @@ void TrophyController::eliminate_carrier(Participant *p_carrier, Participant *p_
 	if (LifeComponent *life = p_carrier->get_life()) {
 		life->eliminate(p_by);
 	}
+}
+
+bool TrophyController::eliminate_participant(Participant *p_victim, Participant *p_by) {
+	if (p_victim == nullptr || !p_victim->is_vulnerable() || p_victim->get_life() == nullptr) {
+		return false;
+	}
+	if (maze_ != nullptr && p_victim == get_carrier()) {
+		eliminate_carrier(p_victim, p_by);
+		update_trophy_view();
+		return true;
+	}
+	return p_victim->get_life()->eliminate(p_by);
 }
 
 void TrophyController::drop_trophy() {

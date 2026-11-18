@@ -1,0 +1,258 @@
+#include <doctest/doctest.h>
+
+#include "core/bot_gunner.h"
+#include "core/line_of_sight.h"
+#include "core/projectiles.h"
+#include "core/weapon.h"
+
+#include <cmath>
+
+using lv::core::BotGunner;
+using lv::core::GridPoint;
+using lv::core::GunDecision;
+using lv::core::GunTarget;
+using lv::core::MazeGrid;
+using lv::core::ProjectileEvent;
+using lv::core::ProjectileTarget;
+using lv::core::ProjectileWorld;
+using lv::core::Rng;
+using lv::core::WeaponSpec;
+using lv::core::WeaponState;
+
+namespace {
+// Bóveda grande: sala abierta en el centro (de 4 a 20) y paredes alrededor (el borde está en 0 y 24).
+MazeGrid open_room() {
+	MazeGrid grid;
+	MazeGrid::Options options;
+	options.cells_w = 6;
+	options.cells_h = 6;
+	options.corridor_width = 3;
+	options.vault_radius = 8;
+	options.seed = 1;
+	grid.generate(options);
+	return grid;
+}
+
+WeaponSpec pistol() {
+	WeaponSpec spec;
+	spec.fire_interval = 0.5f;
+	spec.magazine_size = 0;
+	spec.projectile_speed = 10.0f;
+	spec.range = 6.0f;
+	spec.projectile_radius = 0.1f;
+	return spec;
+}
+
+const std::vector<ProjectileTarget> NO_TARGETS;
+} // namespace
+
+TEST_SUITE("Armas") {
+	TEST_CASE("La cadencia impide disparar antes de tiempo") {
+		WeaponState weapon;
+		weapon.setup(pistol());
+		CHECK(weapon.try_fire());
+		CHECK_FALSE(weapon.try_fire());
+		weapon.tick(0.3f);
+		CHECK_FALSE(weapon.try_fire());
+		weapon.tick(0.25f);
+		CHECK(weapon.is_ready());
+		CHECK(weapon.try_fire());
+	}
+
+	TEST_CASE("La pistola tiene munición infinita") {
+		WeaponState weapon;
+		weapon.setup(pistol());
+		CHECK(weapon.has_infinite_ammo());
+		for (int i = 0; i < 500; i++) {
+			REQUIRE(weapon.try_fire());
+			weapon.tick(0.5f);
+		}
+		CHECK(weapon.ammo() == -1);
+	}
+
+	TEST_CASE("Con cargador: al vaciarlo recarga y vuelve lleno") {
+		WeaponSpec spec = pistol();
+		spec.magazine_size = 2;
+		spec.reload_time = 1.0f;
+		WeaponState weapon;
+		weapon.setup(spec);
+		CHECK(weapon.try_fire());
+		weapon.tick(0.5f);
+		CHECK(weapon.try_fire());
+		CHECK(weapon.state() == WeaponState::State::Reloading);
+		weapon.tick(0.6f);
+		CHECK_FALSE(weapon.try_fire());
+		weapon.tick(0.5f);
+		CHECK(weapon.ammo() == 2);
+		CHECK(weapon.try_fire());
+	}
+}
+
+TEST_SUITE("Balas") {
+	TEST_CASE("La bala avanza y desaparece al llegar a su alcance") {
+		const MazeGrid grid = open_room();
+		ProjectileWorld world;
+		const auto c = grid.center();
+		REQUIRE(world.spawn(c.x + 0.5f, c.y + 0.5f, 0.0f, 1.0f, pistol(), 0));
+		std::vector<ProjectileEvent> events;
+		world.step(0.1f, grid, NO_TARGETS, events); // 1 casilla
+		REQUIRE(world.size() == 1);
+		CHECK(world.projectiles()[0].y == doctest::Approx(c.y + 1.5f));
+		CHECK(events.empty());
+		for (int i = 0; i < 10; i++) {
+			world.step(0.1f, grid, NO_TARGETS, events);
+		}
+		CHECK(world.size() == 0);
+		REQUIRE(events.size() == 1);
+		CHECK(events[0].kind == ProjectileEvent::Kind::Expired);
+		CHECK(events[0].y == doctest::Approx(c.y + 6.5f)); // recorrió exactamente su alcance
+	}
+
+	TEST_CASE("Una bala muy rápida no atraviesa las paredes") {
+		const MazeGrid grid = open_room();
+		ProjectileWorld world;
+		WeaponSpec spec = pistol();
+		spec.projectile_speed = 500.0f;
+		spec.range = 100.0f;
+		const auto c = grid.center();
+		REQUIRE(world.spawn(c.x + 0.5f, c.y + 0.5f, 1.0f, 0.0f, spec, 0));
+		std::vector<ProjectileEvent> events;
+		world.step(1.0f, grid, NO_TARGETS, events); // en un solo frame recorrería 100 casillas
+		REQUIRE(events.size() == 1);
+		CHECK(events[0].kind == ProjectileEvent::Kind::HitWall);
+		CHECK(events[0].x <= grid.width()); // se quedó dentro del mapa
+		const int tile_x = static_cast<int>(std::floor(events[0].x + 0.01f)); // el choque es justo en el borde
+		CHECK(grid.is_wall({ tile_x, c.y })); // terminó justo en el borde de una pared
+		CHECK_FALSE(grid.is_wall({ tile_x - 1, c.y }));
+	}
+
+	TEST_CASE("segment_hits_wall da la fracción del primer choque") {
+		const MazeGrid grid = open_room();
+		const auto c = grid.center();
+		float t = -1.0f;
+		CHECK_FALSE(lv::core::segment_hits_wall(grid, { c.x + 0.5f, c.y + 0.5f }, { c.x + 3.5f, c.y + 0.5f }, t));
+		CHECK(lv::core::segment_hits_wall(grid, { c.x + 0.5f, c.y + 0.5f }, { c.x + 0.5f, -5.0f }, t));
+		CHECK(t > 0.0f);
+		CHECK(t < 1.0f);
+	}
+
+	TEST_CASE("Le pega a un blanco en su camino, pero nunca a quien disparó") {
+		const MazeGrid grid = open_room();
+		ProjectileWorld world;
+		const auto c = grid.center();
+		const float x = c.x + 0.5f;
+		const float y = c.y + 0.5f;
+		std::vector<ProjectileTarget> targets = { { 0, x, y, 0.4f }, { 7, x + 3.0f, y, 0.4f } };
+		REQUIRE(world.spawn(x, y, 1.0f, 0.0f, pistol(), 0)); // sale desde dentro del tirador
+		std::vector<ProjectileEvent> events;
+		for (int i = 0; i < 5 && events.empty(); i++) {
+			world.step(0.1f, grid, targets, events);
+		}
+		REQUIRE(events.size() == 1);
+		CHECK(events[0].kind == ProjectileEvent::Kind::HitTarget);
+		CHECK(events[0].target == 7);
+		CHECK(events[0].owner == 0);
+		CHECK(events[0].x == doctest::Approx(x + 3.0f - 0.5f)); // borde del blanco (0,4 + 0,1 de la bala)
+		CHECK(world.size() == 0);
+	}
+
+	TEST_CASE("Un blanco detrás de una pared está a salvo") {
+		const MazeGrid grid = open_room();
+		ProjectileWorld world;
+		WeaponSpec spec = pistol();
+		spec.range = 40.0f;
+		spec.projectile_speed = 40.0f;
+		const auto c = grid.center();
+		const float y = c.y + 0.5f;
+		// El borde del mapa (x = 0) es pared: un blanco "afuera" no se alcanza.
+		std::vector<ProjectileTarget> targets = { { 3, -2.0f, y, 0.4f } };
+		REQUIRE(world.spawn(c.x + 0.5f, y, -1.0f, 0.0f, spec, 0));
+		std::vector<ProjectileEvent> events;
+		world.step(1.0f, grid, targets, events);
+		REQUIRE(events.size() == 1);
+		CHECK(events[0].kind == ProjectileEvent::Kind::HitWall);
+	}
+
+	TEST_CASE("Al llegar al tope, la bala nueva reemplaza a la más vieja") {
+		const MazeGrid grid = open_room();
+		ProjectileWorld world(3);
+		const auto c = grid.center();
+		for (int i = 0; i < 4; i++) {
+			REQUIRE(world.spawn(c.x + 0.5f, c.y + 0.5f, 1.0f, 0.0f, pistol(), 0, i));
+		}
+		CHECK(world.size() == 3);
+		bool has_first = false;
+		bool has_last = false;
+		for (const auto &p : world.projectiles()) {
+			has_first = has_first || p.tag == 0;
+			has_last = has_last || p.tag == 3;
+		}
+		CHECK_FALSE(has_first);
+		CHECK(has_last);
+	}
+
+	TEST_CASE("Sin dirección no se dispara") {
+		ProjectileWorld world;
+		CHECK_FALSE(world.spawn(1.0f, 1.0f, 0.0f, 0.0f, pistol(), 0));
+		CHECK(world.size() == 0);
+	}
+}
+
+TEST_SUITE("Puntería de los bots") {
+	TEST_CASE("Sin rivales visibles no dispara") {
+		BotGunner gunner;
+		gunner.setup({ 0.0f, 0.0f, 10.0f });
+		Rng rng(1);
+		const GunDecision d = gunner.update(0.1f, 0.0f, 0.0f, {}, rng);
+		CHECK_FALSE(d.fire);
+		CHECK(d.target == -1);
+	}
+
+	TEST_CASE("Espera su tiempo de reacción antes del primer disparo") {
+		BotGunner gunner;
+		gunner.setup({ 0.5f, 0.0f, 10.0f });
+		Rng rng(1);
+		const std::vector<GunTarget> targets = { { 4, 3.0f, 0.0f } };
+		CHECK_FALSE(gunner.update(0.2f, 0.0f, 0.0f, targets, rng).fire);
+		CHECK_FALSE(gunner.update(0.2f, 0.0f, 0.0f, targets, rng).fire);
+		CHECK_FALSE(gunner.update(0.2f, 0.0f, 0.0f, targets, rng).fire);
+		const GunDecision d = gunner.update(0.2f, 0.0f, 0.0f, targets, rng);
+		CHECK(d.fire);
+		CHECK(d.target == 4);
+		CHECK(d.aim_x == doctest::Approx(3.0f)); // sin error de puntería: directo al blanco
+		CHECK(d.aim_y == doctest::Approx(0.0f));
+	}
+
+	TEST_CASE("Elige al más cercano y no dispara fuera de alcance") {
+		BotGunner gunner;
+		gunner.setup({ 0.0f, 0.0f, 5.0f });
+		Rng rng(1);
+		const std::vector<GunTarget> targets = { { 1, 4.0f, 0.0f }, { 2, 0.0f, 2.0f }, { 3, 9.0f, 0.0f } };
+		CHECK(gunner.update(0.1f, 0.0f, 0.0f, targets, rng).target == 2);
+		const std::vector<GunTarget> far = { { 3, 9.0f, 0.0f } };
+		CHECK_FALSE(gunner.update(0.1f, 0.0f, 0.0f, far, rng).fire);
+	}
+
+	TEST_CASE("El error de puntería respeta su límite y es reproducible con la semilla") {
+		BotGunner a;
+		BotGunner b;
+		a.setup({ 0.0f, 10.0f, 20.0f });
+		b.setup({ 0.0f, 10.0f, 20.0f });
+		Rng rng_a(42);
+		Rng rng_b(42);
+		const std::vector<GunTarget> targets = { { 1, 5.0f, 0.0f } };
+		const float max_angle = 10.0f * 3.14159265f / 180.0f + 1e-4f;
+		bool some_error = false;
+		for (int i = 0; i < 50; i++) {
+			const GunDecision da = a.update(0.1f, 0.0f, 0.0f, targets, rng_a);
+			const GunDecision db = b.update(0.1f, 0.0f, 0.0f, targets, rng_b);
+			REQUIRE(da.fire);
+			CHECK(da.aim_x == db.aim_x);
+			CHECK(da.aim_y == db.aim_y);
+			const float angle = std::atan2(da.aim_y, da.aim_x);
+			CHECK(std::abs(angle) <= max_angle);
+			some_error = some_error || std::abs(angle) > 0.01f;
+		}
+		CHECK(some_error);
+	}
+}

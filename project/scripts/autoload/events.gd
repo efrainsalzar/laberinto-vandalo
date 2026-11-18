@@ -22,7 +22,10 @@ signal trophy_dropped(participant: Participant, world_position: Vector2)
 ## `thief` le quitó el trofeo a `victim` (robo por contacto).
 signal trophy_stolen(thief: Participant, victim: Participant)
 
-## `victim` quedó eliminado (hoy: lo atraparon llevando el trofeo). `by` = quién lo atrapó.
+## A `victim` le pegó una bala de `by` (§22). Ocurre antes de `participant_eliminated`.
+signal participant_hit(victim: Participant, by: Participant)
+
+## `victim` quedó eliminado (lo atraparon llevando el trofeo o le dispararon). `by` = quién fue.
 signal participant_eliminated(victim: Participant, by: Participant)
 
 ## `participant` volvió a su base tras ser eliminado (empieza su protección).

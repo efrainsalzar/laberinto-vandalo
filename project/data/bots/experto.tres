@@ -7,3 +7,4 @@ think_interval = 0.25
 mistake_chance = 0.0
 pickup_interest = 0.2
 variation = 0.03
+aim_error_deg = 4.0

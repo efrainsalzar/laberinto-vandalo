@@ -5,8 +5,8 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 
 ## Estado actual
 
-**v0.0.22** · 114 tests · Etapa 1 completa y Etapa 3 (bots) adelantada. Últimas piezas: economía de objetos (v0.0.21)
-y lenguaje visual de objetos (v0.0.22). Todo lo terminado, versión por versión: [HISTORIAL.md](HISTORIAL.md).
+**v0.0.23** · 128 tests · Etapa 1 completa y Etapa 3 (bots) adelantada. Últimas piezas: lenguaje visual de objetos
+(v0.0.22) y disparo + pistola inicial (v0.0.23). Todo lo terminado, versión por versión: [HISTORIAL.md](HISTORIAL.md).
 
 ## Plan acordado (etapas, una pieza a la vez)
 
@@ -24,8 +24,8 @@ Ideas del mapa en detalle: [`DISENO_MAPA.md`](DISENO_MAPA.md).
 **Etapa 1 completa. Etapa 3 (bots) adelantada ✅.** Orden acordado (dueño del proyecto, 2026-11-18):
 1. ~~Economía de objetos~~ ✅ (v0.0.21)
 2. ~~Lenguaje visual de objetos~~ ✅ (v0.0.22)
-3. **Disparo + pistola inicial** ← siguiente (todos los participantes, humanos y bots).
-4. Armas temporales del mapa (categoría "armas"; ficha con tiempo restante en el HUD; bots que las buscan).
+3. ~~Disparo + pistola inicial~~ ✅ (v0.0.23)
+4. **Armas temporales del mapa** ← siguiente (categoría "armas"; ficha con tiempo restante en el HUD; bots que las buscan).
 5. Combate (Etapa 4) → objetos que cambian el mapa, paredes rompibles y portales (Etapa 2.2–2.4) → formas de mapa (Etapa 2.1).
 
 Cada mecánica entra como **acción del bot** + **dato .tres**.
@@ -73,6 +73,10 @@ Demo en itch.io · aliados · torneo con rondas · multijugador local · en lín
   usar objeto) como nuevos campos de `ParticipantCommand`; power-ups nuevos (.tres); romper paredes; portales
   (puertas de la Etapa 2.2); objetos que al comerlos cambian el mapa y los caminos (usan `Maze.queue_passage_change`).
   Cada mecánica trae su `BotAction` para que los bots también la usen.
+- **Impacto de bala:** hoy elimina (para probar). En la Etapa 4 quitará salud: solo cambia quien escucha `participant_hit`.
+- **Balas con índice espacial:** con los vándalos (decenas de blancos) `ProjectileSystem` consultará `EntityIndex` por bala en vez de revisar todos.
+- **Feedback del disparo:** destello, retroceso, chispa al chocar con pared y sonido (Etapa 7; `WeaponComponent.fired` ya existe).
+- **Bots que esquivan balas** o se cubren detrás de paredes: una `BotAction` más cuando haga falta.
 - **Choques entre participantes:** con el combate (Etapa 4). Hoy se atraviesan. El robo básico por contacto ya existe (v0.0.18).
 - **Bots que huyen con el trofeo** (esquivar a quien los persigue / evitar emboscadas): una `BotAction` más cuando haga falta.
 - **Forcejeo** (mantener contacto para robar): con el combate, como otra forma de robo en `TrophyRules`.

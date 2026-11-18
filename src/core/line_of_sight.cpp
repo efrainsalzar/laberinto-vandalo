@@ -64,4 +64,60 @@ bool can_see(const MazeGrid &p_grid, const GridPoint &p_from, const GridPoint &p
 	return has_line_of_sight(p_grid, p_from, p_to);
 }
 
+bool segment_hits_wall(const MazeGrid &p_grid, const GridPoint &p_from, const GridPoint &p_to, float &r_t) {
+	int x = static_cast<int>(std::floor(p_from.x));
+	int y = static_cast<int>(std::floor(p_from.y));
+	if (p_grid.is_wall({ x, y })) {
+		r_t = 0.0f;
+		return true;
+	}
+	const float dx = p_to.x - p_from.x;
+	const float dy = p_to.y - p_from.y;
+	const int step_x = dx > 0 ? 1 : (dx < 0 ? -1 : 0);
+	const int step_y = dy > 0 ? 1 : (dy < 0 ? -1 : 0);
+	constexpr float INF = std::numeric_limits<float>::infinity();
+	const float delta_x = step_x != 0 ? std::abs(1.0f / dx) : INF;
+	const float delta_y = step_y != 0 ? std::abs(1.0f / dy) : INF;
+	float next_x = step_x > 0 ? (x + 1 - p_from.x) * delta_x : (step_x < 0 ? (p_from.x - x) * delta_x : INF);
+	float next_y = step_y > 0 ? (y + 1 - p_from.y) * delta_y : (step_y < 0 ? (p_from.y - y) * delta_y : INF);
+
+	while (true) {
+		float t;
+		if (next_x < next_y) {
+			t = next_x;
+			if (t > 1.0f) {
+				break;
+			}
+			x += step_x;
+			next_x += delta_x;
+		} else if (next_y < next_x) {
+			t = next_y;
+			if (t > 1.0f) {
+				break;
+			}
+			y += step_y;
+			next_y += delta_y;
+		} else {
+			t = next_x;
+			if (t > 1.0f) {
+				break; // incluye el segmento de largo 0 (ambos infinitos)
+			}
+			// Justo por una esquina entre dos paredes en diagonal: choca (igual que la visión).
+			if (p_grid.is_wall({ x + step_x, y }) && p_grid.is_wall({ x, y + step_y })) {
+				r_t = t;
+				return true;
+			}
+			x += step_x;
+			y += step_y;
+			next_x += delta_x;
+			next_y += delta_y;
+		}
+		if (p_grid.is_wall({ x, y })) {
+			r_t = t;
+			return true;
+		}
+	}
+	return false;
+}
+
 } // namespace lv::core

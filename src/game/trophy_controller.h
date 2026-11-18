@@ -85,6 +85,9 @@ public:
 	void start(Maze *p_maze, const TypedArray<Participant> &p_participants);
 	// El portador suelta el trofeo donde está (lo usará la muerte en la fase de combate).
 	void drop_trophy();
+	// Elimina a un participante (p. ej. le pegó una bala, §22). Si llevaba el trofeo, cae al piso donde estaba.
+	// Devuelve true si lo eliminó (no lo hace si está protegido o ya fuera del juego).
+	bool eliminate_participant(Participant *p_victim, Participant *p_by);
 
 	Participant *get_carrier() const;
 	Participant *get_winner() const;

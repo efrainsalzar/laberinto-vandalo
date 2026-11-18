@@ -3,6 +3,14 @@
 > Lo ya terminado, de lo más nuevo a lo más viejo. El estado actual y lo que sigue están en
 > [ROADMAP.md](ROADMAP.md). Al cerrar una pieza se agrega su bloque **arriba**.
 
+### v0.0.23 — Disparo + pistola inicial ✅
+- [x] Todos los participantes tienen pistola (`WeaponType` .tres: 0,35 s entre disparos, munición infinita, alcance 12 casillas).
+- [x] Humano: apunta con el mouse (o stick derecho) y dispara con clic izquierdo (o gatillo); mantener = ráfaga.
+- [x] Bots: disparan mientras se mueven al rival visible más cercano, con reacción y error de puntería según dificultad (`BotGunner`).
+- [x] Todas las balas en un solo sistema (`ProjectileWorld`, tope 256); no atraviesan paredes aunque sean rápidas.
+- [x] Impacto = eliminar (vuelve a su base y suelta el trofeo). Evento `participant_hit`.
+- [x] 14 tests (128 en total).
+
 ### v0.0.22 — Lenguaje visual de objetos ✅
 - [x] La forma dice la categoría (círculo = stat, rombo = power-up; reservados: cuadrado = arma, hexágono = mapa, anillo = portal).
 - [x] El símbolo dice el efecto (» velocidad, ojo visión, rayo rapidez). Halo y borde para leerse sobre cualquier suelo.

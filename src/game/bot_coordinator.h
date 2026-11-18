@@ -58,6 +58,8 @@ public:
 	Maze *get_maze() const { return maze_; }
 	void request_path(const Ref<BotController> &p_bot, const Vector2i &p_from_tile, const Vector2i &p_to_tile);
 	void build_world(const Participant &p_participant, lv::core::BotWorld &r_world) const;
+	// Rivales que este bot VE ahora (en juego, dentro de su radio de visión y con línea de visión). §22.
+	void collect_visible_rivals(const Participant &p_participant, std::vector<ObjectID> &r_rivals) const;
 
 protected:
 	static void _bind_methods();

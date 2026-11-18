@@ -4,6 +4,7 @@
 #include "game/life_component.h"
 #include "game/participant_controller.h"
 #include "game/stats_component.h"
+#include "game/weapon_component.h"
 
 #include <godot_cpp/classes/character_body2d.hpp>
 #include <godot_cpp/variant/color.hpp>
@@ -17,6 +18,7 @@ using namespace godot;
 //   un ParticipantCommand (Command) en cada frame, y lo ejecuta.
 // - No se dibuja a sí mismo: la parte visual vive en su escena (participant.tscn).
 // - Sus stats (velocidad, visión...) están en un StatsComponent hijo (composición).
+// - Si tiene un WeaponComponent hijo, la orden de disparo (fire + aim) va a esa arma (§22).
 // Ver docs/ARQUITECTURA.md §5.
 class Participant : public CharacterBody2D {
 	GDCLASS(Participant, CharacterBody2D)
@@ -43,6 +45,8 @@ public:
 	LifeComponent *get_life() const { return life_; }
 	bool is_active() const { return life_ == nullptr || life_->is_active(); }
 	bool is_vulnerable() const { return life_ == nullptr || life_->is_vulnerable(); }
+	// Arma (primer hijo WeaponComponent). Puede ser nullptr: entonces no dispara.
+	WeaponComponent *get_weapon() const { return weapon_; }
 
 	// Radio del cuerpo (px): ajusta el círculo de colisión y avisa a la vista (señal body_radius_changed).
 	// La partida lo adapta al ancho de pasillo para que el participante siempre quepa.
@@ -62,6 +66,7 @@ private:
 	Color color_ = Color(0.35f, 0.75f, 1.0f);
 	StatsComponent *stats_ = nullptr;
 	LifeComponent *life_ = nullptr;
+	WeaponComponent *weapon_ = nullptr;
 	uint32_t active_layer_ = 2; // capas de física mientras está en juego (se apagan al ser eliminado)
 	uint32_t active_mask_ = 1;
 

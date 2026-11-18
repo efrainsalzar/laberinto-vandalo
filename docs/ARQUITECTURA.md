@@ -48,6 +48,7 @@
 | 6 | **Objetos** | `place_pickups`, `pick_spawn_cell`, `ExpiryQueue`, `Rng` | `PickupType` y `PickupCategory` (datos), `Pickup`, `PickupFactory`, `PickupSpawner` | **Factory + datos**, Strategy, Observer |
 | 7 | **Trofeo y bases** | `TrophyTracker` | `TrophyController` + vistas | **State**, Observer, Factory |
 | 8 | **Partida** | `MatchFlow`: reloj, fases, victoria/tiempo | `MatchController` + `MatchRules` (datos) | **State** (fases), Observer |
+| 9 | **Armas y disparo** | `WeaponState`, `ProjectileWorld`, `BotGunner`, `segment_hits_wall` | `WeaponType` (datos), `WeaponComponent`, `ProjectileSystem` | **Command**, Type Object, State, datos en bloque, Observer |
 
 Fases siguientes (bots, combate, vándalos, director) se diseñan cuando lleguemos; ver [ROADMAP](ROADMAP.md).
 
@@ -88,6 +89,7 @@ Cada módulo tiene su archivo en [`arquitectura/`](arquitectura/). Los comentari
 | §19 | [Etapa 3 — Bots con dificultad](arquitectura/19-bots.md) |
 | §20 | [Economía de objetos: categorías, caducidad y topes](arquitectura/20-economia-objetos.md) |
 | §21 | [Lenguaje visual de objetos](arquitectura/21-lenguaje-visual.md) |
+| §22 | [Disparo + pistola inicial](arquitectura/22-armas-disparo.md) |
 
 ## Patrones aplicados (índice)
 
@@ -99,12 +101,14 @@ Cada módulo tiene su archivo en [`arquitectura/`](arquitectura/). Los comentari
 | Utility AI (puntajes) | `BotBrain` | ✅ |
 | Fichas de ataque | `TokenPool` en `BotCoordinator` | ✅ |
 | A* (búsqueda de caminos) | `find_path` | ✅ |
-| Command | `ParticipantCommand` | ✅ |
+| Command | `ParticipantCommand` (moverse, apuntar, disparar) | ✅ |
 | Composición / separación lógica-vista | `Participant` + `View` + `StatsComponent` + `Vision`; `core` vs `game`; `line_of_sight` vs luz | ✅ |
 | Decorator / modificadores | `Stats` + `StatModifier` | ✅ |
 | Observer / señales | `StatsComponent` → `HUD`, `Vision`; `Pickup` → `PickupFactory` → `Events` → UI; `pickup_spawned`; `MatchController` → `Events.match_*` → HUD | ✅ |
 | State | `TrophyTracker` (estados del trofeo); `App` (flujo del juego); `MazeShifter` (laberinto vivo); `MatchFlow` (fases de la partida); luego estados del participante | ✅ (parcial) |
 | Datos fuera del código | `StatsProfile`, `MatchRules`, `BotProfile`, `TrophyRules`, `PickupCategory` (.tres) | ✅ |
+| Type Object (armas como datos) | `WeaponType` (`pistol.tres`) + `WeaponState` | ✅ |
+| Datos en bloque (pool "de juegos") | `ProjectileWorld`: todas las balas en un arreglo, swap-remove, tope | ✅ |
 | Cola de prioridad (caducidad) | `ExpiryQueue` en `PickupSpawner` | ✅ |
 | Factory + datos | `PickupFactory` + `PickupType` (.tres); vistas de trofeo/bases en `TrophyController` | ✅ |
 | Event Bus | `Events` (autoload) | ✅ |

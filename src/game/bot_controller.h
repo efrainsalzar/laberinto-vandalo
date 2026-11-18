@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/bot_brain.h"
+#include "core/bot_gunner.h"
 #include "core/random.h"
 #include "game/participant_controller.h"
 
@@ -35,6 +36,9 @@ public:
 	float get_pickup_interest() const { return tuning_.pickup_interest; }
 	void set_variation(float p_value) { tuning_.variation = p_value; }
 	float get_variation() const { return tuning_.variation; }
+	// Puntería: cada disparo se desvía al azar hasta ± este ángulo (§22).
+	void set_aim_error_deg(float p_value) { aim_error_deg_ = p_value; }
+	float get_aim_error_deg() const { return aim_error_deg_; }
 
 	const lv::core::BotTuning &tuning() const { return tuning_; }
 
@@ -44,6 +48,7 @@ protected:
 private:
 	String display_name_ = "Normal";
 	lv::core::BotTuning tuning_;
+	float aim_error_deg_ = 12.0f;
 };
 
 // Controlador de un bot (Strategy): el Participant no sabe que lo controla una IA.
@@ -53,6 +58,8 @@ private:
 //   presupuesto por frame; lo sigue de centro a centro de celda y produce un ParticipantCommand (Command).
 // - En los cruces puede equivocarse (mistake_chance) y luego replantea el camino.
 // - Si queda trabado o el mapa cierra su camino, pide uno nuevo (BotCoordinator le avisa).
+// - Dispara mientras se mueve: lv::core::BotGunner elige al rival visible más cercano y apunta con el error
+//   de su perfil; va en el mismo ParticipantCommand (fire + aim). Ver §22.
 // Lo crea BotCoordinator.add_bot (no se instancia a mano). Ver docs/ARQUITECTURA.md §19.
 class BotController : public ParticipantController {
 	GDCLASS(BotController, ParticipantController)
@@ -83,6 +90,10 @@ protected:
 
 private:
 	static constexpr float STUCK_SECONDS = 1.0f;
+	static constexpr float AIM_SCAN_INTERVAL = 0.15f; // cada cuánto revisa a qué rivales ve
+
+	lv::core::ParticipantCommand compute_move(const Participant &p_participant, float p_delta);
+	void aim(const Participant &p_participant, float p_delta, lv::core::ParticipantCommand &r_command);
 
 	BotCoordinator *coordinator_ = nullptr;
 	Ref<BotProfile> profile_;
@@ -105,6 +116,11 @@ private:
 	lv::core::Cell requested_target_; // destino del pedido en curso (si el objetivo cambia, se descarta)
 	Vector2 last_position_;
 	float last_radius_ = 11.0f;
+
+	lv::core::BotGunner gunner_;
+	std::vector<ObjectID> seen_rivals_; // rivales visibles en la última revisión (ids: pueden desaparecer)
+	std::vector<lv::core::GunTarget> gun_targets_; // reutilizado cada frame
+	float aim_scan_timer_ = 0.0f;
 
 	float retry_timer_ = 0.0f; // espera antes de volver a pedir camino si no hubo ruta
 	float stuck_timer_ = 0.0f;

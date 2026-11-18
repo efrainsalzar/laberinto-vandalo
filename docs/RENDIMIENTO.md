@@ -41,6 +41,8 @@ Escenario de referencia para medir: **mapa Gigante, Difícil, laberinto vivo Ca�
 | `bots.think` | Decisión y movimiento de cada bot (percepción solo al pensar) | `game/bot_controller.cpp` |
 | `bots.path` | Cola de caminos A* (máx. 2 por frame) | `game/bot_coordinator.cpp` |
 | `bots.tokens` | Reparto de fichas de ataque (cada 0,25 s) | `game/bot_coordinator.cpp` |
+| `bots.aim` | Gatillo de cada bot: rivales visibles (cada 0,15 s) y puntería | `game/bot_controller.cpp` |
+| `weapons.projectiles` | Avance y choques de todas las balas (máx. 256; no corre sin balas) | `game/projectile_system.cpp` |
 
 **Agregar una medición** (C++): `#include "core/perf.h"` y al inicio del bloque `lv::core::PerfScope perf("sistema.tarea");`.
 Aparece sola en el panel F3 y en los monitores. Nombre: `<sistema>.<tarea>` en minúsculas.

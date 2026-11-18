@@ -18,4 +18,9 @@ bool has_line_of_sight(const MazeGrid &p_grid, const GridPoint &p_from, const Gr
 // Es la regla de visión del juego: la usan los bots para no "hacer trampa".
 bool can_see(const MazeGrid &p_grid, const GridPoint &p_from, const GridPoint &p_to, float p_radius);
 
+// ¿El segmento choca con una pared? Si choca, r_t es la fracción del segmento (0..1) en la que entra a la
+// primera casilla de pared (0 = ya empieza dentro de una). Mismo recorrido DDA y misma regla de esquinas que
+// has_line_of_sight. Lo usan las balas: aunque sean rápidas, no atraviesan paredes delgadas. Ver §22.
+bool segment_hits_wall(const MazeGrid &p_grid, const GridPoint &p_from, const GridPoint &p_to, float &r_t);
+
 } // namespace lv::core

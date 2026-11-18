@@ -17,6 +17,7 @@ void Participant::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_color"), &Participant::get_color);
 	ClassDB::bind_method(D_METHOD("get_stats"), &Participant::get_stats);
 	ClassDB::bind_method(D_METHOD("get_life"), &Participant::get_life);
+	ClassDB::bind_method(D_METHOD("get_weapon"), &Participant::get_weapon);
 	ClassDB::bind_method(D_METHOD("is_active"), &Participant::is_active);
 	ClassDB::bind_method(D_METHOD("is_vulnerable"), &Participant::is_vulnerable);
 	ClassDB::bind_method(D_METHOD("get_facing"), &Participant::get_facing);
@@ -41,6 +42,9 @@ void Participant::_ready() {
 		}
 		if (life_ == nullptr) {
 			life_ = Object::cast_to<LifeComponent>(get_child(i));
+		}
+		if (weapon_ == nullptr) {
+			weapon_ = Object::cast_to<WeaponComponent>(get_child(i));
 		}
 	}
 	if (life_ != nullptr && !Engine::get_singleton()->is_editor_hint()) {
@@ -72,6 +76,11 @@ void Participant::execute_command(const lv::core::ParticipantCommand &p_command)
 	const float speed = stats_ != nullptr ? stats_->get_speed() : 0.0f;
 	set_velocity(direction * speed);
 	move_and_slide();
+
+	if (p_command.fire && weapon_ != nullptr) {
+		const Vector2 aim = p_command.has_aim() ? Vector2(p_command.aim_x, p_command.aim_y) : facing_;
+		weapon_->try_fire(this, aim);
+	}
 }
 
 void Participant::set_controller(const Ref<ParticipantController> &p_controller) {

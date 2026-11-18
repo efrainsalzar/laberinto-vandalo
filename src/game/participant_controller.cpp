@@ -8,12 +8,22 @@ lv::core::ParticipantCommand ParticipantController::compute_command(const Partic
 	return {};
 }
 
-lv::core::ParticipantCommand HumanController::compute_command(const Participant &, double) {
-	// Acciones definidas en project.godot ([input]): WASD y flechas.
-	const Vector2 direction = Input::get_singleton()->get_vector("move_left", "move_right", "move_up", "move_down");
+lv::core::ParticipantCommand HumanController::compute_command(const Participant &p_participant, double) {
+	// Acciones definidas en project.godot ([input]): WASD y flechas; fire y aim_* (mouse / mando).
+	Input *input = Input::get_singleton();
+	const Vector2 direction = input->get_vector("move_left", "move_right", "move_up", "move_down");
 	lv::core::ParticipantCommand command;
 	command.move_x = direction.x;
 	command.move_y = direction.y;
+
+	command.fire = input->is_action_pressed("fire");
+	// Stick derecho si se está usando; si no, hacia el puntero del mouse.
+	Vector2 aim = input->get_vector("aim_left", "aim_right", "aim_up", "aim_down");
+	if (aim.is_zero_approx()) {
+		aim = p_participant.get_global_mouse_position() - p_participant.get_global_position();
+	}
+	command.aim_x = aim.x;
+	command.aim_y = aim.y;
 	return command;
 }
 

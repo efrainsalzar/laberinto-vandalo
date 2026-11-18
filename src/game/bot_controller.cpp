@@ -7,6 +7,7 @@
 #include "game/participant.h"
 
 #include <godot_cpp/core/class_db.hpp>
+#include <godot_cpp/core/object.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -26,6 +27,8 @@ void BotProfile::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_pickup_interest"), &BotProfile::get_pickup_interest);
 	ClassDB::bind_method(D_METHOD("set_variation", "value"), &BotProfile::set_variation);
 	ClassDB::bind_method(D_METHOD("get_variation"), &BotProfile::get_variation);
+	ClassDB::bind_method(D_METHOD("set_aim_error_deg", "value"), &BotProfile::set_aim_error_deg);
+	ClassDB::bind_method(D_METHOD("get_aim_error_deg"), &BotProfile::get_aim_error_deg);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "display_name"), "set_display_name", "get_display_name");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "reaction_time", PROPERTY_HINT_RANGE, "0,3,0.05,suffix:s"), "set_reaction_time", "get_reaction_time");
@@ -33,6 +36,7 @@ void BotProfile::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "mistake_chance", PROPERTY_HINT_RANGE, "0,1,0.01"), "set_mistake_chance", "get_mistake_chance");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "pickup_interest", PROPERTY_HINT_RANGE, "0,1,0.01"), "set_pickup_interest", "get_pickup_interest");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "variation", PROPERTY_HINT_RANGE, "0,1,0.01"), "set_variation", "get_variation");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "aim_error_deg", PROPERTY_HINT_RANGE, "0,45,0.5,suffix:grados"), "set_aim_error_deg", "get_aim_error_deg");
 }
 
 // --- BotController ----------------------------------------------------------------------------
@@ -51,6 +55,12 @@ void BotController::setup(BotCoordinator *p_coordinator, const Ref<BotProfile> &
 	rng_ = std::make_unique<lv::core::Rng>(p_seed);
 	// Desfase: no piensan todos los bots en el mismo frame.
 	brain_->set_think_offset(rng_->unit() * tuning.think_interval);
+	lv::core::BotGunner::Tuning gun;
+	gun.reaction_time = tuning.reaction_time;
+	gun.aim_error_deg = p_profile.is_valid() ? p_profile->get_aim_error_deg() : 12.0f;
+	gunner_.setup(gun);
+	seen_rivals_.clear();
+	aim_scan_timer_ = rng_->unit() * AIM_SCAN_INTERVAL; // desfase entre bots
 	base_ = { p_base_zone.position.x, p_base_zone.position.y, p_base_zone.size.x, p_base_zone.size.y };
 	path_.clear();
 	path_requested_ = false;
@@ -63,11 +73,48 @@ int BotController::get_goal() const {
 }
 
 lv::core::ParticipantCommand BotController::compute_command(const Participant &p_participant, double p_delta) {
-	lv::core::PerfScope perf("bots.think");
 	if (coordinator_ == nullptr || !brain_ || coordinator_->get_maze() == nullptr) {
 		return {};
 	}
 	const float dt = static_cast<float>(p_delta);
+	lv::core::ParticipantCommand command = compute_move(p_participant, dt);
+	aim(p_participant, dt, command);
+	return command;
+}
+
+// Gatillo (BotGunner): a quién ve se revisa cada AIM_SCAN_INTERVAL; la puntería sigue la posición actual.
+void BotController::aim(const Participant &p_participant, float p_delta, lv::core::ParticipantCommand &r_command) {
+	const WeaponComponent *weapon = p_participant.get_weapon();
+	if (weapon == nullptr || weapon->get_weapon().is_null()) {
+		return;
+	}
+	lv::core::PerfScope perf("bots.aim");
+	aim_scan_timer_ -= p_delta;
+	if (aim_scan_timer_ <= 0.0f) {
+		aim_scan_timer_ = AIM_SCAN_INTERVAL;
+		coordinator_->collect_visible_rivals(p_participant, seen_rivals_);
+	}
+	const Maze *maze = coordinator_->get_maze();
+	gun_targets_.clear();
+	for (const ObjectID id : seen_rivals_) {
+		const Participant *rival = Object::cast_to<Participant>(ObjectDB::get_instance(id));
+		if (rival == nullptr || !rival->is_vulnerable()) {
+			continue;
+		}
+		const lv::core::GridPoint at = maze->world_to_grid_point(rival->get_global_position());
+		gun_targets_.push_back({ rival->get_participant_id(), at.x, at.y });
+	}
+	gunner_.set_max_range(weapon->get_weapon()->get_range());
+	const lv::core::GridPoint self = maze->world_to_grid_point(p_participant.get_global_position());
+	const lv::core::GunDecision decision = gunner_.update(p_delta, self.x, self.y, gun_targets_, *rng_);
+	r_command.fire = decision.fire;
+	r_command.aim_x = decision.aim_x;
+	r_command.aim_y = decision.aim_y;
+}
+
+lv::core::ParticipantCommand BotController::compute_move(const Participant &p_participant, float p_delta) {
+	lv::core::PerfScope perf("bots.think");
+	const float dt = p_delta;
 	if (!has_explore_target_) {
 		pick_explore_target();
 	}
@@ -154,6 +201,8 @@ void BotController::on_respawned(const Participant &) {
 	replan_at_end_ = false;
 	stuck_timer_ = 0.0f;
 	world_ready_ = false;
+	gunner_.reset();
+	seen_rivals_.clear();
 	if (brain_) {
 		brain_->think_soon();
 	}

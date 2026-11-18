@@ -29,7 +29,9 @@ protected:
 	static void _bind_methods() {}
 };
 
-// Controlador de una persona con teclado (o mando): lee las acciones move_* del InputMap.
+// Controlador de una persona con teclado y mouse (o mando): lee las acciones move_* del InputMap.
+// Apunta con el mouse (o el stick derecho, acciones aim_*) y dispara con la acción "fire" (clic izquierdo o
+// gatillo derecho). Mantener apretado = dispara a la cadencia del arma.
 class HumanController : public ParticipantController {
 	GDCLASS(HumanController, ParticipantController)
 

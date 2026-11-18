@@ -9,9 +9,11 @@ antes de que se acabe el tiempo (si no, los vándalos se lo llevan).
 La flecha del borde te indica a dónde ir.
 Si otro lleva el trofeo, TÓCALO: lo atrapas, vuelve a su base y el trofeo cae al piso.
 Si te atrapan a ti, reapareces en tu base a los pocos segundos.
+Todos tienen pistola: un balazo elimina (vuelve a su base) y quien llevaba el trofeo lo suelta.
 Fases: Preparación → Asalto → Golpe de los vándalos (el laberinto se acelera).
 
 WASD / flechas · moverse
+Mouse · apuntar   Clic izquierdo · disparar (mantener = ráfaga)
 Esc / P · pausa
 F1 · mostrar u ocultar esta ayuda"""
 const DEBUG_CONTROLS := """
@@ -43,6 +45,7 @@ const RESULTS_SCREEN := preload("res://scenes/menus/results_screen.tscn")
 @onready var _shift_view: MazeShiftView = $ShiftView
 @onready var _match: MatchController = $MatchController
 @onready var _bots: BotCoordinator = $Bots
+@onready var _projectiles: ProjectileSystem = $Projectiles
 
 ## Radio normal del cuerpo del participante (px) y cuánto del pasillo puede ocupar como máximo.
 const BODY_RADIUS := 11.0
@@ -54,6 +57,9 @@ var _live_interval := 0.0  # intervalo del laberinto vivo elegido en el menú (a
 var _pause_menu: CanvasLayer
 var _stress: Node
 var _bot_nodes: Array[Participant] = []
+## Mientras se procesa un balazo (para que el aviso de eliminación diga "disparó" y no "atrapó").
+var _hit_in_progress := false
+var _hit_had_trophy := false
 
 
 func _ready() -> void:
@@ -69,6 +75,8 @@ func _ready() -> void:
 	_trophy.trophy_stolen.connect(func(thief: Participant, victim: Participant) -> void: Events.trophy_stolen.emit(thief, victim))
 	Events.trophy_stolen.connect(_on_trophy_stolen)
 	Events.participant_eliminated.connect(_on_participant_eliminated)
+	_projectiles.participant_hit.connect(_on_participant_hit)
+	Input.set_default_cursor_shape(Input.CURSOR_CROSS)  # se apunta con el mouse
 	Events.trophy_taken.connect(func(p: Participant) -> void:
 		if p != _participant:
 			_hud.toast("¡%s TOMÓ EL TROFEO!" % p.display_name.to_upper(), p.color, 2.5))
@@ -141,6 +149,7 @@ func _on_maze_generated(seed_value: int) -> void:
 	_hud.set_map_info("MAPA %s · %s · %d×%d · semilla %d" % [
 		_maze.profile.get_display_name().to_upper() if _maze.profile else "?", m.algorithm, size.x, size.y, seed_value])
 	_spawner.start(_maze, _maze.get_base_cells(4), seed_value)
+	_projectiles.setup(_maze)  # sin balas de la partida anterior
 	_hud.reset_collected()
 	# La zona de resguardo mide lo que mide el pasillo: cada participante empieza en el centro de la suya y
 	# su cuerpo se ajusta para caber siempre (en pasillos de 1 casilla, el cuerpo normal no pasaría).
@@ -229,15 +238,34 @@ func _forward_eliminated(by: Object, victim: Participant) -> void:
 	Events.participant_eliminated.emit(victim, by as Participant)
 
 
+func _exit_tree() -> void:
+	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+
+
+## Impacto de bala (hoy elimina; con el combate de la Etapa 4 quitará salud). Lo decide la partida, no el arma.
+func _on_participant_hit(victim: Participant, by: Participant) -> void:
+	Events.participant_hit.emit(victim, by)
+	_hit_in_progress = true
+	_hit_had_trophy = _trophy.get_carrier() == victim
+	_trophy.eliminate_participant(victim, by)  # emite participant_eliminated en el acto
+	_hit_in_progress = false
+
+
 func _on_participant_eliminated(victim: Participant, by: Participant) -> void:
 	var seconds := roundi(victim.get_life().respawn_delay) if victim.get_life() else 0
 	var by_name := by.display_name.to_upper() if by else "ALGUIEN"
+	var shot := _hit_in_progress
+	var trophy_fell := _hit_had_trophy if shot else true
 	if victim == _participant:
-		_hud.toast("¡%s TE ATRAPÓ! · el trofeo cayó · vuelves a tu base en %d s" % [by_name, seconds], Color(1.0, 0.4, 0.35), 3.0)
+		_hud.toast("¡%s TE %s!%s · vuelves a tu base en %d s" % [
+			by_name, "DISPARÓ" if shot else "ATRAPÓ", " · el trofeo cayó" if trophy_fell else "", seconds],
+			Color(1.0, 0.4, 0.35), 3.0)
 	elif by == _participant:
-		_hud.toast("¡ATRAPASTE A %s! · el trofeo cayó al piso: ¡tómalo!" % victim.display_name.to_upper(), Color(1.0, 0.82, 0.25), 3.0)
-	else:
-		_hud.toast("%s atrapó a %s · el trofeo cayó" % [by_name, victim.display_name.to_upper()], by.color if by else Color.WHITE, 2.0)
+		_hud.toast("¡%s %s!%s" % ["LE DISTE A" if shot else "ATRAPASTE A", victim.display_name.to_upper(),
+			" · el trofeo cayó al piso: ¡tómalo!" if trophy_fell else ""], Color(1.0, 0.82, 0.25), 3.0 if trophy_fell else 1.5)
+	elif trophy_fell:  # entre bots solo se avisa si cambia algo del trofeo (si no, sería un aviso por balazo)
+		_hud.toast("%s %s a %s · el trofeo cayó" % [by_name, "le disparó" if shot else "atrapó", victim.display_name.to_upper()],
+			by.color if by else Color.WHITE, 2.0)
 
 
 func _on_trophy_stolen(thief: Participant, victim: Participant) -> void:

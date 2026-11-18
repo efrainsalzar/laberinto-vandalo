@@ -49,6 +49,8 @@ types = Array[PickupType]([ExtResource("5_pv"), ExtResource("6_pvi"), ExtResourc
 factory_path = NodePath("../Pickups")
 categories = Array[PickupCategory]([ExtResource("8_cat_pts"), ExtResource("8_cat_pow")])
 
+[node name="Projectiles" type="ProjectileSystem" parent="."]
+
 [node name="Participant" parent="." instance=ExtResource("2_part")]
 
 [node name="Darkness" type="CanvasModulate" parent="."]

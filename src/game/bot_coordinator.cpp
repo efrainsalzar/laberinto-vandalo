@@ -9,6 +9,7 @@
 #include "game/trophy_controller.h"
 
 #include <godot_cpp/classes/engine.hpp>
+#include <godot_cpp/classes/scene_tree.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
@@ -146,6 +147,26 @@ void BotCoordinator::build_world(const Participant &p_participant, lv::core::Bot
 					}
 				}
 			}
+		}
+	}
+}
+
+void BotCoordinator::collect_visible_rivals(const Participant &p_participant, std::vector<ObjectID> &r_rivals) const {
+	r_rivals.clear();
+	if (maze_ == nullptr || !is_inside_tree()) {
+		return;
+	}
+	const StatsComponent *stats = p_participant.get_stats();
+	const float radius = stats != nullptr ? stats->get_vision() : 5.0f;
+	const Vector2 position = p_participant.get_global_position();
+	const TypedArray<Node> nodes = get_tree()->get_nodes_in_group("participants");
+	for (int i = 0; i < nodes.size(); i++) {
+		const Participant *other = Object::cast_to<Participant>(nodes[i]);
+		if (other == nullptr || other == &p_participant || !other->is_active()) {
+			continue;
+		}
+		if (maze_->can_see(position, other->get_global_position(), radius)) {
+			r_rivals.push_back(ObjectID(other->get_instance_id()));
 		}
 	}
 }
