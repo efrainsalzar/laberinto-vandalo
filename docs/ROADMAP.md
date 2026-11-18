@@ -139,6 +139,6 @@ Demo en itch.io · aliados · torneo con rondas · multijugador local · en lín
 - **Balas con índice espacial:** con los vándalos (decenas de blancos) `ProjectileSystem` consultará `EntityIndex` por bala en vez de revisar todos.
 - **Feedback del disparo:** destello, retroceso, chispa al chocar con pared y sonido (Etapa 7; `WeaponComponent.fired` ya existe).
 - **Bots que esquivan balas** o se cubren detrás de paredes: una `BotAction` más cuando haga falta.
-- **Choques entre participantes:** con el combate (Etapa 4). Hoy se atraviesan. El robo básico por contacto ya existe (v0.0.18).
+- **Choques entre participantes:** pospuestos por el dueño (2026-11-18), después del combate. Hoy se atraviesan. El robo básico por contacto ya existe (v0.0.18).
 - **Bots que huyen con el trofeo** (esquivar a quien los persigue / evitar emboscadas): una `BotAction` más cuando haga falta.
 - **Forcejeo** (mantener contacto para robar): con el combate, como otra forma de robo en `TrophyRules`.
