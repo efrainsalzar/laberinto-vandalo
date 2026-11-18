@@ -40,13 +40,15 @@ public:
 	void set_color(const Color &p_value);
 	Color get_color() const { return color_; }
 	// Componente de stats (primer hijo de tipo StatsComponent). Puede ser nullptr.
-	StatsComponent *get_stats() const { return stats_; }
+	// Los componentes se buscan al pedirlos (y se recuerdan): los hijos hacen su _ready ANTES que el padre, así que
+	// si la vista o el arma los piden en su _ready, el participante todavía no los habría buscado.
+	StatsComponent *get_stats() const { return find_component(stats_); }
 	// Ciclo de vida (eliminar / reaparecer). Puede ser nullptr: entonces siempre está activo.
-	LifeComponent *get_life() const { return life_; }
-	bool is_active() const { return life_ == nullptr || life_->is_active(); }
-	bool is_vulnerable() const { return life_ == nullptr || life_->is_vulnerable(); }
+	LifeComponent *get_life() const { return find_component(life_); }
+	bool is_active() const { return get_life() == nullptr || get_life()->is_active(); }
+	bool is_vulnerable() const { return get_life() == nullptr || get_life()->is_vulnerable(); }
 	// Arma (primer hijo WeaponComponent). Puede ser nullptr: entonces no dispara.
-	WeaponComponent *get_weapon() const { return weapon_; }
+	WeaponComponent *get_weapon() const { return find_component(weapon_); }
 
 	// Radio del cuerpo (px): ajusta el círculo de colisión y avisa a la vista (señal body_radius_changed).
 	// La partida lo adapta al ancho de pasillo para que el participante siempre quepa.
@@ -64,9 +66,20 @@ private:
 	int participant_id_ = 0;
 	String display_name_ = "Participante";
 	Color color_ = Color(0.35f, 0.75f, 1.0f);
-	StatsComponent *stats_ = nullptr;
-	LifeComponent *life_ = nullptr;
-	WeaponComponent *weapon_ = nullptr;
+	mutable StatsComponent *stats_ = nullptr;
+	mutable LifeComponent *life_ = nullptr;
+	mutable WeaponComponent *weapon_ = nullptr;
+
+	// Primer hijo del tipo T (se recuerda en r_cache). nullptr si no hay.
+	template <typename T>
+	T *find_component(T *&r_cache) const {
+		if (r_cache == nullptr) {
+			for (int i = 0; i < get_child_count() && r_cache == nullptr; i++) {
+				r_cache = Object::cast_to<T>(get_child(i));
+			}
+		}
+		return r_cache;
+	}
 	uint32_t active_layer_ = 2; // capas de física mientras está en juego (se apagan al ser eliminado)
 	uint32_t active_mask_ = 1;
 

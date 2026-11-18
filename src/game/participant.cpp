@@ -36,17 +36,9 @@ void Participant::_bind_methods() {
 void Participant::_ready() {
 	add_to_group("participants"); // lo usan sistemas que necesitan a todos (p. ej. PickupSpawner)
 	apply_body_radius();
-	for (int i = 0; i < get_child_count(); i++) {
-		if (stats_ == nullptr) {
-			stats_ = Object::cast_to<StatsComponent>(get_child(i));
-		}
-		if (life_ == nullptr) {
-			life_ = Object::cast_to<LifeComponent>(get_child(i));
-		}
-		if (weapon_ == nullptr) {
-			weapon_ = Object::cast_to<WeaponComponent>(get_child(i));
-		}
-	}
+	get_stats();
+	get_life();
+	get_weapon();
 	if (life_ != nullptr && !Engine::get_singleton()->is_editor_hint()) {
 		life_->connect("eliminated", callable_mp(this, &Participant::on_eliminated));
 		life_->connect("respawned", callable_mp(this, &Participant::on_respawned));

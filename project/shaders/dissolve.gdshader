@@ -22,18 +22,18 @@ float hash(vec2 p) {
 }
 
 void fragment() {
-	if (progress <= 0.0) {
-		return;
-	}
-	float n = hash(floor(local_pos / pixel_size));
-	// Los de afuera se van antes que los del centro (se deshace de afuera hacia adentro).
-	float radial = clamp(length(local_pos) / max(body_radius, 1.0), 0.0, 1.0);
-	float t = mix(n, 1.0 - radial, 0.35);
-	float cut = progress * (1.0 + edge_width);
-	if (t < cut - edge_width) {
-		discard;
-	}
-	if (t < cut) {
-		COLOR = vec4(edge_color.rgb, COLOR.a);
+	// (En fragment() no se permite "return": todo va dentro del if.)
+	if (progress > 0.0) {
+		float n = hash(floor(local_pos / pixel_size));
+		// Los de afuera se van antes que los del centro (se deshace de afuera hacia adentro).
+		float radial = clamp(length(local_pos) / max(body_radius, 1.0), 0.0, 1.0);
+		float t = mix(n, 1.0 - radial, 0.35);
+		float cut = progress * (1.0 + edge_width);
+		if (t < cut - edge_width) {
+			discard;
+		}
+		if (t < cut) {
+			COLOR = vec4(edge_color.rgb, COLOR.a);
+		}
 	}
 }

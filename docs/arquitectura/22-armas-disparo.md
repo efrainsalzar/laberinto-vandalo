@@ -69,7 +69,12 @@ estela de lo recorrido en los últimos 0,03 s, que nunca sale del cuerpo del tir
 `shaders/dissolve.gdshader`: lo divide en cuadraditos que desaparecen al azar (de afuera hacia adentro) con un borde
 brillante de su color. A la vez, `death_effect.gd` suelta 26 "píxeles" de su color que se dispersan frenando, y deja
 una "x" tenue en el piso (4 s). Al reaparecer crece desde chico con rebote y parpadea durante la protección.
-*Error corregido:* en v0.0.24 el efecto tenía `z_index = -1` y quedaba **debajo del piso** (no se veía). Ahora el
+*Error corregido (v0.0.30), la causa real:* la vista se conectaba a `LifeComponent` en su `_ready`, pero en Godot los
+hijos hacen `_ready` antes que el padre y `Participant` recién buscaba sus componentes en el suyo: la vista recibía
+`null` y la animación nunca arrancaba (tampoco el parpadeo de protección ni perder el arma especial al morir). Ahora
+`Participant::get_stats/get_life/get_weapon` buscan el componente al pedirlo. Además el shader usaba `return` en
+`fragment()` (no permitido) y no compilaba. Verificado con capturas durante la animación.
+*Otro error corregido (v0.0.27):* en v0.0.24 el efecto tenía `z_index = -1` y quedaba **debajo del piso** (no se veía). Ahora el
 efecto va en z 0 al final del nivel (sobre el piso) y los participantes en z 1 (pasan por encima de la marca).
 
 **Humano.** Apunta con el mouse (o el stick derecho, acciones `aim_*`) y dispara con `fire` (clic izquierdo o gatillo
