@@ -1,7 +1,7 @@
-# Plantilla: sección de docs/ARQUITECTURA.md para un módulo terminado
+# Plantilla: docs/arquitectura/NN-<modulo>.md para un módulo terminado
 
 ~~~markdown
-## N. Módulo M — <Nombre> (detalle)
+# §N. <Etapa o pieza> — <Nombre>
 
 ### Problema que resuelve el diseño
 <Qué necesidad hay y por qué la solución obvia no sirve.>
