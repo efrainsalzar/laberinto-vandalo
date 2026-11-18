@@ -5,8 +5,8 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 
 ## Estado actual
 
-**v0.0.25** · 135 tests · Etapa 1 completa y Etapa 3 (bots) adelantada. Últimas piezas: lenguaje visual de objetos
-(v0.0.22) disparo más real + animación de muerte (v0.0.24) y catálogo de armas (v0.0.25). Todo lo terminado, versión por versión: [HISTORIAL.md](HISTORIAL.md).
+**v0.0.26** · 135 tests · Etapa 1 completa y Etapa 3 (bots) adelantada. Últimas piezas: lenguaje visual de objetos
+(v0.0.22) catálogo de armas (v0.0.25) y armas en el mapa + HUD (v0.0.26). Todo lo terminado, versión por versión: [HISTORIAL.md](HISTORIAL.md).
 
 ## Plan acordado (etapas, una pieza a la vez)
 
@@ -25,7 +25,8 @@ Ideas del mapa en detalle: [`DISENO_MAPA.md`](DISENO_MAPA.md).
 1. ~~Economía de objetos~~ ✅ (v0.0.21)
 2. ~~Lenguaje visual de objetos~~ ✅ (v0.0.22)
 3. ~~Disparo + pistola inicial~~ ✅ (v0.0.23)
-4. **Armas temporales del mapa** ← siguiente (categoría "armas"; ficha con tiempo restante en el HUD; bots que las buscan).
+4. ~~Armas temporales del mapa~~ ✅ (v0.0.24–v0.0.26: disparo más real, catálogo, armas en el mapa y HUD)
+4b. **Bots que buscan armas a propósito** (`BotAction` + distancia preferida por arma) ← siguiente
 5. Combate (Etapa 4) → objetos que cambian el mapa, paredes rompibles y portales (Etapa 2.2–2.4) → formas de mapa (Etapa 2.1).
 
 Cada mecánica entra como **acción del bot** + **dato .tres**.

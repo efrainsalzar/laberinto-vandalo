@@ -90,7 +90,7 @@ Cada módulo tiene su archivo en [`arquitectura/`](arquitectura/). Los comentari
 | §20 | [Economía de objetos: categorías, caducidad y topes](arquitectura/20-economia-objetos.md) |
 | §21 | [Lenguaje visual de objetos](arquitectura/21-lenguaje-visual.md) |
 | §22 | [Disparo + pistola inicial](arquitectura/22-armas-disparo.md) |
-| §23 | [Catálogo de armas: escopeta, láser y bazuca](arquitectura/23-catalogo-armas.md) |
+| §23 | [Catálogo de armas: escopeta, láser y bazuca; armas en el mapa y HUD](arquitectura/23-catalogo-armas.md) |
 
 ## Patrones aplicados (índice)
 

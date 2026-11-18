@@ -3,6 +3,11 @@
 > Lo ya terminado, de lo más nuevo a lo más viejo. El estado actual y lo que sigue están en
 > [ROADMAP.md](ROADMAP.md). Al cerrar una pieza se agrega su bloque **arriba**.
 
+### v0.0.26 — Armas en el mapa y HUD de armas ✅
+- [x] Escopeta, láser y bazuca aparecen en el mapa como cuadrados con su símbolo (categoría "armas" con cupo, reposición y caducidad).
+- [x] Al recogerla se equipa sola en la ranura especial; los bots también las recogen y las usan.
+- [x] Panel de armas en el HUD (abajo al centro): pistola + especial con munición y barra.
+
 ### v0.0.25 — Catálogo de armas: escopeta, láser y bazuca ✅
 - [x] Arma = combinación de datos: modo (proyectil / rayo), perdigones en cono, explosión, munición. Un arma nueva = un .tres.
 - [x] Escopeta (7 perdigones en 30°, 8 tiros), láser (rayo instantáneo, 30 tiros) y bazuca (explosión de radio 2, 4 tiros).

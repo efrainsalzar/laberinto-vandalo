@@ -10,6 +10,7 @@ La flecha del borde te indica a dónde ir.
 Si otro lleva el trofeo, TÓCALO: lo atrapas, vuelve a su base y el trofeo cae al piso.
 Si te atrapan a ti, reapareces en tu base a los pocos segundos.
 Todos tienen pistola: un balazo elimina (vuelve a su base) y quien llevaba el trofeo lo suelta.
+Los CUADRADOS del mapa son armas (escopeta, láser, bazuca): se usan solas hasta gastar la munición.
 Fases: Preparación → Asalto → Golpe de los vándalos (el laberinto se acelera).
 
 WASD / flechas · moverse

@@ -1,5 +1,5 @@
 <!-- Sección §23 de docs/ARQUITECTURA.md (índice). -->
-# §23. Catálogo de armas: escopeta, láser y bazuca
+# §23. Catálogo de armas: escopeta, láser y bazuca (+ armas en el mapa y HUD)
 
 ### Problema que resuelve el diseño
 El juego necesita muchas armas. Si cada arma fuera una clase, 20 armas serían 20 clases con código casi repetido.
@@ -50,6 +50,19 @@ a todos los que estén en el radio y tengan línea de visión con el centro (las
 (decisión del dueño, por ahora). El punto de choque contra una pared se retrocede 0,05 casillas para que la explosión
 no nazca dentro de la pared.
 
+### Armas en el mapa y HUD (v0.0.26)
+- **Objeto-arma = un `PickupType` con `weapon`** (`data/pickups/arma_*.tres`): forma **cuadrado** (reservada para
+  armas desde §21) y símbolo propio: abanico (escopeta), haz (láser), estrella (bazuca). Al recogerlo,
+  `Pickup.collect` llama a `WeaponComponent.equip_special`. Sin código por arma: **agregar un arma al mapa =
+  un `WeaponType` + un `PickupType` + sumarlo a la categoría**.
+- **Categoría "armas"** (`data/spawning/armas.tres`): cupo propio (5 % del presupuesto, entre 1 y 8), reposición cada
+  35 s, caducan a los 30 s. Rareza por `weight`: escopeta 3, láser 2, bazuca 1. Reutiliza `PickupSpawner` (§20).
+- **Bots:** recogen armas como cualquier objeto que ven (acción "recoger objeto") y disparan con la que tengan.
+  Buscarlas a propósito queda para la pieza de bots.
+- **HUD** (`scripts/ui/weapon_panel.gd`, abajo al centro): ranura PISTOLA (∞) y ranura ESPECIAL con nombre, munición
+  (en rojo con 2 o menos) y barra del color del arma; la activa se resalta y la especial late al recogerla. Solo vista:
+  escucha `weapon_changed` y `ammo_changed` (Observer).
+
 ### Rendimiento
 | Medición | Qué |
 |---|---|
@@ -67,6 +80,10 @@ Escopeta: 7 balas por disparo; con 8 participantes con escopeta son ~70 balas po
 | `src/game/weapon_type.*`, `weapon_component.*`, `projectile_system.*` | Datos, ranura especial, rayos y explosiones |
 | `project/data/weapons/{pistol,shotgun,laser,bazooka}.tres` | El catálogo |
 | `project/scripts/game/match.gd` | Teclas de prueba 4/5/6 (equipar) y 7 (volver a la pistola) |
+| `src/game/pickup_type.*`, `pickup.cpp` | `PickupType.weapon` y símbolos de armas; equipar al recoger |
+| `project/data/pickups/arma_*.tres`, `data/spawning/armas.tres` | Objetos-arma y su categoría |
+| `project/scripts/pickups/pickup_view.gd` | Dibujo de los símbolos de armas |
+| `project/scripts/ui/weapon_panel.gd`, `hud.gd` | Panel de armas del HUD |
 
 ### Decisiones
 - Todas las armas matan al impactar (dueño). La especificación propia de cada arma queda para después.

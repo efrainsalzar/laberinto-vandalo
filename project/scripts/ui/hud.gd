@@ -34,6 +34,8 @@ const HINT_SECONDS := 5.0
 @onready var _clock: Control = $Clock
 @onready var _clock_time: Label = $Clock/Time
 @onready var _clock_phase: Label = $Clock/Phase
+const WEAPON_PANEL := preload("res://scripts/ui/weapon_panel.gd")
+var _weapon_panel: PanelContainer
 var _toast_tween: Tween
 
 var _participant: Participant
@@ -82,12 +84,21 @@ func bind(participant: Participant) -> void:
 	_participant = participant
 	_stats = participant.get_stats()
 	_dot.color = participant.color
+	_bind_weapons(participant.get_weapon())
 	if _stats == null:
 		return
 	_stats.stat_changed.connect(_on_stat_changed)
 	for stat in _shown:
 		_shown[stat] = _stats.get_stat(stat)
 		_render_stat(stat, _shown[stat])
+
+
+## Panel de armas (abajo al centro): pistola + ranura especial. Se crea en código; es solo vista.
+func _bind_weapons(weapon: WeaponComponent) -> void:
+	if _weapon_panel == null:
+		_weapon_panel = WEAPON_PANEL.new()
+		add_child(_weapon_panel)
+	_weapon_panel.bind(weapon)
 
 
 ## Conecta el indicador de objetivo al trofeo (y al laberinto, para medir distancias en casillas).

@@ -2,7 +2,8 @@ extends Node2D
 ## Vista de un objeto recolectable con el lenguaje visual del juego (ARQUITECTURA §21):
 ## - La FORMA dice la categoría: círculo = mejora de stat, rombo = power-up, cuadrado = arma,
 ##   hexágono = objeto que cambia el mapa, anillo = portal.
-## - El SÍMBOLO de adentro dice qué hace: » velocidad, ojo visión, rayo rapidez.
+## - El SÍMBOLO de adentro dice qué hace: » velocidad, ojo visión, rayo rapidez; armas: abanico (escopeta),
+##   haz (láser), estrella (bazuca).
 ## - Halo suave del color del tipo y borde oscuro para que se lea sobre cualquier suelo.
 ## Rendimiento: se dibuja UNA vez (no cada frame); con cientos de objetos en mapas gigantes importa.
 ## Si el tipo tiene `icon`, se dibuja la textura en lugar del símbolo (arte de la Etapa 7).
@@ -77,6 +78,19 @@ func _draw_symbol(symbol: int, s: float, ink: Color) -> void:
 			lid.append(lid[0])
 			draw_polyline(lid, ink, w * 0.8, true)
 			draw_circle(Vector2.ZERO, s * 0.32, ink)
+		PickupType.SYMBOL_SPREAD:  # abanico: tres líneas que se abren
+			for a: float in [-0.45, 0.0, 0.45]:
+				var d := Vector2.from_angle(a - PI / 2.0)
+				draw_line(Vector2(0, s * 0.7), Vector2(0, s * 0.7) + d * s * 1.5, ink, w * 0.8, true)
+		PickupType.SYMBOL_BEAM:  # haz: línea diagonal con destello en la punta
+			draw_line(Vector2(-s * 0.8, s * 0.8), Vector2(s * 0.5, -s * 0.5), ink, w, true)
+			draw_circle(Vector2(s * 0.55, -s * 0.55), s * 0.3, ink)
+		PickupType.SYMBOL_BLAST:  # estrella de explosión
+			var star := PackedVector2Array()
+			for i in 16:
+				var rr := s if i % 2 == 0 else s * 0.45
+				star.append(Vector2.from_angle(TAU * i / 16.0) * rr)
+			draw_colored_polygon(star, ink)
 		PickupType.SYMBOL_BOLT:  # rayo
 			draw_colored_polygon(PackedVector2Array([
 				Vector2(s * 0.2, -s), Vector2(-s * 0.55, s * 0.12), Vector2(-s * 0.02, s * 0.12),

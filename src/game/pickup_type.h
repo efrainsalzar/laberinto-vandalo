@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/stats_component.h"
+#include "game/weapon_type.h"
 
 #include <godot_cpp/classes/resource.hpp>
 #include <godot_cpp/classes/texture2d.hpp>
@@ -55,6 +56,9 @@ public:
 		SYMBOL_SPEED, // flechas »
 		SYMBOL_VISION, // ojo
 		SYMBOL_BOLT, // rayo
+		SYMBOL_SPREAD, // abanico de 3 líneas (escopeta)
+		SYMBOL_BEAM, // línea con destello (láser)
+		SYMBOL_BLAST, // estrella de explosión (bazuca)
 	};
 	void set_shape(Shape p_value) { shape_ = p_value; }
 	Shape get_shape() const { return shape_; }
@@ -78,6 +82,9 @@ public:
 	float get_weight() const { return weight_; }
 	void set_effects(const TypedArray<PickupEffect> &p_value) { effects_ = p_value; }
 	TypedArray<PickupEffect> get_effects() const { return effects_; }
+	// Arma que entrega al recogerlo (va a la ranura especial del WeaponComponent). Null = no es un arma. §23.
+	void set_weapon(const Ref<WeaponType> &p_value) { weapon_ = p_value; }
+	Ref<WeaponType> get_weapon() const { return weapon_; }
 
 protected:
 	static void _bind_methods();
@@ -91,6 +98,7 @@ private:
 	Ref<Texture2D> icon_; // arte (pieza 8); si no hay, la vista dibuja una forma de color
 	float weight_ = 1.0f; // rareza: más peso = sale más seguido
 	TypedArray<PickupEffect> effects_;
+	Ref<WeaponType> weapon_;
 	Shape shape_ = SHAPE_CIRCLE;
 	Symbol symbol_ = SYMBOL_NONE;
 };

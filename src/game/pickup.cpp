@@ -50,6 +50,13 @@ bool Pickup::collect(Participant *p_participant) {
 		}
 	}
 
+	// Arma: va a la ranura especial y se equipa sola (reemplaza a la anterior). §23.
+	if (type_.is_valid() && type_->get_weapon().is_valid()) {
+		if (WeaponComponent *weapon = p_participant->get_weapon()) {
+			weapon->equip_special(type_->get_weapon());
+		}
+	}
+
 	emit_signal("collected", p_participant);
 	set_deferred("monitoring", false);
 	queue_free();

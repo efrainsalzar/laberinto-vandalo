@@ -1,0 +1,19 @@
+[gd_resource type="PickupCategory" load_steps=5 format=3]
+
+[ext_resource type="PickupType" path="res://data/pickups/arma_escopeta.tres" id="1_esc"]
+[ext_resource type="PickupType" path="res://data/pickups/arma_laser.tres" id="2_las"]
+[ext_resource type="PickupType" path="res://data/pickups/arma_bazuca.tres" id="3_baz"]
+
+[sub_resource type="KeepDensityPolicy" id="pol"]
+
+[resource]
+id = "armas"
+types = Array[PickupType]([ExtResource("1_esc"), ExtResource("2_las"), ExtResource("3_baz")])
+policy = SubResource("pol")
+share = 0.05
+min_count = 1
+max_count = 8
+refill_time = 35.0
+initial_fill = 0.5
+lifetime = 30.0
+warn_time = 5.0

@@ -1,0 +1,14 @@
+[gd_resource type="PickupType" load_steps=2 format=3]
+
+[ext_resource type="WeaponType" path="res://data/weapons/laser.tres" id="1_w"]
+
+[resource]
+id = "arma_laser"
+display_name = "Láser"
+popup_title = "¡LÁSER!"
+color = Color(1, 0.3, 0.4, 1)
+radius = 8
+shape = 2
+symbol = 5
+weight = 2
+weapon = ExtResource("1_w")
