@@ -1,111 +1,66 @@
 # CLAUDE.md — Guía para agentes de IA (y colaboradores humanos)
 
-Este archivo es el contexto que un agente (Claude Code u otro) debe leer antes de tocar el proyecto.
-También sirve como guía rápida para personas.
+**Laberinto Vándalo** (nombre provisional): juego 2D top-down. Torneo en un laberinto vivo donde varios
+participantes compiten por un trofeo mientras unos vándalos sabotean todo. Gana quien lleva el trofeo a su base.
 
-## Qué es este proyecto
+## Documentos (leer solo lo que la tarea necesita)
 
-**Laberinto Vándalo** (nombre provisional): juego 2D top-down. Un torneo en un laberinto vivo donde
-varios participantes compiten por un trofeo mientras unos vándalos sabotean todo para robárselo.
-Gana quien lleva el trofeo a su zona de resguardo antes de que acabe el tiempo.
+| Documento | Para qué |
+|---|---|
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Estado actual y qué sigue. **Empezar aquí.** |
+| [`docs/ARQUITECTURA.md`](docs/ARQUITECTURA.md) | Índice corto: principios, mapa de módulos, patrones. El detalle de cada módulo está en `docs/arquitectura/NN-*.md`; un `§N` en el código = ese archivo. Abrir solo el que toca. |
+| [`docs/VISION.md`](docs/VISION.md) | Diseño del juego (fuente de verdad). Leer solo la sección de la pieza. |
+| [`docs/RENDIMIENTO.md`](docs/RENDIMIENTO.md) | Presupuesto, medición y checklist de escalabilidad (al diseñar algo en tiempo real). |
+| [`docs/HISTORIAL.md`](docs/HISTORIAL.md) | Lo ya hecho, versión por versión. Normalmente no hace falta leerlo. |
 
-- Visión completa del juego: [`docs/VISION.md`](docs/VISION.md) — **fuente de verdad del diseño.**
-- Arquitectura y patrones: [`docs/ARQUITECTURA.md`](docs/ARQUITECTURA.md).
-- Estado y siguiente paso: [`docs/ROADMAP.md`](docs/ROADMAP.md).
+Para entender código existente: buscar con Grep y leer solo los archivos implicados, no recorrer el proyecto.
 
 ## Forma de trabajar (OBLIGATORIO)
 
-1. **Paso a paso.** Se construye un módulo a la vez. Nunca implementar varias fases o sistemas de golpe.
-2. **Primero diseño, después código.** Antes de escribir un módulo nuevo: explicar qué clases, qué patrón
-   y por qué, y **esperar la aprobación del dueño del proyecto.**
-3. **Nada fuera de alcance.** Si algo no está pedido en el paso actual, se anota en `docs/ROADMAP.md`, no se implementa.
-4. **Cada módulo termina verificado:** compila, sus tests pasan y se ve funcionando en Godot.
-5. **El idioma del proyecto es español** (documentos, comentarios, mensajes de commit). Los identificadores de código van en inglés.
-6. **Commits pequeños** con formato semántico: `feat:`, `fix:`, `docs:`, `build:`, `test:`, `refactor:`, `chore:`.
+1. **Paso a paso.** Un módulo a la vez; nunca varias fases o sistemas de golpe.
+2. **Primero diseño, después código.** Explicar clases, patrón y por qué, y **esperar la aprobación del dueño.**
+3. **Nada fuera de alcance.** Lo no pedido se anota en `docs/ROADMAP.md` ("Ideas anotadas"), no se implementa.
+4. **Cada módulo termina verificado:** compila, tests pasan, carga en Godot. Las pruebas en vivo las hace el dueño.
+5. **Idioma: español** (documentos, comentarios, commits). Identificadores de código en inglés.
+6. **Commits pequeños** semánticos: `feat:`, `fix:`, `docs:`, `build:`, `test:`, `refactor:`, `chore:`.
 
-## Arquitectura (resumen)
+## Arquitectura (resumen; detalle en ARQUITECTURA.md §1)
 
-- **C++ (GDExtension, godot-cpp)** para la lógica: laberinto, reglas, IA, sistemas.
-- **GDScript** solo para interfaz y para conectar escenas.
-- **La lógica pura no depende de Godot** (`src/core/`): se prueba con doctest sin abrir el motor.
-- **Composición sobre herencia.** Patrones previstos (ver VISION §15): Strategy (controladores),
-  State (estados/fases), Command (acciones), Observer (señales), Factory + datos, Decorator (modificadores), Composite (IA).
-- **Idea central: el participante no sabe quién lo controla** (humano, bot o red).
-- Sin sobreingeniería: no se diseña para "cambiar de motor". Se aplica un patrón cuando resuelve un problema real.
-- **Todo módulo nuevo se documenta en `docs/ARQUITECTURA.md`**: problema, patrón elegido y por qué,
-  diagrama de clases (Mermaid), archivos y decisiones pendientes. Y se agrega al índice de patrones (última sección).
-- Lógica y vista separadas: los nodos C++ no dibujan; la vista (escena/GDScript) no decide.
-- **Eventos de juego por el Event Bus** (`Events`, autoload): los niveles publican ahí lo que ocurrió;
-  la interfaz, los sonidos y el Director escuchan ahí. La lógica C++ no conoce la interfaz.
-- **Interfaz:** el centro de la pantalla queda libre; HUD en los bordes; ayuda en F1; textos flotantes para feedback.
-  Cada opción de menú lleva descripción con `UiFx.hint(control, "...")` (globo flotante, no texto fijo).
-- **Rendimiento** ([`docs/RENDIMIENTO.md`](docs/RENDIMIENTO.md)): medir antes de optimizar. **Todo sistema nuevo trae su medición**
-  (`lv::core::PerfScope perf("sistema.tarea")`) y se revisa en el panel F3 contra el presupuesto. Ninguna vista
-  que exista en cantidad se redibuja cada frame. Todo cambio del mapa va por `Maze.queue_passage_change`.
-- **Escalabilidad** (obligatorio para todo lo que corra en tiempo real): presupuesto por área, colas con presupuesto,
-  topes con política, reservas y prioridades ante conflictos, pools, LOD de lógica, índices espaciales, eventos agrupados,
-  trabajo pesado en hilos, y prueba de estrés al cerrar cada etapa. Ver el checklist en `docs/RENDIMIENTO.md`.
+- **C++ (GDExtension)** para la lógica; **GDScript** solo para interfaz y conectar escenas.
+- `src/core/`: lógica pura sin Godot (namespace `lv::core`), probada con doctest. `src/game/`: nodos que la adaptan.
+- **Composición sobre herencia.** El participante no sabe quién lo controla (humano, bot o red).
+- Un patrón solo cuando resuelve un problema real. Lógica y vista separadas. Eventos por `Events` (Event Bus).
+- Todo sistema en tiempo real lleva `lv::core::PerfScope perf("sistema.tarea")`. Cambios del mapa: `Maze.queue_passage_change`.
+- Todo módulo nuevo: un archivo `docs/arquitectura/NN-modulo.md` + fila en el índice (ver skill `/nuevo-modulo`).
 
-## Estructura de carpetas
+## Carpetas
 
-```
-src/
-  register_types.cpp   Registro de clases C++ en Godot (único punto de registro)
-  version.h            Versión del proyecto
-  core/                Lógica pura C++ (sin Godot) — testeable con doctest
-  game/                Clases que Godot ve (nodos, recursos) — envuelven a core/
-tests/                 Tests unitarios (doctest) de src/core
-thirdparty/            Dependencias incluidas (doctest)
-godot-cpp/             Submódulo: bindings C++ de Godot (no editar)
-project/               Proyecto de Godot (escenas, scripts GDScript, assets)
-  bin/                 laberinto.gdextension + DLL compiladas (las DLL no se suben)
-  scenes/menus/        Menú principal, configurar partida, opciones, pausa, resultados
-  scenes/game/         La partida (match.tscn)
-  scripts/autoload/    Events (Event Bus), Settings (opciones), App (flujo del juego: State), UiFx (efectos de interfaz)
-  data/                Datos (.tres): mapas, objetos, stats, reglas de aparición
-  ui/theme.tres        Tema único de la interfaz
-docs/                  Visión, arquitectura, hoja de ruta
-```
+`src/core` lógica pura · `src/game` nodos Godot · `src/register_types.cpp` registro de clases · `tests/` doctest ·
+`project/` proyecto Godot (`scenes/`, `scripts/autoload/` = Events, Settings, App, UiFx; `data/` .tres; `ui/theme.tres`) ·
+`godot-cpp/` submódulo (no editar) · `tools/` scripts.
 
 ## Comandos
 
-Entorno local (Windows): activar con `. D:\Github\gamedev\env.ps1` (scons, clang-format, godot en el PATH).
+Entorno (Windows): `. D:\Github\gamedev\env.ps1`.
 
 | Acción | Comando |
 |---|---|
-| Compilar extensión (debug) | `scons platform=windows target=template_debug compiledb=yes` |
-| Tests unitarios | `scons tests=yes` |
-| Ejecutar juego (abre el menú) | `godot --path project` |
-| Ejecutar la partida directamente | `godot --path project res://scenes/game/match.tscn` |
-| Ejecutar sin ventana (verificación) | `godot --headless --path project --quit-after 5` |
-| Formatear C++ | `clang-format -i src/**/*.cpp src/**/*.h tests/*.cpp` |
-| **Verificar todo** (compilar + tests + Godot) | `./tools/verificar.ps1` (opciones: `-SinCompilar`, `-SinGodot`, `-Captura <carpeta>`, `-Escena res://...`, `-Estres`) |
-| **Prueba de estrés** + resumen del informe | `./tools/verificar.ps1 -SinCompilar -Estres` (registro: `%APPDATA%\Godot\app_userdata\Laberinto Vándalo\stress\latest.json`) |
+| **Verificar** (compilar + tests + Godot) | `./tools/verificar.ps1` — salida corta; `-Detalle` para todo. Otras: `-SinCompilar`, `-SinGodot`, `-Captura <dir>`, `-Escena res://...`, `-Estres` |
+| Ejecutar el juego | `godot --path project` |
+| Formatear C++ | `clang-format -i <archivos tocados>` |
 
-Después de cambiar C++ hay que **recompilar y reabrir el editor de Godot** (la extensión no se recarga sola).
+Tras cambiar C++ hay que recompilar y reabrir el editor de Godot.
+Skills: `/nuevo-modulo` (pieza nueva: diseño → aprobación → core + tests → Godot → verificar → documentar → commit) y `/verificar`.
 
-## Skills del proyecto (`.claude/skills/`)
+## Convenciones C++
 
-| Skill | Cuándo |
-|---|---|
-| `/nuevo-modulo` | Construir la siguiente pieza del ROADMAP o un sistema nuevo: diseño → aprobación → core + tests → Godot → sandbox → verificar → documentar → commit. Incluye plantillas. |
-| `/verificar` | Antes de cada commit o tras cualquier cambio: ejecuta `tools/verificar.ps1` y reporta con honestidad. |
-
-Las skills describen el **proceso**; la lógica ejecutable vive en `tools/` para que también la usen personas y CI.
-Si se repite una tarea varias veces, se convierte en skill (y su parte ejecutable, en un script de `tools/`).
-
-## Convenciones de código C++
-
-- Estilo de godot-cpp: `.clang-format` del repo (tabs, llaves en la misma línea).
-- Clases en `PascalCase`, métodos y variables en `snake_case`.
-- Parámetros con prefijo `p_`, miembros privados con sufijo `_` en `core/`.
-- Lógica pura en el namespace `lv::core`. Clases de Godot sin namespace (Godot las registra por nombre).
-- Toda clase nueva de Godot se registra en `src/register_types.cpp`.
-- En `core/`, lo aleatorio usa siempre `lv::core::Rng` (nunca `std::uniform_*_distribution` ni `std::shuffle`): misma semilla = mismo resultado en todas las plataformas.
-- Nada de lógica de reglas dentro de nodos visuales: el nodo delega en `core/`.
+- `.clang-format` del repo (tabs, llaves en la misma línea). Clases `PascalCase`; métodos y variables `snake_case`.
+- Parámetros `p_`; miembros privados con sufijo `_` en `core/`. Clases de Godot sin namespace, registradas en `register_types.cpp`.
+- Aleatorio en `core/`: siempre `lv::core::Rng` (nunca `std::uniform_*_distribution` ni `std::shuffle`).
+- Nada de reglas dentro de nodos visuales: el nodo delega en `core/`.
 
 ## Reglas que no se rompen
 
-- **Todo original.** No copiar nombres, arte, sonidos ni apariencia de franquicias existentes.
-- Arte de prototipo solo de fuentes **CC0** (por ejemplo Kenney.nl), registrado en `CREDITS.md`.
-- No subir binarios compilados ni la carpeta `.godot/`.
+- **Todo original.** Nada de nombres, arte, sonidos ni apariencia de franquicias existentes.
+- Arte de prototipo solo **CC0** (p. ej. Kenney.nl), registrado en `CREDITS.md`. Hoy el arte es provisional (puntos y colores); el arte real llega en la Etapa 7.
+- No subir binarios compilados ni `.godot/`.

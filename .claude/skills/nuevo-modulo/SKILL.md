@@ -6,12 +6,14 @@ description: Flujo obligatorio para construir una pieza o módulo nuevo de Laber
 # /nuevo-modulo
 
 El proyecto se construye **una pieza a la vez** y **primero el diseño**. Esta skill es el procedimiento.
-Leer antes: `CLAUDE.md`, `docs/ROADMAP.md` (qué sigue) y la sección del módulo en `docs/VISION.md`.
+Leer antes: `docs/ROADMAP.md` (qué sigue) y **solo** la sección de la pieza en `docs/VISION.md`.
+No leer documentos enteros ni recorrer el proyecto: buscar con Grep y abrir solo lo implicado.
 
 ## Fase A — Diseño (sin código)
 
 1. Identificar la pieza en `docs/ROADMAP.md` y lo que dice `docs/VISION.md` sobre ella.
-2. Revisar qué existe y se puede reutilizar (la última sección de `docs/ARQUITECTURA.md` es el índice de patrones).
+2. Revisar qué existe y se puede reutilizar: `docs/ARQUITECTURA.md` es un índice corto (módulos y patrones);
+   abrir solo los archivos de `docs/arquitectura/` de los módulos que la pieza toca.
 3. Escribir la propuesta con [`plantilla-diseno.md`](plantilla-diseno.md): problema, solución,
    patrones **con su porqué**, clases, qué va en `core` y qué en `game`, cómo se prueba en pantalla.
    - Un patrón solo si resuelve un problema de esta pieza o de una fase cercana ya planificada. Si es la
@@ -43,8 +45,8 @@ Leer antes: `CLAUDE.md`, `docs/ROADMAP.md` (qué sigue) y la sección del módul
 ## Fase C — Verificación
 
 1. `/verificar -Captura <scratchpad>` y **mirar la captura**.
-2. Si la pieza tiene comportamiento (movimiento, tiempos, efectos), escribir una prueba temporal que mida
-   el resultado real. No dejar esas pruebas en el repo.
+2. Las pruebas de comportamiento en vivo las hace el dueño. Solo si él lo pide, escribir una prueba temporal
+   que mida el resultado real (no dejarla en el repo).
    - **Sin autoloads** (solo C++ y escenas): script `extends SceneTree` en el scratchpad y
      `godot --headless --path project -s <script>`.
    - **Con autoloads** (p. ej. `Events`): `-s` NO los carga y el script no compila. Crear una escena temporal en
@@ -56,11 +58,13 @@ Leer antes: `CLAUDE.md`, `docs/ROADMAP.md` (qué sigue) y la sección del módul
 
 ## Fase D — Documentación y cierre
 
-1. `docs/ARQUITECTURA.md`: nueva sección con [`plantilla-arquitectura.md`](plantilla-arquitectura.md)
-   **antes** del índice de patrones; renumerar el índice y actualizar sus filas y la tabla de módulos (§2).
-   Ajustar las referencias `§N` en los comentarios del código y en `CLAUDE.md` si cambiaron.
-2. `docs/ROADMAP.md`: mover la pieza a "Hecho" con su versión y lo logrado; poner la siguiente pieza en
-   "Siguiente paso"; anotar ideas nuevas en "Ideas anotadas" (no implementarlas).
+1. Arquitectura: nuevo archivo `docs/arquitectura/NN-<modulo>.md` (NN = siguiente número libre) con
+   [`plantilla-arquitectura.md`](plantilla-arquitectura.md); en `docs/ARQUITECTURA.md` agregar su fila a
+   "Detalle por módulo" y actualizar el índice de patrones y la tabla de módulos (§2). Los números existentes
+   no cambian, así que las referencias `§N` del código siguen valiendo.
+2. `docs/HISTORIAL.md`: agregar **arriba** el bloque de la versión con lo logrado.
+   `docs/ROADMAP.md`: actualizar "Estado actual" (versión, tests, última pieza) y el plan; anotar ideas nuevas
+   en "Ideas anotadas" (no implementarlas).
 3. `README.md`: versión, fila de estado de la fase y controles si cambiaron.
 4. Subir la versión (patch) en `src/version.h` y `project/project.godot` (`config/version`).
 5. Commit semántico en español con la co-autoría del agente. Ej.: `feat(trofeo): pieza 6 - ... (v0.0.7)`.

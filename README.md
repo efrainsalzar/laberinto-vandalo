@@ -25,7 +25,7 @@ Juego 2D top-down hecho con **Godot 4** y **C++ (GDExtension)**. Código abierto
 | Bots con 4 dificultades ✅ (v0.0.17) |  ✅ |
 | Combate · Soldados · Vándalos · Mapa vivo | 🔜 |
 
-Detalle y siguiente paso: [`docs/ROADMAP.md`](docs/ROADMAP.md).
+Detalle y siguiente paso: [`docs/ROADMAP.md`](docs/ROADMAP.md) · historial: [`docs/HISTORIAL.md`](docs/HISTORIAL.md) · cómo pedir tareas al agente: [`docs/COMO_PEDIR.md`](docs/COMO_PEDIR.md).
 
 ---
 
