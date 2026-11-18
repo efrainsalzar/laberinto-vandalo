@@ -42,36 +42,8 @@ theme_override_styles/panel = SubResource("StyleBox_topbar")
 
 [node name="Row" type="HBoxContainer" parent="TopBar"]
 layout_mode = 2
+alignment = 2
 theme_override_constants/separation = 18
-
-[node name="Dot" type="ColorRect" parent="TopBar/Row"]
-custom_minimum_size = Vector2(12, 12)
-layout_mode = 2
-size_flags_vertical = 4
-
-[node name="Speed" type="Label" parent="TopBar/Row"]
-custom_minimum_size = Vector2(92, 0)
-layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "VEL 0"
-
-[node name="Vision" type="Label" parent="TopBar/Row"]
-custom_minimum_size = Vector2(80, 0)
-layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "VIS 0"
-
-[node name="Effects" type="HBoxContainer" parent="TopBar/Row"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 8
-
-[node name="TrophyStatus" type="Label" parent="TopBar/Row"]
-visible = false
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.82, 0.25, 1)
-theme_override_font_sizes/font_size = 16
-text = "LLEVAS EL TROFEO · VEL ×0.6 · ¡VE A TU BASE!"
 
 [node name="Fps" type="Label" parent="TopBar/Row"]
 visible = false

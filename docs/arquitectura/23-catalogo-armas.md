@@ -65,7 +65,7 @@ no nazca dentro de la pared.
   35 s, caducan a los 30 s. Rareza por `weight`: escopeta 3, láser 2, bazuca 1. Reutiliza `PickupSpawner` (§20).
 - **Bots:** recogen armas como cualquier objeto que ven (acción "recoger objeto") y disparan con la que tengan.
   Buscarlas a propósito queda para la pieza de bots.
-- **HUD** (`scripts/ui/weapon_panel.gd`, abajo al centro): ranura PISTOLA (∞) y ranura ESPECIAL con nombre, munición
+- **HUD** (v0.0.26; desde v0.0.29 es la sección de armas de la tarjeta del participante, §24) (`scripts/ui/weapon_panel.gd`, abajo al centro): ranura PISTOLA (∞) y ranura ESPECIAL con nombre, munición
   (en rojo con 2 o menos) y barra del color del arma; la activa se resalta y la especial late al recogerla. Solo vista:
   escucha `weapon_changed` y `ammo_changed` (Observer).
 

@@ -1,29 +1,20 @@
 class_name HUD
 extends CanvasLayer
-## HUD del jugador: barra superior delgada (stats, efectos activos, contador), pista F1 y panel
-## de controles. El centro de la pantalla queda siempre libre.
+## HUD del jugador: tarjeta del participante (arriba a la izquierda: estado, stats, efectos y armas), barra
+## superior delgada (reloj, objetos, FPS), pista F1 y panel de controles. El centro de la pantalla queda libre.
 ##
-## Observer: escucha al StatsComponent del participante y a Events; nunca modifica el juego.
-## Ver docs/ARQUITECTURA.md §10.
+## Observer: escucha al participante y a Events; nunca modifica el juego.
+## Ver docs/ARQUITECTURA.md §10 y docs/arquitectura/24-tarjeta-participante.md.
 
-const COUNT_TIME := 0.35  # duración de la animación de números
-const FLASH_UP := Color(0.45, 1.0, 0.6)
-const FLASH_DOWN := Color(1.0, 0.45, 0.45)
-const TEXT_COLOR := Color(0.93, 0.92, 0.98)
 const HINT_SECONDS := 5.0
 
 ## Texto del panel de controles (cada escena puede poner el suyo).
 @export_multiline var controls_text := "WASD / flechas · moverse\nF1 · mostrar u ocultar esta ayuda"
 
-@onready var _dot: ColorRect = $TopBar/Row/Dot
-@onready var _speed: Label = $TopBar/Row/Speed
-@onready var _vision: Label = $TopBar/Row/Vision
-@onready var _effects: HBoxContainer = $TopBar/Row/Effects
 @onready var _collected: Label = $TopBar/Row/Collected
 @onready var _hint: Label = $HintF1
 @onready var _controls: PanelContainer = $Controls
 @onready var _controls_list: Label = $Controls/Rows/List
-@onready var _trophy_status: Label = $TopBar/Row/TrophyStatus
 @onready var _objective: ObjectiveIndicator = $Objective
 @onready var _banner: PanelContainer = $Banner
 @onready var _banner_title: Label = $Banner/Rows/Title
@@ -34,15 +25,11 @@ const HINT_SECONDS := 5.0
 @onready var _clock: Control = $Clock
 @onready var _clock_time: Label = $Clock/Time
 @onready var _clock_phase: Label = $Clock/Phase
-const WEAPON_PANEL := preload("res://scripts/ui/weapon_panel.gd")
-var _weapon_panel: PanelContainer
+const PLAYER_CARD := preload("res://scripts/ui/player_card/player_card.gd")
+var _card: PanelContainer
 var _toast_tween: Tween
 
 var _participant: Participant
-var _stats: StatsComponent
-var _shown := {StatsComponent.STAT_SPEED: 0.0, StatsComponent.STAT_VISION: 0.0}
-var _count_tweens := {}
-var _chips := {}  # id de modificador -> {panel, bar, duration}
 var _collected_count := 0
 var _trophy: TrophyController
 var _maze: Maze
@@ -62,10 +49,6 @@ const TROPHY_COLOR := Color(1.0, 0.82, 0.25)
 func _ready() -> void:
 	_controls_list.text = controls_text
 	Events.pickup_collected.connect(_on_pickup_collected)
-	Events.trophy_taken.connect(_on_trophy_changed.unbind(1))
-	Events.trophy_dropped.connect(_on_trophy_changed.unbind(2))
-	Events.trophy_stolen.connect(_on_trophy_changed.unbind(2))
-	Events.trophy_delivered.connect(_on_trophy_changed.unbind(1))
 	Events.match_phase_changed.connect(_on_phase_changed)
 	Events.match_time_warning.connect(func(seconds_left: float) -> void:
 		var text := "¡QUEDA 1 MINUTO!" if seconds_left >= 60.0 else "¡QUEDAN %d SEGUNDOS!" % roundi(seconds_left)
@@ -82,30 +65,19 @@ func _ready() -> void:
 ## Conecta el HUD a un participante (el que controla esta pantalla).
 func bind(participant: Participant) -> void:
 	_participant = participant
-	_stats = participant.get_stats()
-	_dot.color = participant.color
-	_bind_weapons(participant.get_weapon())
-	if _stats == null:
-		return
-	_stats.stat_changed.connect(_on_stat_changed)
-	for stat in _shown:
-		_shown[stat] = _stats.get_stat(stat)
-		_render_stat(stat, _shown[stat])
-
-
-## Panel de armas (abajo al centro): pistola + ranura especial. Se crea en código; es solo vista.
-func _bind_weapons(weapon: WeaponComponent) -> void:
-	if _weapon_panel == null:
-		_weapon_panel = WEAPON_PANEL.new()
-		add_child(_weapon_panel)
-	_weapon_panel.bind(weapon)
+	if _card == null:
+		_card = PLAYER_CARD.new()
+		add_child(_card)
+		move_child(_card, 0)  # debajo de los carteles y del panel de controles
+	_card.bind(participant)
 
 
 ## Conecta el indicador de objetivo al trofeo (y al laberinto, para medir distancias en casillas).
 func bind_objective(trophy: TrophyController, maze: Maze) -> void:
 	_trophy = trophy
 	_maze = maze
-	_on_trophy_changed()
+	if _card != null:
+		_card.set_trophy(trophy)
 
 
 ## Conecta el reloj de arriba al centro a la partida.
@@ -197,8 +169,6 @@ func _toggle_controls() -> void:
 
 
 func _process(_delta: float) -> void:
-	if _stats != null:
-		_sync_effect_chips()
 	_update_objective()
 	_update_clock()
 	_fps.visible = Settings.get_value("show_fps")
@@ -266,122 +236,6 @@ func _update_objective() -> void:
 		_objective.target_color = TROPHY_COLOR
 	var tile := _maze.get_tile_px() if _maze != null else 16.0
 	_objective.distance_tiles = _participant.global_position.distance_to(_objective.target_position) / tile
-
-
-func _on_trophy_changed() -> void:
-	if _trophy == null or _participant == null:
-		return
-	var carrying := _trophy.get_carrier() == _participant
-	if carrying != _trophy_status.visible:
-		_trophy_status.visible = carrying
-		if carrying:
-			_trophy_status.modulate.a = 0.0
-			create_tween().tween_property(_trophy_status, "modulate:a", 1.0, 0.25)
-
-
-# --- Stats: números que cuentan y destellan ------------------------------------------------
-
-func _on_stat_changed(stat: int, value: float) -> void:
-	if not _shown.has(stat):
-		return
-	var label := _label_for(stat)
-	var from: float = _shown[stat]
-	if is_equal_approx(from, value):
-		return
-	if _count_tweens.has(stat):
-		_count_tweens[stat].kill()
-	var tween := create_tween().set_parallel(true)
-	tween.tween_method(_set_shown.bind(stat), from, value, COUNT_TIME)
-	label.add_theme_color_override("font_color", FLASH_UP if value > from else FLASH_DOWN)
-	label.pivot_offset = label.size / 2.0
-	label.scale = Vector2(1.15, 1.15)
-	tween.tween_property(label, "scale", Vector2.ONE, COUNT_TIME).set_trans(Tween.TRANS_BACK)
-	tween.chain().tween_callback(func() -> void: label.add_theme_color_override("font_color", TEXT_COLOR))
-	_count_tweens[stat] = tween
-
-
-func _set_shown(value: float, stat: int) -> void:
-	_shown[stat] = value
-	_render_stat(stat, value)
-
-
-func _render_stat(stat: int, value: float) -> void:
-	match stat:
-		StatsComponent.STAT_SPEED:
-			_speed.text = "VEL %d" % roundi(value)
-		StatsComponent.STAT_VISION:
-			_vision.text = "VIS %.1f" % value
-
-
-func _label_for(stat: int) -> Label:
-	return _speed if stat == StatsComponent.STAT_SPEED else _vision
-
-
-# --- Efectos temporales como fichas con barra que se vacía --------------------------------
-
-func _sync_effect_chips() -> void:
-	var alive := {}
-	for m: Dictionary in _stats.get_modifiers():
-		if m.duration < 0.0:
-			continue  # los permanentes ya se ven en el valor de la stat
-		alive[m.id] = true
-		if not _chips.has(m.id):
-			_chips[m.id] = _make_chip(m)
-		var chip: Dictionary = _chips[m.id]
-		chip.bar.value = clampf(m.remaining / chip.duration, 0.0, 1.0)
-	for id in _chips.keys():
-		if not alive.has(id):
-			_remove_chip(_chips[id])
-			_chips.erase(id)
-
-
-func _make_chip(m: Dictionary) -> Dictionary:
-	var color: Color = EffectText.STAT_COLORS.get(m.stat, Color.WHITE)
-	var panel := PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(color, 0.16)
-	style.border_color = Color(color, 0.7)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
-	style.content_margin_left = 8
-	style.content_margin_right = 8
-	style.content_margin_top = 1
-	style.content_margin_bottom = 2
-	panel.add_theme_stylebox_override("panel", style)
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 1)
-	var label := Label.new()
-	label.text = EffectText.format(m.stat, m.op, m.value)
-	label.add_theme_font_size_override("font_size", 14)
-	label.add_theme_color_override("font_color", color)
-	var bar := ProgressBar.new()
-	bar.show_percentage = false
-	bar.max_value = 1.0
-	bar.custom_minimum_size = Vector2(0, 3)
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = color
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = Color(color, 0.2)
-	bar.add_theme_stylebox_override("fill", fill)
-	bar.add_theme_stylebox_override("background", bg)
-	box.add_child(label)
-	box.add_child(bar)
-	panel.add_child(box)
-	_effects.add_child(panel)
-	# Entra con un destello (el contenedor controla la posición; se anima opacidad y escala).
-	panel.modulate.a = 0.0
-	panel.scale = Vector2(1.25, 1.25)
-	var t := create_tween().set_parallel(true)
-	t.tween_property(panel, "modulate:a", 1.0, 0.2)
-	t.tween_property(panel, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_BACK)
-	return {"panel": panel, "bar": bar, "duration": maxf(m.duration, 0.001)}
-
-
-func _remove_chip(chip: Dictionary) -> void:
-	var panel: Control = chip.panel
-	var t := create_tween()
-	t.tween_property(panel, "modulate:a", 0.0, 0.25)
-	t.tween_callback(panel.queue_free)
 
 
 # --- Contador -------------------------------------------------------------------------------

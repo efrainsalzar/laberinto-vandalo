@@ -3,6 +3,11 @@
 > Lo ya terminado, de lo más nuevo a lo más viejo. El estado actual y lo que sigue están en
 > [ROADMAP.md](ROADMAP.md). Al cerrar una pieza se agrega su bloque **arriba**.
 
+### v0.0.29 — Tarjeta del participante ✅
+- [x] Panel arriba a la izquierda: avatar con anillo de estado, píldoras (en juego, protegido, eliminado, trofeo), VEL y VIS con barra hasta el tope, efectos con anillo y armas con munición.
+- [x] Composite de secciones: la salud y las vidas (Etapa 4) serán una sección más.
+- [x] La barra de arriba queda para la partida (reloj, objetos, FPS); se quitó el panel de armas de abajo.
+
 ### v0.0.28 — Láser sostenido y comportamientos de disparo ✅
 - [x] El láser es un rayo continuo mientras se mantiene el clic (sin parpadeo), con 4 s de batería.
 - [x] Comportamientos de disparo como Strategy (`FireBehavior`): el arma recibe el gatillo apretado / mantenido / soltado.

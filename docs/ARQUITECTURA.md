@@ -91,6 +91,7 @@ Cada módulo tiene su archivo en [`arquitectura/`](arquitectura/). Los comentari
 | §21 | [Lenguaje visual de objetos](arquitectura/21-lenguaje-visual.md) |
 | §22 | [Disparo + pistola inicial](arquitectura/22-armas-disparo.md) |
 | §23 | [Catálogo de armas: escopeta, láser y bazuca; armas en el mapa y HUD](arquitectura/23-catalogo-armas.md) |
+| §24 | [Tarjeta del participante (HUD)](arquitectura/24-tarjeta-participante.md) |
 
 ## Patrones aplicados (índice)
 
@@ -118,3 +119,4 @@ Cada módulo tiene su archivo en [`arquitectura/`](arquitectura/). Los comentari
 | Instrumentación / observabilidad | `Perf`, `PerfScope`, panel F3, monitores | ✅ |
 | Object Pool | `FloatingTextLayer` | ✅ |
 | Decorator en tiempo de ejecución | `UiFx` (efectos y descripciones en todos los controles) | ✅ |
+| Composite (interfaz) | Tarjeta del participante: contenedor + secciones (cabecera, stats, efectos, armas; luego vida) | ✅ |
