@@ -11,7 +11,13 @@ struct WeaponSpec {
 	float projectile_speed = 14.0f; // casillas por segundo
 	float range = 10.0f; // casillas que recorre la bala antes de desaparecer
 	float projectile_radius = 0.15f; // radio de la bala (casillas)
+	// El alcance sale de la visión de quien dispara (no se dispara "a la nada", más allá de lo que se ve).
+	bool range_from_vision = false;
+	float range_vision_factor = 1.0f; // alcance = visión × factor
 };
+
+// Alcance real del arma para quien tiene visión p_vision (casillas).
+float effective_range(const WeaponSpec &p_spec, float p_vision);
 
 // Estado de un arma en uso (patrón State, como enum: pocos estados con temporizador).
 //

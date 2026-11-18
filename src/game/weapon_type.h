@@ -29,6 +29,10 @@ public:
 	float get_range() const { return spec_.range; }
 	void set_projectile_radius(float p_value) { spec_.projectile_radius = p_value; }
 	float get_projectile_radius() const { return spec_.projectile_radius; }
+	void set_range_from_vision(bool p_value) { spec_.range_from_vision = p_value; }
+	bool get_range_from_vision() const { return spec_.range_from_vision; }
+	void set_range_vision_factor(float p_value) { spec_.range_vision_factor = p_value; }
+	float get_range_vision_factor() const { return spec_.range_vision_factor; }
 	void set_projectile_color(const Color &p_value) { projectile_color_ = p_value; }
 	Color get_projectile_color() const { return projectile_color_; }
 

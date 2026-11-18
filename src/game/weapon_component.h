@@ -28,6 +28,9 @@ public:
 	// Intenta disparar desde p_participant hacia p_direction. Devuelve true si salió una bala.
 	bool try_fire(Participant *p_participant, const Vector2 &p_direction);
 
+	// Alcance real (casillas) para este participante: puede depender de su visión (WeaponType.range_from_vision).
+	float get_effective_range(const Participant *p_participant) const;
+
 	void set_weapon(const Ref<WeaponType> &p_value);
 	Ref<WeaponType> get_weapon() const { return weapon_; }
 	bool is_ready() const { return state_.is_ready(); }

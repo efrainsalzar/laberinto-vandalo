@@ -32,6 +32,14 @@ void WeaponComponent::set_weapon(const Ref<WeaponType> &p_value) {
 	emit_signal("weapon_changed", weapon_);
 }
 
+float WeaponComponent::get_effective_range(const Participant *p_participant) const {
+	if (weapon_.is_null()) {
+		return 0.0f;
+	}
+	const StatsComponent *stats = p_participant != nullptr ? p_participant->get_stats() : nullptr;
+	return lv::core::effective_range(weapon_->spec(), stats != nullptr ? stats->get_vision() : 5.0f);
+}
+
 bool WeaponComponent::try_fire(Participant *p_participant, const Vector2 &p_direction) {
 	if (weapon_.is_null() || p_participant == nullptr || p_direction.is_zero_approx() || !state_.is_ready()) {
 		return false;
@@ -44,7 +52,7 @@ bool WeaponComponent::try_fire(Participant *p_participant, const Vector2 &p_dire
 		return false;
 	}
 	const Vector2 direction = p_direction.normalized();
-	projectiles->spawn(p_participant, p_participant->get_global_position(), direction, weapon_);
+	projectiles->spawn(p_participant, p_participant->get_global_position(), direction, weapon_, get_effective_range(p_participant));
 	emit_signal("fired", direction);
 	return true;
 }

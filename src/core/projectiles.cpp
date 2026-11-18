@@ -107,6 +107,7 @@ void ProjectileWorld::step(float p_delta, const MazeGrid &p_grid, const std::vec
 			p.x += dx;
 			p.y += dy;
 			p.distance_left -= move;
+			p.traveled += move;
 			if (p.distance_left > 1e-4f) {
 				i++;
 				continue;

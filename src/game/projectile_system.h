@@ -34,7 +34,8 @@ public:
 	void _draw() override;
 
 	void setup(Maze *p_maze);
-	void spawn(Participant *p_owner, const Vector2 &p_from, const Vector2 &p_direction, const Ref<WeaponType> &p_weapon);
+	// p_range: alcance real en casillas (WeaponComponent lo calcula; puede depender de la visión).
+	void spawn(Participant *p_owner, const Vector2 &p_from, const Vector2 &p_direction, const Ref<WeaponType> &p_weapon, float p_range);
 	void clear();
 	int get_projectile_count() const { return world_.size(); }
 
@@ -53,6 +54,8 @@ private:
 	std::vector<Participant *> bodies_; // bodies_[i] es el participante de id i (o nullptr)
 
 	int weapon_tag(const Ref<WeaponType> &p_weapon);
+	static constexpr float TRAIL_SECONDS = 0.03f; // largo de la estela = lo que la bala recorre en este tiempo
+
 	Participant *body(int p_id) const;
 	Vector2 grid_to_local(float p_x, float p_y) const;
 };

@@ -104,7 +104,7 @@ void BotController::aim(const Participant &p_participant, float p_delta, lv::cor
 		const lv::core::GridPoint at = maze->world_to_grid_point(rival->get_global_position());
 		gun_targets_.push_back({ rival->get_participant_id(), at.x, at.y });
 	}
-	gunner_.set_max_range(weapon->get_weapon()->get_range());
+	gunner_.set_max_range(weapon->get_effective_range(&p_participant));
 	const lv::core::GridPoint self = maze->world_to_grid_point(p_participant.get_global_position());
 	const lv::core::GunDecision decision = gunner_.update(p_delta, self.x, self.y, gun_targets_, *rng_);
 	r_command.fire = decision.fire;

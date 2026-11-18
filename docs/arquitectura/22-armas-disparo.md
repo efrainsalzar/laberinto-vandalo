@@ -58,6 +58,17 @@ los protegidos no son blanco.
 más cercano dentro del alcance del arma, esperan su `reaction_time` (el mismo del perfil) y disparan con un desvío al
 azar de ±`aim_error_deg` (`BotProfile`: Fácil 22°, Normal 14°, Difícil 8°, Experto 4°). La cadencia la pone el arma.
 
+**Alcance = visión (v0.0.24).** Con `WeaponType.range_from_vision` el alcance real es la visión de quien dispara
+× `range_vision_factor` (`lv::core::effective_range`): no se dispara "a la nada" y un power-up de visión también
+alarga el alcance. Los bots usan el mismo alcance para decidir si disparan.
+
+**Balas rápidas (v0.0.24).** La pistola va a 50 casillas/s (antes 16, "globitos"). Se dibuja como bala trazadora:
+estela de lo recorrido en los últimos 0,03 s, que nunca sale del cuerpo del tirador (`Projectile.traveled`).
+
+**Muerte (v0.0.24, solo vista).** Al ser eliminado, el participante se infla y se desvanece (0,15 s) y deja un
+`death_effect.gd` en el mundo: anillo + 10 fragmentos de su color (0,45 s) y una "x" tenue en el piso (4 s). Al
+reaparecer crece desde chico con rebote y parpadea durante la protección.
+
 **Humano.** Apunta con el mouse (o el stick derecho, acciones `aim_*`) y dispara con `fire` (clic izquierdo o gatillo
 derecho); manteniendo apretado dispara a la cadencia del arma. El cursor de la partida es una cruz.
 
@@ -90,7 +101,8 @@ derecho); manteniendo apretado dispara a la cadencia del arma. El cursor de la p
 | `src/game/participant*.{h,cpp}` | Ejecuta `fire` con su arma; `HumanController` lee mouse / stick |
 | `src/game/bot_controller.*`, `bot_coordinator.*` | Gatillo del bot; `collect_visible_rivals`; `BotProfile.aim_error_deg` |
 | `src/game/trophy_controller.*` | `eliminate_participant`: elimina y, si era el portador, suelta el trofeo |
-| `project/data/weapons/pistol.tres` | Pistola: 0,35 s entre disparos, munición infinita, 16 casillas/s, alcance 12 |
+| `project/data/weapons/pistol.tres` | Pistola: 0,35 s entre disparos, munición infinita, 50 casillas/s, alcance = visión |
+| `project/scripts/participant/death_effect.gd`, `participant_view.gd` | Animación de eliminación y reaparición |
 | `project/scenes/participant/participant.tscn` | Nodo `Weapon` con la pistola |
 | `project/scenes/game/match.tscn`, `scripts/game/match.gd` | Nodo `Projectiles`; impacto = eliminar; avisos "TE DISPARÓ" / "LE DISTE A" |
 | `project/project.godot` | Acciones `fire`, `aim_left/right/up/down` |

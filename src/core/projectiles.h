@@ -16,6 +16,7 @@ struct Projectile {
 	float dir_y = 0.0f;
 	float speed = 0.0f; // casillas/s
 	float distance_left = 0.0f; // casillas que le quedan antes de desaparecer
+	float traveled = 0.0f; // casillas recorridas (para dibujar la estela sin que salga del tirador)
 	float radius = 0.1f;
 	int owner = -1; // quien la disparó (nunca le pega a él)
 	int tag = 0; // dato libre para quien la usa (p. ej. qué arma, para dibujarla)

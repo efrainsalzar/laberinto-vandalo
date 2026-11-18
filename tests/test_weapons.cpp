@@ -256,3 +256,25 @@ TEST_SUITE("Puntería de los bots") {
 		CHECK(some_error);
 	}
 }
+
+TEST_SUITE("Alcance") {
+	TEST_CASE("Con alcance por visión, el arma llega hasta donde se ve") {
+		WeaponSpec spec = pistol();
+		CHECK(lv::core::effective_range(spec, 5.0f) == doctest::Approx(6.0f)); // alcance propio
+		spec.range_from_vision = true;
+		CHECK(lv::core::effective_range(spec, 5.0f) == doctest::Approx(5.0f));
+		CHECK(lv::core::effective_range(spec, 7.5f) == doctest::Approx(7.5f)); // con power-up de visión
+		spec.range_vision_factor = 0.5f;
+		CHECK(lv::core::effective_range(spec, 5.0f) == doctest::Approx(2.5f));
+	}
+
+	TEST_CASE("La bala lleva la cuenta de lo recorrido") {
+		const MazeGrid grid = open_room();
+		ProjectileWorld world;
+		const auto c = grid.center();
+		REQUIRE(world.spawn(c.x + 0.5f, c.y + 0.5f, 0.0f, 1.0f, pistol(), 0));
+		std::vector<ProjectileEvent> events;
+		world.step(0.2f, grid, NO_TARGETS, events);
+		CHECK(world.projectiles()[0].traveled == doctest::Approx(2.0f));
+	}
+}

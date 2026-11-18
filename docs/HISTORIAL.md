@@ -3,6 +3,12 @@
 > Lo ya terminado, de lo más nuevo a lo más viejo. El estado actual y lo que sigue están en
 > [ROADMAP.md](ROADMAP.md). Al cerrar una pieza se agrega su bloque **arriba**.
 
+### v0.0.24 — Disparo más real y animación de muerte ✅
+- [x] Alcance del arma = visión de quien dispara (dato `range_from_vision`); con power-up de visión se dispara más lejos.
+- [x] Balas a 50 casillas/s (antes 16) con estela de bala trazadora.
+- [x] Animación de eliminación (estallido + marca en el piso) y de reaparición.
+- [x] 2 tests (130 en total).
+
 ### v0.0.23 — Disparo + pistola inicial ✅
 - [x] Todos los participantes tienen pistola (`WeaponType` .tres: 0,35 s entre disparos, munición infinita, alcance 12 casillas).
 - [x] Humano: apunta con el mouse (o stick derecho) y dispara con clic izquierdo (o gatillo); mantener = ráfaga.

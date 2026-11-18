@@ -8,6 +8,8 @@
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/typed_array.hpp>
 
+#include <algorithm>
+
 namespace {
 const char *GROUP_SELF = "projectile_system";
 }
@@ -62,12 +64,14 @@ int ProjectileSystem::weapon_tag(const Ref<WeaponType> &p_weapon) {
 	return static_cast<int>(weapons_.size()) - 1;
 }
 
-void ProjectileSystem::spawn(Participant *p_owner, const Vector2 &p_from, const Vector2 &p_direction, const Ref<WeaponType> &p_weapon) {
+void ProjectileSystem::spawn(Participant *p_owner, const Vector2 &p_from, const Vector2 &p_direction, const Ref<WeaponType> &p_weapon, float p_range) {
 	if (maze_ == nullptr || p_owner == nullptr || p_weapon.is_null()) {
 		return;
 	}
 	const lv::core::GridPoint from = maze_->world_to_grid_point(p_from);
-	world_.spawn(from.x, from.y, p_direction.x, p_direction.y, p_weapon->spec(), p_owner->get_participant_id(), weapon_tag(p_weapon));
+	lv::core::WeaponSpec spec = p_weapon->spec();
+	spec.range = p_range;
+	world_.spawn(from.x, from.y, p_direction.x, p_direction.y, spec, p_owner->get_participant_id(), weapon_tag(p_weapon));
 }
 
 Participant *ProjectileSystem::body(int p_id) const {
@@ -133,10 +137,13 @@ void ProjectileSystem::_draw() {
 	const float tile = maze_->get_tile_px();
 	for (const lv::core::Projectile &p : world_.projectiles()) {
 		const Color color = (p.tag >= 0 && p.tag < static_cast<int>(weapons_.size())) ? weapons_[p.tag]->get_projectile_color() : Color(1, 1, 1);
-		const float radius = p.radius * tile > 1.5f ? p.radius * tile : 1.5f;
+		const float radius = p.radius * tile > 1.0f ? p.radius * tile : 1.0f;
 		const Vector2 at = grid_to_local(p.x, p.y);
-		// Estela corta hacia atrás para que se lea la dirección.
-		draw_line(at - Vector2(p.dir_x, p.dir_y) * radius * 3.0f, at, Color(color, 0.5f), radius);
+		// Estela tipo bala trazadora: lo que recorrió en los últimos TRAIL_SECONDS (nunca sale del tirador).
+		const float trail_tiles = std::min(p.traveled, p.speed * TRAIL_SECONDS);
+		const Vector2 tail = at - Vector2(p.dir_x, p.dir_y) * trail_tiles * tile;
+		draw_line(tail, at, Color(color, 0.35f), radius * 2.0f);
+		draw_line(tail.lerp(at, 0.5f), at, Color(color, 0.8f), radius);
 		draw_circle(at, radius, color);
 	}
 }

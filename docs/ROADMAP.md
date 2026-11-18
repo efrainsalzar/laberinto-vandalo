@@ -5,8 +5,8 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 
 ## Estado actual
 
-**v0.0.23** · 128 tests · Etapa 1 completa y Etapa 3 (bots) adelantada. Últimas piezas: lenguaje visual de objetos
-(v0.0.22) y disparo + pistola inicial (v0.0.23). Todo lo terminado, versión por versión: [HISTORIAL.md](HISTORIAL.md).
+**v0.0.24** · 130 tests · Etapa 1 completa y Etapa 3 (bots) adelantada. Últimas piezas: lenguaje visual de objetos
+(v0.0.22) disparo + pistola inicial (v0.0.23) y disparo más real + animación de muerte (v0.0.24). Todo lo terminado, versión por versión: [HISTORIAL.md](HISTORIAL.md).
 
 ## Plan acordado (etapas, una pieza a la vez)
 

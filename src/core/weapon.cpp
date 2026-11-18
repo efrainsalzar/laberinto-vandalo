@@ -2,6 +2,14 @@
 
 namespace lv::core {
 
+float effective_range(const WeaponSpec &p_spec, float p_vision) {
+	if (!p_spec.range_from_vision) {
+		return p_spec.range;
+	}
+	const float range = p_vision * p_spec.range_vision_factor;
+	return range > 0.5f ? range : 0.5f;
+}
+
 void WeaponState::setup(const WeaponSpec &p_spec) {
 	spec_ = p_spec;
 	state_ = State::Ready;
