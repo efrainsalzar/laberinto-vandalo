@@ -19,6 +19,8 @@ public:
 
 	// Cantidad de objetos a crear ahora. La base no crea nada.
 	virtual int compute_spawns(int p_active_count, double p_delta) { return 0; }
+	// El spawner le dice el cupo de su categoría (escala con el mapa) y en cuánto reponerlo entero.
+	virtual void configure(int p_target, float p_refill_time) {}
 
 protected:
 	static void _bind_methods() {}
@@ -30,6 +32,12 @@ class KeepDensityPolicy : public PickupSpawnPolicy {
 
 public:
 	int compute_spawns(int p_active_count, double p_delta) override { return rule_.update(p_active_count, p_delta); }
+	void configure(int p_target, float p_refill_time) override {
+		rule_.target_count = p_target;
+		if (p_refill_time > 0.0f) {
+			rule_.respawn_delay = lv::core::refill_delay(p_target, p_refill_time);
+		}
+	}
 
 	void set_target_count(int p_value) { rule_.target_count = p_value; }
 	int get_target_count() const { return rule_.target_count; }

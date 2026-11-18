@@ -5,8 +5,10 @@
 #include "core/maze_grid.h"
 #include "core/random.h"
 
+#include <cstdint>
 #include <functional>
 #include <optional>
+#include <queue>
 #include <vector>
 
 namespace lv::core {
@@ -54,6 +56,46 @@ public:
 
 private:
 	double timer_ = 0.0;
+};
+
+// --- Categorías de objetos (puntos, power-ups, luego armas...) -----------------------------------
+// Cada categoría tiene su propio cupo, que escala con el tamaño del mapa: `p_budget` es el presupuesto
+// de objetos del mapa (MazeProfile.pickup_count) y `p_share` la parte que le toca a la categoría.
+// El resultado queda entre `p_min_count` y `p_max_count` (p_max_count <= 0 = sin tope).
+int category_target(int p_budget, float p_share, int p_min_count, int p_max_count);
+
+// Segundos entre apariciones para reponer el cupo completo en `p_refill_time` segundos.
+// Así la reposición escala con el mapa: un mapa con el doble de cupo repone el doble de rápido.
+float refill_delay(int p_target, float p_refill_time);
+
+// Cola de caducidad: objetos que desaparecen del piso si nadie los recoge.
+// Cada objeto avisa `warn_time` segundos antes (la vista parpadea) y luego caduca.
+// Trabajo por frame: O(eventos que vencen), no O(objetos) — sirve con cientos de objetos.
+class ExpiryQueue {
+public:
+	enum class Stage { Warn,
+		Expire };
+	struct Event {
+		uint64_t id = 0;
+		Stage stage = Stage::Expire;
+	};
+
+	// Programa un objeto: caduca en `p_now + p_lifetime`, avisa `p_warn_time` antes.
+	// p_lifetime <= 0 = no caduca (no se programa).
+	void schedule(uint64_t p_id, double p_now, double p_lifetime, double p_warn_time);
+	// Eventos vencidos hasta `p_now`, en orden de tiempo. Quien llama ignora los ids que ya no existen.
+	std::vector<Event> poll(double p_now);
+	void clear() { queue_ = {}; }
+	size_t pending() const { return queue_.size(); }
+
+private:
+	struct Entry {
+		double time;
+		uint64_t id;
+		Stage stage;
+		bool operator>(const Entry &p_other) const { return time > p_other.time; }
+	};
+	std::priority_queue<Entry, std::vector<Entry>, std::greater<Entry>> queue_;
 };
 
 } // namespace lv::core

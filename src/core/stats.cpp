@@ -14,6 +14,32 @@ size_t idx(StatType p_stat) {
 Stats::Stats() {
 	min_.fill(0.0f);
 	max_.fill(std::numeric_limits<float>::max());
+	bonus_cap_.fill(-1.0f);
+}
+
+void Stats::set_bonus_cap(StatType p_stat, float p_cap) {
+	bonus_cap_[idx(p_stat)] = p_cap;
+}
+
+namespace {
+bool is_permanent_bonus(const StatModifier &p_m) {
+	return p_m.op == ModifierOp::Add && p_m.duration < 0.0 && p_m.value > 0.0f;
+}
+} // namespace
+
+bool Stats::is_bonus_maxed(StatType p_stat) const {
+	const float cap = bonus_cap_[idx(p_stat)];
+	return cap >= 0.0f && permanent_bonus(p_stat) >= cap - 1e-4f;
+}
+
+float Stats::permanent_bonus(StatType p_stat) const {
+	float total = 0.0f;
+	for (const ActiveModifier &active : modifiers_) {
+		if (active.modifier.stat == p_stat && is_permanent_bonus(active.modifier)) {
+			total += active.modifier.value;
+		}
+	}
+	return total;
 }
 
 void Stats::set_base(StatType p_stat, float p_value) {
@@ -46,8 +72,17 @@ float Stats::get(StatType p_stat) const {
 }
 
 int Stats::add_modifier(const StatModifier &p_modifier) {
+	StatModifier modifier = p_modifier;
+	const float cap = bonus_cap_[idx(modifier.stat)];
+	if (cap >= 0.0f && is_permanent_bonus(modifier)) {
+		const float room = cap - permanent_bonus(modifier.stat);
+		if (room <= 1e-4f) {
+			return 0; // ya está al máximo
+		}
+		modifier.value = std::min(modifier.value, room);
+	}
 	const int id = next_id_++;
-	modifiers_.push_back({ id, p_modifier, p_modifier.duration });
+	modifiers_.push_back({ id, modifier, modifier.duration });
 	return id;
 }
 

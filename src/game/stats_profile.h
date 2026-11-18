@@ -15,6 +15,11 @@ public:
 	float get_speed() const { return speed_; }
 	void set_vision(float p_value) { vision_ = p_value; }
 	float get_vision() const { return vision_; }
+	// Máximo que pueden sumar en total las mejoras permanentes (puntos recolectables). < 0 = sin tope.
+	void set_speed_bonus_max(float p_value) { speed_bonus_max_ = p_value; }
+	float get_speed_bonus_max() const { return speed_bonus_max_; }
+	void set_vision_bonus_max(float p_value) { vision_bonus_max_ = p_value; }
+	float get_vision_bonus_max() const { return vision_bonus_max_; }
 
 protected:
 	static void _bind_methods();
@@ -22,4 +27,6 @@ protected:
 private:
 	float speed_ = 160.0f; // px/s
 	float vision_ = 5.0f; // casillas
+	float speed_bonus_max_ = 48.0f; // +40 % sobre 120
+	float vision_bonus_max_ = 2.5f; // +50 % sobre 5
 };

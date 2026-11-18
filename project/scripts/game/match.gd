@@ -135,8 +135,7 @@ func _on_maze_generated(seed_value: int) -> void:
 	# Guardar la semilla real: "Reiniciar" y "Jugar otra vez" repiten este mismo mapa.
 	App.match_config.seed = seed_value
 	var pickup_count: int = _maze.profile.get_pickup_count() if _maze.profile else 30
-	_pickups.count = pickup_count
-	(_spawner.policy as KeepDensityPolicy).target_count = pickup_count
+	_spawner.budget = pickup_count  # cada categoría (puntos, power-ups) toma su parte
 	var m: Dictionary = _maze.get_metrics()
 	var size: Vector2i = _maze.get_grid_size()
 	_hud.set_map_info("MAPA %s · %s · %d×%d · semilla %d" % [

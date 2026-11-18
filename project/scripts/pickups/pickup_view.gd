@@ -13,6 +13,14 @@ func _ready() -> void:
 	# Aparición con rebote (también al reaparecer).
 	scale = Vector2.ZERO
 	create_tween().tween_property(self, "scale", Vector2.ONE, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_pickup.expiring.connect(_on_expiring)
+
+
+## Va a desaparecer pronto: parpadea (cada vez más rápido) hasta que el spawner lo retire.
+func _on_expiring() -> void:
+	var tween := create_tween().set_loops()
+	tween.tween_property(self, "modulate:a", 0.25, 0.25)
+	tween.tween_property(self, "modulate:a", 1.0, 0.25)
 
 
 

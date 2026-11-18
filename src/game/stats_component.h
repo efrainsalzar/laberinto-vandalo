@@ -34,6 +34,8 @@ public:
 	float get_stat(Stat p_stat) const;
 	float get_speed() const { return get_stat(STAT_SPEED); }
 	float get_vision() const { return get_stat(STAT_VISION); }
+	// ¿Ya llegó al tope de mejoras permanentes (StatsProfile.*_bonus_max)?
+	bool is_bonus_maxed(Stat p_stat) const { return stats_.is_bonus_maxed(static_cast<lv::core::StatType>(p_stat)); }
 
 	// duration < 0 = permanente. Devuelve el id del modificador.
 	int add_modifier(Stat p_stat, Op p_op, float p_value, double p_duration, const String &p_source);

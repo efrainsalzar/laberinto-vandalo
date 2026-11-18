@@ -20,6 +20,7 @@ void StatsComponent::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_stat", "stat"), &StatsComponent::get_stat);
 	ClassDB::bind_method(D_METHOD("get_speed"), &StatsComponent::get_speed);
 	ClassDB::bind_method(D_METHOD("get_vision"), &StatsComponent::get_vision);
+	ClassDB::bind_method(D_METHOD("is_bonus_maxed", "stat"), &StatsComponent::is_bonus_maxed);
 	ClassDB::bind_method(D_METHOD("add_modifier", "stat", "op", "value", "duration", "source"), &StatsComponent::add_modifier);
 	ClassDB::bind_method(D_METHOD("remove_modifier", "id"), &StatsComponent::remove_modifier);
 	ClassDB::bind_method(D_METHOD("remove_modifiers_from", "source"), &StatsComponent::remove_modifiers_from);
@@ -69,6 +70,9 @@ int StatsComponent::add_modifier(Stat p_stat, Op p_op, float p_value, double p_d
 	modifier.duration = p_duration < 0.0 ? lv::core::StatModifier::PERMANENT : p_duration;
 	modifier.source = p_source.utf8().get_data();
 	const int id = stats_.add_modifier(modifier);
+	if (id == 0) {
+		return 0; // tope de mejora alcanzado: no cambió nada
+	}
 	notify(modifier.stat);
 	emit_signal("modifiers_changed");
 	return id;
@@ -128,6 +132,8 @@ void StatsComponent::apply_profile() {
 	}
 	stats_.set_base(lv::core::StatType::Speed, profile->get_speed());
 	stats_.set_base(lv::core::StatType::Vision, profile->get_vision());
+	stats_.set_bonus_cap(lv::core::StatType::Speed, profile->get_speed_bonus_max());
+	stats_.set_bonus_cap(lv::core::StatType::Vision, profile->get_vision_bonus_max());
 	notify(lv::core::StatType::Speed);
 	notify(lv::core::StatType::Vision);
 }

@@ -5,8 +5,8 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 
 ## Estado actual
 
-**v0.0.20** · 108 tests · Etapa 1 completa y Etapa 3 (bots) adelantada. Última pieza: atrapar al portador
-(eliminación y reaparición en la base). Todo lo terminado, versión por versión: [HISTORIAL.md](HISTORIAL.md).
+**v0.0.21** · 114 tests · Etapa 1 completa y Etapa 3 (bots) adelantada. Última pieza: economía de objetos
+(categorías, caducidad en el piso, valores y topes más bajos). Todo lo terminado, versión por versión: [HISTORIAL.md](HISTORIAL.md).
 
 ## Plan acordado (etapas, una pieza a la vez)
 
@@ -21,9 +21,15 @@ Ideas del mapa en detalle: [`DISENO_MAPA.md`](DISENO_MAPA.md).
 
 ~~Mapas que cambian en tiempo real~~ ✅ (v0.0.12, en prueba en vivo).
 
-**Etapa 1 completa. Etapa 3 (bots) adelantada ✅.** Siguiente paso (orden propuesto por el dueño del proyecto):
-acciones del participante → combate y robo del trofeo (Etapa 4) → objetos que cambian el mapa, paredes rompibles y
-portales (Etapa 2.2–2.4) → formas de mapa (Etapa 2.1). Cada una entra como **acción del bot** + **dato .tres**.
+**Etapa 1 completa. Etapa 3 (bots) adelantada ✅.** Orden acordado (dueño del proyecto, 2026-11-18):
+1. ~~Economía de objetos~~ ✅ (v0.0.21)
+2. **Lenguaje visual de objetos** ← siguiente: forma por categoría (círculo = stat, rombo = power-up, cuadrado = arma,
+   hexágono = objeto de mapa, anillo = portal) en lugar de puntos. Arte final sigue en la Etapa 7.
+3. Disparo + pistola inicial (todos los participantes, humanos y bots).
+4. Armas temporales del mapa (categoría "armas"; ficha con tiempo restante en el HUD; bots que las buscan).
+5. Combate (Etapa 4) → objetos que cambian el mapa, paredes rompibles y portales (Etapa 2.2–2.4) → formas de mapa (Etapa 2.1).
+
+Cada mecánica entra como **acción del bot** + **dato .tres**.
 
 ### Etapa 2 — El mundo
 1. `MapConfig` + formas de contorno (cuadrado, círculo, hexágono...). (Algoritmos, dificultad y tamaños ✅ en v0.0.10.)
@@ -51,6 +57,11 @@ Identidad visual (paleta, fuente, Theme, glow, Forward+), avatares, arte, sonido
 ### Después
 Demo en itch.io · aliados · torneo con rondas · multijugador local · en línea · Steam (VISION §17).
 ## Ideas anotadas (no implementar todavía)
+
+- **Objetos de mapa con efectos especiales:** hacer temblar todo el mapa, romper paredes con formas geométricas
+  (cruz, anillo, línea). Encajan en la Etapa 2.4: cada "forma de romper" es un dato que encola cambios en `Maze.queue_passage_change`.
+- **Actores que buscan armas o te las roban** (vándalos, Etapa 6): una `BotAction` por conducta.
+- **Historia dinámica:** el Director de IA tendrá una política propia por categoría de objetos (más armas en el Golpe, etc.).
 
 - **Política del Director para objetos:** el Director de IA (fase 5) tendrá su propia `PickupSpawnPolicy` (p. ej. más objetos cerca de quien va perdiendo).
 - **Más tipos de objeto** (pociones, escudos, bombas): solo nuevos .tres + los efectos que falten en la fase de combate.

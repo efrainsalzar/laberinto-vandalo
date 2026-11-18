@@ -3,3 +3,5 @@
 [resource]
 speed = 120.0
 vision = 5.0
+speed_bonus_max = 48.0
+vision_bonus_max = 2.5

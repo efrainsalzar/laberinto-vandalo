@@ -32,7 +32,7 @@ Escenario de referencia para medir: **mapa Gigante, Difícil, laberinto vivo Ca�
 | `maze.shifter` | Lógica del laberinto vivo por frame (avisos, ocupación) | `game/maze_shifter.cpp` |
 | `maze.apply` | Aplicar órdenes de la cola de cambios (incluye `maze.rebuild`) | `game/maze.cpp` |
 | `maze.rebuild` | Reconstrucción de colisión y sombras de Godot tras cambiar casillas | `game/maze.cpp` |
-| `pickups.spawner` | Reaparición de objetos por frame | `game/pickup_spawner.cpp` |
+| `pickups.spawner` | Reaparición y caducidad de objetos por frame (por categoría) | `game/pickup_spawner.cpp` |
 | `pickups.populate` | Colocar los objetos iniciales | `game/pickup_factory.cpp` |
 | `pickups.remove` | Retirar objetos tapados por una pared | `game/pickup_factory.cpp` |
 | `trophy.update` | Reglas del trofeo por frame de física | `game/trophy_controller.cpp` |

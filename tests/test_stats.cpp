@@ -89,3 +89,36 @@ TEST_SUITE("Stats") {
 		CHECK(s.get(StatType::Speed) == doctest::Approx(20.0f));
 	}
 }
+
+TEST_SUITE("Stats: tope de mejoras permanentes") {
+	TEST_CASE("Los puntos suman hasta el tope y luego no dan más") {
+		Stats s;
+		s.set_base(StatType::Speed, 120.0f);
+		s.set_bonus_cap(StatType::Speed, 10.0f);
+		StatModifier m;
+		m.stat = StatType::Speed;
+		m.value = 4.0f;
+		CHECK(s.add_modifier(m) != 0);
+		CHECK(s.add_modifier(m) != 0);
+		CHECK(s.add_modifier(m) != 0); // se recorta a +2
+		CHECK(s.get(StatType::Speed) == doctest::Approx(130.0f));
+		CHECK(s.add_modifier(m) == 0); // lleno
+		CHECK(s.is_bonus_maxed(StatType::Speed));
+		CHECK(s.permanent_bonus(StatType::Speed) == doctest::Approx(10.0f));
+	}
+
+	TEST_CASE("El tope no limita efectos temporales ni multiplicadores") {
+		Stats s;
+		s.set_base(StatType::Speed, 100.0f);
+		s.set_bonus_cap(StatType::Speed, 0.0f);
+		StatModifier temp;
+		temp.value = 50.0f;
+		temp.duration = 5.0;
+		CHECK(s.add_modifier(temp) != 0);
+		StatModifier mul;
+		mul.op = ModifierOp::Multiply;
+		mul.value = 2.0f;
+		CHECK(s.add_modifier(mul) != 0);
+		CHECK(s.get(StatType::Speed) == doctest::Approx(300.0f));
+	}
+}

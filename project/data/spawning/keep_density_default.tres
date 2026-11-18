@@ -1,6 +1,0 @@
-[gd_resource type="KeepDensityPolicy" format=3]
-
-[resource]
-resource_local_to_scene = true
-target_count = 30
-respawn_delay = 3.0

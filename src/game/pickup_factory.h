@@ -31,6 +31,13 @@ public:
 	// Borra los objetos actuales y coloca nuevos en el laberinto. Devuelve cuántos creó.
 	int populate(Maze *p_maze, const TypedArray<Vector2i> &p_bases, int p_seed);
 	void clear_pickups();
+	// Borra todo y prepara el índice para este laberinto (antes de place()).
+	void begin(Maze *p_maze);
+	// Coloca `p_count` objetos de esos tipos (según su `weight`) SIN borrar los que ya hay.
+	// Salta las casillas ocupadas. Devuelve los creados.
+	std::vector<Pickup *> place(const TypedArray<Vector2i> &p_bases, const TypedArray<PickupType> &p_types, int p_count, int p_seed);
+	// Retira un objeto sin efecto (p. ej. caducó).
+	void remove_pickup(Pickup *p_pickup);
 	// Retira (sin efecto) los objetos que están en esas casillas: p. ej. una pared se cerró encima.
 	int remove_pickups_at(Maze *p_maze, const TypedArray<Vector2i> &p_tiles);
 	// Objetos en el nivel que todavía no se recogieron.

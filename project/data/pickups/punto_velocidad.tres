@@ -3,7 +3,7 @@
 [sub_resource type="PickupEffect" id="e1"]
 stat = 0
 op = 0
-value = 8.0
+value = 3.0
 duration = -1.0
 
 [resource]

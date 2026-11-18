@@ -144,3 +144,53 @@ TEST_SUITE("KeepDensityRule") {
 		CHECK(rule.update(2, 1.0) == 0); // empieza a contar de nuevo
 	}
 }
+
+TEST_SUITE("Categorías de objetos") {
+	TEST_CASE("El cupo escala con el mapa y respeta mínimo y tope") {
+		CHECK(lv::core::category_target(31, 0.35f, 4, 0) == 11);
+		CHECK(lv::core::category_target(1955, 0.35f, 4, 0) == 684); // mapa gigante
+		CHECK(lv::core::category_target(5, 0.35f, 4, 0) == 4); // mapa diminuto: el mínimo manda
+		CHECK(lv::core::category_target(1955, 0.06f, 1, 20) == 20); // tope
+		CHECK(lv::core::category_target(0, 0.5f, 0, 0) == 0);
+	}
+
+	TEST_CASE("La reposición escala con el cupo") {
+		CHECK(lv::core::refill_delay(10, 40.0f) == doctest::Approx(4.0f));
+		CHECK(lv::core::refill_delay(20, 40.0f) == doctest::Approx(2.0f)); // el doble de cupo, el doble de rápido
+		CHECK(lv::core::refill_delay(0, 40.0f) == 0.0f);
+	}
+}
+
+TEST_SUITE("ExpiryQueue") {
+	using lv::core::ExpiryQueue;
+
+	TEST_CASE("Avisa antes y caduca después, en orden") {
+		ExpiryQueue q;
+		q.schedule(1, 0.0, 30.0, 5.0);
+		q.schedule(2, 0.0, 10.0, 5.0);
+		CHECK(q.poll(4.9).empty());
+		auto e = q.poll(5.0);
+		REQUIRE(e.size() == 1);
+		CHECK(e[0].id == 2);
+		CHECK(e[0].stage == ExpiryQueue::Stage::Warn);
+		e = q.poll(10.0);
+		REQUIRE(e.size() == 1);
+		CHECK(e[0].stage == ExpiryQueue::Stage::Expire);
+		e = q.poll(100.0);
+		REQUIRE(e.size() == 2); // aviso y caducidad del objeto 1
+		CHECK(e[0].stage == ExpiryQueue::Stage::Warn);
+		CHECK(e[1].stage == ExpiryQueue::Stage::Expire);
+		CHECK(q.pending() == 0);
+	}
+
+	TEST_CASE("Sin vida limitada no se programa; aviso más largo que la vida avisa ya") {
+		ExpiryQueue q;
+		q.schedule(1, 0.0, 0.0, 5.0);
+		q.schedule(2, 0.0, -1.0, 5.0);
+		CHECK(q.pending() == 0);
+		q.schedule(3, 10.0, 2.0, 5.0);
+		auto e = q.poll(10.0);
+		REQUIRE(e.size() == 1);
+		CHECK(e[0].stage == ExpiryQueue::Stage::Warn);
+	}
+}

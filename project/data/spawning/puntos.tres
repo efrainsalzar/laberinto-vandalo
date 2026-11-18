@@ -1,0 +1,17 @@
+[gd_resource type="PickupCategory" load_steps=4 format=3]
+
+[ext_resource type="PickupType" path="res://data/pickups/punto_velocidad.tres" id="1_pv"]
+[ext_resource type="PickupType" path="res://data/pickups/punto_vision.tres" id="2_pvi"]
+
+[sub_resource type="KeepDensityPolicy" id="pol"]
+
+[resource]
+id = "puntos"
+types = Array[PickupType]([ExtResource("1_pv"), ExtResource("2_pvi")])
+policy = SubResource("pol")
+share = 0.35
+min_count = 4
+refill_time = 40.0
+initial_fill = 1.0
+lifetime = 30.0
+warn_time = 5.0

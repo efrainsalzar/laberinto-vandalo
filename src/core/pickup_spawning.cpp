@@ -1,5 +1,8 @@
 #include "core/pickup_spawning.h"
 
+#include <algorithm>
+#include <cmath>
+
 namespace lv::core {
 
 std::optional<Cell> pick_spawn_cell(const MazeGrid &p_grid, const std::vector<Cell> &p_occupied,
@@ -71,6 +74,42 @@ int KeepDensityRule::update(int p_active_count, double p_delta) {
 		spawns++;
 	}
 	return spawns;
+}
+
+int category_target(int p_budget, float p_share, int p_min_count, int p_max_count) {
+	int target = static_cast<int>(std::lround(std::max(0, p_budget) * std::max(0.0f, p_share)));
+	target = std::max(target, std::max(0, p_min_count));
+	if (p_max_count > 0) {
+		target = std::min(target, p_max_count);
+	}
+	return target;
+}
+
+float refill_delay(int p_target, float p_refill_time) {
+	if (p_target <= 0 || p_refill_time <= 0.0f) {
+		return 0.0f;
+	}
+	return p_refill_time / static_cast<float>(p_target);
+}
+
+void ExpiryQueue::schedule(uint64_t p_id, double p_now, double p_lifetime, double p_warn_time) {
+	if (p_lifetime <= 0.0) {
+		return;
+	}
+	const double expire_at = p_now + p_lifetime;
+	if (p_warn_time > 0.0) {
+		queue_.push({ std::max(p_now, expire_at - p_warn_time), p_id, Stage::Warn });
+	}
+	queue_.push({ expire_at, p_id, Stage::Expire });
+}
+
+std::vector<ExpiryQueue::Event> ExpiryQueue::poll(double p_now) {
+	std::vector<Event> events;
+	while (!queue_.empty() && queue_.top().time <= p_now) {
+		events.push_back({ queue_.top().id, queue_.top().stage });
+		queue_.pop();
+	}
+	return events;
 }
 
 } // namespace lv::core

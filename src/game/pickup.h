@@ -27,6 +27,8 @@ public:
 	// sin física (tests, IA, red). Devuelve false si ya estaba consumido.
 	bool collect(Participant *p_participant);
 	bool is_consumed() const { return consumed_; }
+	// Está por caducar: emite `expiring` (la vista parpadea). Lo llama PickupSpawner.
+	void warn_expiring() { emit_signal("expiring"); }
 
 protected:
 	static void _bind_methods();

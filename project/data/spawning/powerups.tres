@@ -1,0 +1,17 @@
+[gd_resource type="PickupCategory" load_steps=3 format=3]
+
+[ext_resource type="PickupType" path="res://data/pickups/powerup_rapidez.tres" id="1_pr"]
+
+[sub_resource type="KeepDensityPolicy" id="pol"]
+
+[resource]
+id = "powerups"
+types = Array[PickupType]([ExtResource("1_pr")])
+policy = SubResource("pol")
+share = 0.07
+min_count = 1
+max_count = 12
+refill_time = 45.0
+initial_fill = 0.5
+lifetime = 25.0
+warn_time = 5.0

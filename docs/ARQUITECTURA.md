@@ -45,7 +45,7 @@
 | 3 | **Controladores** | `BotBrain` (Utility AI), `find_path` (A*) | `ParticipantController` → `HumanController`, `WanderController`, `BotController`; `BotCoordinator`, `BotProfile` | **Strategy**, Utility AI |
 | 4 | **Stats** | `Stats`: valores base + modificadores | expuesto como recurso del participante | **Decorator / modificadores** |
 | 5 | **Visión** | `line_of_sight`: radio + línea de visión | `Vision` (`PointLight2D` con sombras) | Composición, Observer |
-| 6 | **Objetos** | `place_pickups` (dónde/qué tipo), `Rng` | `PickupType` (datos), `Pickup`, `PickupFactory` | **Factory + datos**, Observer |
+| 6 | **Objetos** | `place_pickups`, `pick_spawn_cell`, `ExpiryQueue`, `Rng` | `PickupType` y `PickupCategory` (datos), `Pickup`, `PickupFactory`, `PickupSpawner` | **Factory + datos**, Strategy, Observer |
 | 7 | **Trofeo y bases** | `TrophyTracker` | `TrophyController` + vistas | **State**, Observer, Factory |
 | 8 | **Partida** | `MatchFlow`: reloj, fases, victoria/tiempo | `MatchController` + `MatchRules` (datos) | **State** (fases), Observer |
 
@@ -86,6 +86,7 @@ Cada módulo tiene su archivo en [`arquitectura/`](arquitectura/). Los comentari
 | §17 | [Escalabilidad: prioridades y reservas, índice de entidades y prueba de estrés](arquitectura/17-escalabilidad.md) |
 | §18 | [Etapa 1.2 — Partida: reloj, fases y fin por tiempo](arquitectura/18-partida-fases.md) |
 | §19 | [Etapa 3 — Bots con dificultad](arquitectura/19-bots.md) |
+| §20 | [Economía de objetos: categorías, caducidad y topes](arquitectura/20-economia-objetos.md) |
 
 ## Patrones aplicados (índice)
 
@@ -102,7 +103,8 @@ Cada módulo tiene su archivo en [`arquitectura/`](arquitectura/). Los comentari
 | Decorator / modificadores | `Stats` + `StatModifier` | ✅ |
 | Observer / señales | `StatsComponent` → `HUD`, `Vision`; `Pickup` → `PickupFactory` → `Events` → UI; `pickup_spawned`; `MatchController` → `Events.match_*` → HUD | ✅ |
 | State | `TrophyTracker` (estados del trofeo); `App` (flujo del juego); `MazeShifter` (laberinto vivo); `MatchFlow` (fases de la partida); luego estados del participante | ✅ (parcial) |
-| Datos fuera del código | `StatsProfile`, `MatchRules`, `BotProfile`, `TrophyRules` (.tres) | ✅ |
+| Datos fuera del código | `StatsProfile`, `MatchRules`, `BotProfile`, `TrophyRules`, `PickupCategory` (.tres) | ✅ |
+| Cola de prioridad (caducidad) | `ExpiryQueue` en `PickupSpawner` | ✅ |
 | Factory + datos | `PickupFactory` + `PickupType` (.tres); vistas de trofeo/bases en `TrophyController` | ✅ |
 | Event Bus | `Events` (autoload) | ✅ |
 | Command (cola con presupuesto, prioridades y reservas) | `MapChangeQueue` en `Maze` | ✅ |

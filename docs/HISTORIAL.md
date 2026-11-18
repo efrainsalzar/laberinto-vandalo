@@ -3,6 +3,12 @@
 > Lo ya terminado, de lo más nuevo a lo más viejo. El estado actual y lo que sigue están en
 > [ROADMAP.md](ROADMAP.md). Al cerrar una pieza se agrega su bloque **arriba**.
 
+### v0.0.21 — Economía de objetos: categorías, caducidad y topes ✅
+- [x] `PickupCategory` (.tres): puntos y power-ups con cupo propio que escala con el mapa (11 y 2 en Normal) y reposición propia.
+- [x] Los objetos caducan en el piso (puntos 30 s, power-ups 25 s) y parpadean antes (`ExpiryQueue`).
+- [x] Valores más bajos: verde +3 VEL, amarillo +0,25 VIS. Tope de mejoras permanentes como dato: +48 VEL, +2,5 VIS ("MÁX" al llenarse).
+- [x] 6 tests (114 en total).
+
 ### v0.0.20 — Atrapar al portador: eliminación y reaparición ✅
 - [x] Modo de robo como dato (`TrophyRules.steal_mode`): por defecto **Eliminar al portador** (el trofeo cae al piso; el portador reaparece en su base a los 3 s, protegido 2 s). El modo Transferir sigue disponible.
 - [x] `LifeCycle` (core, State) + `LifeComponent`: base de la reaparición de la Etapa 4. Vidas infinitas por ahora.

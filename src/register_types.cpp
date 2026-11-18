@@ -14,6 +14,7 @@
 #include "game/participant_controller.h"
 #include "game/perf_stats.h"
 #include "game/pickup.h"
+#include "game/pickup_category.h"
 #include "game/pickup_factory.h"
 #include "game/pickup_spawn_policy.h"
 #include "game/pickup_spawner.h"
@@ -67,6 +68,7 @@ void initialize_laberinto_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(PickupFactory);
 	GDREGISTER_ABSTRACT_CLASS(PickupSpawnPolicy);
 	GDREGISTER_CLASS(KeepDensityPolicy);
+	GDREGISTER_CLASS(PickupCategory);
 	GDREGISTER_CLASS(PickupSpawner);
 
 	// Trofeo y bases

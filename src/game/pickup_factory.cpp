@@ -60,16 +60,25 @@ Pickup *PickupFactory::create(const Ref<PickupType> &p_type, const Vector2 &p_po
 }
 
 int PickupFactory::populate(Maze *p_maze, const TypedArray<Vector2i> &p_bases, int p_seed) {
-	lv::core::PerfScope perf("pickups.populate");
+	begin(p_maze);
+	return static_cast<int>(place(p_bases, types_, count_, p_seed).size());
+}
+
+void PickupFactory::begin(Maze *p_maze) {
 	clear_pickups();
 	maze_ = p_maze;
-	if (p_maze == nullptr || types_.is_empty()) {
-		return 0;
+}
+
+std::vector<Pickup *> PickupFactory::place(const TypedArray<Vector2i> &p_bases, const TypedArray<PickupType> &p_types, int p_count, int p_seed) {
+	lv::core::PerfScope perf("pickups.populate");
+	std::vector<Pickup *> created;
+	if (maze_ == nullptr || p_types.is_empty() || p_count <= 0) {
+		return created;
 	}
 
 	std::vector<float> weights;
-	for (int i = 0; i < types_.size(); i++) {
-		Ref<PickupType> type = types_[i];
+	for (int i = 0; i < p_types.size(); i++) {
+		Ref<PickupType> type = p_types[i];
 		weights.push_back(type.is_valid() ? type->get_weight() : 0.0f);
 	}
 	std::vector<lv::core::Cell> bases;
@@ -78,19 +87,31 @@ int PickupFactory::populate(Maze *p_maze, const TypedArray<Vector2i> &p_bases, i
 		bases.push_back({ base.x, base.y });
 	}
 	lv::core::PickupPlacementOptions options;
-	options.count = count_;
+	options.count = p_count;
 	options.min_spacing = min_spacing_;
 	options.base_clearance = base_clearance_;
 	options.seed = static_cast<uint32_t>(p_seed);
 
-	int created = 0;
-	for (const lv::core::PickupPlacement &placement : lv::core::place_pickups(p_maze->get_grid(), weights, bases, options)) {
-		const Vector2 position = to_local(p_maze->cell_to_world(Vector2i(placement.cell.x, placement.cell.y)));
-		if (create(types_[placement.kind], position) != nullptr) {
-			created++;
+	for (const lv::core::PickupPlacement &placement : lv::core::place_pickups(maze_->get_grid(), weights, bases, options)) {
+		const Vector2i cell(placement.cell.x, placement.cell.y);
+		if (has_pickup_at(cell)) {
+			continue; // ya hay un objeto de otra categoría
+		}
+		if (Pickup *pickup = create(p_types[placement.kind], to_local(maze_->cell_to_world(cell)))) {
+			created.push_back(pickup);
 		}
 	}
 	return created;
+}
+
+void PickupFactory::remove_pickup(Pickup *p_pickup) {
+	if (p_pickup == nullptr || p_pickup->is_consumed() || p_pickup->get_parent() != this) {
+		return;
+	}
+	index_remove(p_pickup);
+	active_count_--;
+	remove_child(p_pickup);
+	p_pickup->queue_free();
 }
 
 void PickupFactory::index_add(Pickup *p_pickup) {

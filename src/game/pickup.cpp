@@ -12,6 +12,8 @@ void Pickup::_bind_methods() {
 
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "type", PROPERTY_HINT_RESOURCE_TYPE, "PickupType"), "set_type", "get_type");
 
+	ClassDB::bind_method(D_METHOD("warn_expiring"), &Pickup::warn_expiring);
+	ADD_SIGNAL(MethodInfo("expiring"));
 	ADD_SIGNAL(MethodInfo("collected", PropertyInfo(Variant::OBJECT, "participant", PROPERTY_HINT_NODE_TYPE, "Participant")));
 }
 

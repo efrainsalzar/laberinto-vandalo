@@ -46,7 +46,17 @@ public:
 	// Valor final con todos los modificadores aplicados.
 	float get(StatType p_stat) const;
 
-	// Devuelve un id para poder quitarlo después.
+	// Tope de lo que suman las mejoras PERMANENTES positivas (Add) de una stat: p. ej. los puntos
+	// recolectables no pueden dar más de +48 de velocidad en total. < 0 = sin tope.
+	// No afecta a los efectos temporales ni a los multiplicadores (power-ups, trofeo).
+	void set_bonus_cap(StatType p_stat, float p_cap);
+	// Lo que suman hoy las mejoras permanentes positivas de una stat.
+	float permanent_bonus(StatType p_stat) const;
+	// ¿Las mejoras permanentes de esta stat ya llegaron a su tope?
+	bool is_bonus_maxed(StatType p_stat) const;
+
+	// Devuelve un id para poder quitarlo después, o 0 si no se agregó (tope de mejora alcanzado).
+	// Si la mejora pasa el tope, se recorta a lo que falta.
 	int add_modifier(const StatModifier &p_modifier);
 	bool remove_modifier(int p_id);
 	// Quita todos los modificadores de un origen. Devuelve cuántos quitó.
@@ -69,6 +79,7 @@ private:
 	std::array<float, STAT_COUNT> base_{};
 	std::array<float, STAT_COUNT> min_{};
 	std::array<float, STAT_COUNT> max_{};
+	std::array<float, STAT_COUNT> bonus_cap_{};
 	std::vector<ActiveModifier> modifiers_;
 	int next_id_ = 1;
 };
