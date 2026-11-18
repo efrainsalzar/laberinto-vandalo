@@ -81,7 +81,7 @@ void ProjectileSystem::spawn(Participant *p_owner, const Vector2 &p_from, const 
 	world_.spawn(from.x, from.y, p_direction.x, p_direction.y, spec, p_owner->get_participant_id(), weapon_tag(p_weapon));
 }
 
-void ProjectileSystem::hold_beam(Participant *p_owner, const Vector2 &p_from, const Vector2 &p_direction, const Ref<WeaponType> &p_weapon, float p_range) {
+void ProjectileSystem::hold_beam(Participant *p_owner, const Vector2 &p_from, const Vector2 &p_direction, const Ref<WeaponType> &p_weapon, float p_range, float p_delta) {
 	if (maze_ == nullptr || p_owner == nullptr || p_weapon.is_null()) {
 		return;
 	}
@@ -109,7 +109,15 @@ void ProjectileSystem::hold_beam(Participant *p_owner, const Vector2 &p_from, co
 	beam->refreshed = true;
 	queue_redraw();
 	if (result.target >= 0) {
-		hit(result.target, owner);
+		lv::core::DamageInfo info;
+		info.amount = p_weapon->get_damage() * p_delta;
+		info.source = owner;
+		info.kind = lv::core::DamageKind::Beam;
+		info.dir_x = p_direction.x;
+		info.dir_y = p_direction.y;
+		info.x = result.end_x;
+		info.y = result.end_y;
+		hit(result.target, info);
 	}
 }
 
@@ -117,10 +125,19 @@ Participant *ProjectileSystem::body(int p_id) const {
 	return (p_id >= 0 && p_id < static_cast<int>(bodies_.size())) ? bodies_[p_id] : nullptr;
 }
 
-void ProjectileSystem::hit(int p_victim, int p_owner) {
+const lv::core::WeaponSpec *ProjectileSystem::weapon_spec(int p_tag) const {
+	return (p_tag >= 0 && p_tag < static_cast<int>(weapons_.size())) ? &weapons_[p_tag]->spec() : nullptr;
+}
+
+void ProjectileSystem::hit(int p_victim, const lv::core::DamageInfo &p_info) {
 	Participant *victim = body(p_victim);
-	if (victim != nullptr) {
-		emit_signal("participant_hit", victim, body(p_owner));
+	if (victim == nullptr) {
+		return;
+	}
+	if (HealthComponent *health = victim->get_health()) {
+		health->take_damage(p_info, body(p_info.source));
+	} else {
+		emit_signal("participant_hit", victim, body(p_info.source)); // sin salud: decide quien escucha
 	}
 }
 
@@ -187,11 +204,33 @@ void ProjectileSystem::_physics_process(double p_delta) {
 				flash.duration = EXPLOSION_SECONDS;
 				flashes_.push_back(flash);
 				emit_signal("exploded", to_global(flash.from), flash.radius);
-				for (const int victim : victims_) {
-					hit(victim, event.owner);
+				const lv::core::WeaponSpec *spec = weapon_spec(event.tag);
+				for (const lv::core::ExplosionVictim &victim : victims_) {
+					lv::core::DamageInfo info;
+					info.amount = spec != nullptr ? lv::core::explosion_damage(spec->damage, spec->damage_edge, event.explosion_radius, victim.distance) : 0.0f;
+					info.source = event.owner;
+					info.kind = lv::core::DamageKind::Explosion;
+					info.x = event.x;
+					info.y = event.y;
+					if (const Participant *p = body(victim.id)) { // empuja hacia afuera del centro
+						const lv::core::GridPoint at = maze_->world_to_grid_point(p->get_global_position());
+						const Vector2 away = Vector2(at.x - event.x, at.y - event.y).normalized();
+						info.dir_x = away.x;
+						info.dir_y = away.y;
+					}
+					hit(victim.id, info);
 				}
 			} else if (event.kind == lv::core::ProjectileEvent::Kind::HitTarget) {
-				hit(event.target, event.owner);
+				const lv::core::WeaponSpec *spec = weapon_spec(event.tag);
+				lv::core::DamageInfo info;
+				info.amount = spec != nullptr ? spec->damage : 0.0f;
+				info.source = event.owner;
+				info.kind = lv::core::DamageKind::Bullet;
+				info.dir_x = event.dir_x;
+				info.dir_y = event.dir_y;
+				info.x = event.x;
+				info.y = event.y;
+				hit(event.target, info);
 			}
 		}
 	}

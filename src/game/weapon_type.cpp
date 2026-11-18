@@ -26,6 +26,10 @@ void WeaponType::_bind_methods() {
 	LV_BIND(pellets, INT, "1,24,1")
 	LV_BIND(spread_deg, FLOAT, "0,180,0.5,suffix:grados")
 
+	ADD_GROUP("Daño", "");
+	LV_BIND(damage, FLOAT, "0,500,0.5") // por bala/perdigón; rayo: por segundo; explosión: en el centro
+	LV_BIND(damage_edge, FLOAT, "0,500,0.5") // explosión: en el borde del radio
+
 	ADD_GROUP("Alcance", "");
 	LV_BIND_RAW(range_from_vision)
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "range_from_vision"), "set_range_from_vision", "get_range_from_vision");

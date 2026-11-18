@@ -45,6 +45,8 @@ struct ProjectileEvent {
 	int owner = -1;
 	int target = -1; // solo HitTarget
 	int tag = 0;
+	float dir_x = 0.0f; // hacia dónde iba la bala (para el daño: de dónde vino el golpe)
+	float dir_y = 0.0f;
 	float explosion_radius = 0.0f; // >0: aquí hay una explosión (el punto siempre queda sobre suelo)
 };
 
@@ -60,10 +62,16 @@ struct BeamHit {
 BeamHit trace_beam(const MazeGrid &p_grid, float p_x, float p_y, float p_dir_x, float p_dir_y, float p_range,
 		const std::vector<ProjectileTarget> &p_targets, int p_owner);
 
+// Un blanco alcanzado por una explosión y qué tan lejos del centro quedó su cuerpo (para que el daño baje al borde).
+struct ExplosionVictim {
+	int id = -1;
+	float distance = 0.0f; // casillas del centro al borde de su cuerpo (0 = el centro lo toca)
+};
+
 // Blancos alcanzados por una explosión en (x, y): dentro del radio (contando su cuerpo) y con línea de visión
-// desde el centro (las paredes protegen). Nunca `p_owner` (no hay daño propio, por ahora). Añade ids a r_out.
+// desde el centro (las paredes protegen). Nunca `p_owner` (no hay daño propio, por ahora). Los añade a r_out.
 void explosion_victims(const MazeGrid &p_grid, float p_x, float p_y, float p_radius,
-		const std::vector<ProjectileTarget> &p_targets, int p_owner, std::vector<int> &r_out);
+		const std::vector<ProjectileTarget> &p_targets, int p_owner, std::vector<ExplosionVictim> &r_out);
 
 // Todas las balas del mapa como datos en bloque (un std::vector de structs), no un nodo por bala.
 // - spawn(): si se llegó al tope, la bala nueva reemplaza a la más vieja (nunca crece sin límite).

@@ -11,4 +11,6 @@ range_vision_factor = 1.0
 projectile_speed = 22.0
 projectile_radius = 0.2
 explosion_radius = 2.0
+damage = 80.0
+damage_edge = 30.0
 projectile_color = Color(1, 0.5, 0.15, 1)

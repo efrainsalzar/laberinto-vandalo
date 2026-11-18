@@ -18,6 +18,8 @@ profile = ExtResource("2_prof")
 
 [node name="Life" type="LifeComponent" parent="."]
 
+[node name="Health" type="HealthComponent" parent="."]
+
 [node name="Weapon" type="WeaponComponent" parent="."]
 weapon = ExtResource("3_pistol")
 

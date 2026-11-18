@@ -1,14 +1,14 @@
 extends VBoxContainer
 ## Tarjeta del participante (HUD): flotante y compacta, abajo a la izquierda, pegada a la esquina.
 ## Arriba van los efectos temporales como fichitas (solo mientras duran); debajo, la tarjeta:
-## cabecera (avatar, estado, trofeo) · stats (VEL, VIS) · arma activa.
+## cabecera (avatar, estado, trofeo) · salud · stats (VEL, VIS) · arma activa.
 ## Si un participante pasa por detrás, se vuelve semitransparente para no tapar el juego.
 ##
 ## Patrón Composite: la tarjeta es un contenedor con una lista de SECCIONES. Cada sección es independiente,
 ## escucha solo su fuente (Observer) y nunca modifica el juego:
-##   cabecera → LifeComponent + eventos del trofeo · stats → StatsComponent · efectos → modificadores temporales
+##   cabecera → LifeComponent + eventos del trofeo · salud → HealthComponent · stats → StatsComponent · efectos → modificadores temporales
 ##   · armas → WeaponComponent.
-## Agregar información nueva (p. ej. salud y vidas en la Etapa 4) = una sección nueva en SECTIONS.
+## Agregar información nueva (p. ej. escudos o vidas) = una sección nueva en SECTIONS.
 ## API de una sección: bind(participant) y, si la necesita, set_trophy(trophy).
 ## Ver docs/arquitectura/24-tarjeta-participante.md.
 
@@ -16,11 +16,12 @@ const CardStyle := preload("res://scripts/ui/player_card/card_style.gd")
 const EFFECTS := preload("res://scripts/ui/player_card/card_effects.gd")
 const SECTIONS: Array[Script] = [
 	preload("res://scripts/ui/player_card/card_header.gd"),
+	preload("res://scripts/ui/player_card/card_health.gd"),
 	preload("res://scripts/ui/player_card/card_stats.gd"),
 	preload("res://scripts/ui/player_card/card_weapons.gd"),
 ]
 ## Secciones que se apagan mientras el participante está eliminado (la cabecera sigue viva: cuenta la espera).
-const DIM_WHEN_DOWN := ["card_stats", "card_weapons", "card_effects"]
+const DIM_WHEN_DOWN := ["card_health", "card_stats", "card_weapons", "card_effects"]
 const MARGIN := 14
 const FADED_ALPHA := 0.3  # con algo detrás
 

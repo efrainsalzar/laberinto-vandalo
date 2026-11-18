@@ -3,6 +3,13 @@
 > Lo ya terminado, de lo más nuevo a lo más viejo. El estado actual y lo que sigue están en
 > [ROADMAP.md](ROADMAP.md). Al cerrar una pieza se agrega su bloque **arriba**.
 
+### v0.0.32 — Etapa 4.1: salud y daño por arma ✅
+- [x] Salud 100 (`HealthComponent` + `lv::core::Health`). Una bala ya no elimina: quita salud; con 0 se pierde la vida, se suelta el trofeo y se reaparece con la salud llena.
+- [x] Daño como dato en cada arma: pistola 20, escopeta 12 por perdigón, láser 70/s, bazuca 80 en el centro → 30 en el borde.
+- [x] El golpe es un `DamageInfo` (Value Object) que `ProjectileSystem` aplica en C++; GDScript solo recibe señales finales (el láser, agrupado cada 0,25 s).
+- [x] Visual: destello blanco al recibir golpe, números de daño (perdigones sumados), barrita de salud sobre rivales, borde rojo con salud < 30, sacudida con explosiones cercanas y sección SAL en la tarjeta.
+- [x] Tecla de prueba 8: recibir 25 de daño. 13 tests (151 en total).
+
 ### v0.0.31 — HUD flotante ✅
 - [x] Sin barra superior: pastilla del reloj (roja en el último minuto) con la línea del trofeo debajo; FPS solo si está activado.
 - [x] Tarjeta compacta y flotante abajo a la izquierda (cabecera en una línea, solo el arma activa); efectos encima; se vuelve transparente si hay alguien detrás.

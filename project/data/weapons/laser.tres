@@ -10,4 +10,5 @@ energy = 4.0
 range_from_vision = true
 range_vision_factor = 1.0
 projectile_radius = 0.06
+damage = 70.0
 projectile_color = Color(1, 0.25, 0.35, 1)

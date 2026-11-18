@@ -22,10 +22,11 @@ signal trophy_dropped(participant: Participant, world_position: Vector2)
 ## `thief` le quitó el trofeo a `victim` (robo por contacto).
 signal trophy_stolen(thief: Participant, victim: Participant)
 
-## A `victim` le pegó una bala de `by` (§22). Ocurre antes de `participant_eliminated`.
-signal participant_hit(victim: Participant, by: Participant)
+## `victim` perdió `amount` de salud por un golpe de `by` (§25). kind = HealthComponent.DAMAGE_*.
+## El láser llega agrupado (cada 0,25 s), no por frame. Si lo dejó en 0, después viene `participant_eliminated`.
+signal participant_damaged(victim: Participant, by: Participant, amount: float, kind: int)
 
-## `victim` quedó eliminado (lo atraparon llevando el trofeo o le dispararon). `by` = quién fue.
+## `victim` perdió la vida (lo atraparon llevando el trofeo o su salud llegó a 0). `by` = quién fue.
 signal participant_eliminated(victim: Participant, by: Participant)
 
 ## `participant` volvió a su base tras ser eliminado (empieza su protección).

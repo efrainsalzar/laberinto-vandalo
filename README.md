@@ -3,7 +3,7 @@
 [![CI](https://github.com/efrainsalzar/laberinto-vandalo/actions/workflows/ci.yml/badge.svg)](https://github.com/efrainsalzar/laberinto-vandalo/actions/workflows/ci.yml)
 [![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE)
 
-> Nombre provisional · **En desarrollo temprano (v0.0.31)**
+> Nombre provisional · **En desarrollo temprano (v0.0.32)**
 
 **Un torneo en un laberinto vivo donde varios participantes compiten por un trofeo, pero unos vándalos
 sabotean todo para robárselo. Solo gana uno: quien consiga el trofeo y vuelva con él a su zona de
@@ -25,7 +25,8 @@ Juego 2D top-down hecho con **Godot 4** y **C++ (GDExtension)**. Código abierto
 | Bots con 4 dificultades ✅ (v0.0.17) |  ✅ |
 | Disparo + pistola inicial (humano y bots) ✅ (v0.0.23) | ✅ |
 | Armas del mapa: escopeta, láser y bazuca + HUD de armas ✅ (v0.0.26) | ✅ |
-| Combate · Soldados · Vándalos · Mapa vivo | 🔜 |
+| Combate: salud y daño por arma ✅ (v0.0.32) · pociones, escudos, bombas | 🚧 |
+| Soldados · Vándalos · Mapa vivo | 🔜 |
 
 Detalle y siguiente paso: [`docs/ROADMAP.md`](docs/ROADMAP.md) · historial: [`docs/HISTORIAL.md`](docs/HISTORIAL.md) · cómo pedir tareas al agente: [`docs/COMO_PEDIR.md`](docs/COMO_PEDIR.md).
 

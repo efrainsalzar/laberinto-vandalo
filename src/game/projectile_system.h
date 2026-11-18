@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/health.h"
 #include "core/projectiles.h"
 #include "game/weapon_type.h"
 
@@ -22,8 +23,10 @@ class Participant;
 //   en el acto al primer blanco que toca. Si un frame no se renueva, se apaga.
 // - Cada frame de física: avanza las balas contra las paredes del Maze y contra los participantes que son
 //   blanco ahora (en juego y sin protección; nunca quien disparó). Si la bala explota (bazuca), le pega a todos
-//   los del radio con línea de visión. Emite participant_hit(victim, by) por cada uno; qué hace el impacto lo
-//   decide quien escucha (hoy match.gd: elimina y, si llevaba el trofeo, lo suelta). exploded(...) para la vista.
+//   los del radio con línea de visión. Cada golpe es un lv::core::DamageInfo con el daño del arma (WeaponType):
+//   bala/perdigón = damage; láser = damage × delta por frame; explosión = de damage (centro) a damage_edge (borde).
+//   Se aplica directo al HealthComponent de la víctima en C++ (§25), sin pasar por GDScript; si el participante
+//   no tiene salud, emite participant_hit(victim, by) y quien escucha decide. exploded(...) para la vista.
 // - Dibuja todo en un solo _draw (arte provisional): balas con estela, rayos y explosiones que se apagan.
 // - Tope `max_projectiles`: al superarlo, la bala nueva reemplaza a la más vieja.
 // Hay uno por nivel; WeaponComponent lo encuentra con ProjectileSystem::find (grupo "projectile_system").
@@ -41,7 +44,8 @@ public:
 	void setup(Maze *p_maze);
 	// p_range: alcance real en casillas (WeaponComponent lo calcula; puede depender de la visión).
 	void spawn(Participant *p_owner, const Vector2 &p_from, const Vector2 &p_direction, const Ref<WeaponType> &p_weapon, float p_range);
-	void hold_beam(Participant *p_owner, const Vector2 &p_from, const Vector2 &p_direction, const Ref<WeaponType> &p_weapon, float p_range);
+	// p_delta: segundos de este frame (el láser quita damage × delta).
+	void hold_beam(Participant *p_owner, const Vector2 &p_from, const Vector2 &p_direction, const Ref<WeaponType> &p_weapon, float p_range, float p_delta);
 	void clear();
 	int get_projectile_count() const { return world_.size(); }
 
@@ -80,14 +84,15 @@ private:
 	std::vector<lv::core::ProjectileEvent> events_; // reutilizado cada frame
 	std::vector<lv::core::ProjectileTarget> targets_;
 	std::vector<Participant *> bodies_; // bodies_[i] es el participante de id i (o nullptr)
-	std::vector<int> victims_;
+	std::vector<lv::core::ExplosionVictim> victims_;
 	std::vector<Flash> flashes_;
 	std::vector<HeldBeam> held_beams_;
 
 	int weapon_tag(const Ref<WeaponType> &p_weapon);
 	Color weapon_color(int p_tag) const;
 	void gather_targets();
-	void hit(int p_victim, int p_owner);
+	const lv::core::WeaponSpec *weapon_spec(int p_tag) const;
+	void hit(int p_victim, const lv::core::DamageInfo &p_info);
 	Participant *body(int p_id) const;
 	Vector2 grid_to_local(float p_x, float p_y) const;
 };

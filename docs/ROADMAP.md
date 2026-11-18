@@ -5,9 +5,9 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 
 ## Estado actual
 
-**v0.0.31** · 138 tests · Etapa 1 completa y Etapa 3 (bots) adelantada. Últimas piezas: lenguaje visual de objetos
-(v0.0.22), armas en el mapa + HUD (v0.0.26), tarjeta del participante (v0.0.29), arreglo de la muerte (v0.0.30) y HUD
-flotante (v0.0.31). **Siguiente: Etapa 4 — Combate, Pieza 1 (salud y daño). Diseño ya aprobado: ver abajo.** Todo lo terminado, versión por versión: [HISTORIAL.md](HISTORIAL.md).
+**v0.0.32** · 151 tests · Etapa 1 completa y Etapa 3 (bots) adelantada. Últimas piezas: tarjeta del participante
+(v0.0.29), HUD flotante (v0.0.31) y **Etapa 4.1 — salud y daño por arma (v0.0.32, en prueba en vivo)**.
+**Siguiente: Etapa 4 — Pieza 2 (pociones y efectos de objeto como Strategy). Diseño ya aprobado: ver abajo.** Todo lo terminado, versión por versión: [HISTORIAL.md](HISTORIAL.md).
 
 ## Plan acordado (etapas, una pieza a la vez)
 
@@ -84,7 +84,7 @@ recibe señales finales (`damaged`, `healed`, `died`) para la vista y el HUD. Me
 | Bazuca | 80 en el centro → 30 en el borde de la explosión |
 
 **Piezas (en orden):**
-1. **Salud y daño por arma.** `core`: `Health` + `DamageInfo` (+ caída del daño de la explosión). `game`:
+1. ~~**Salud y daño por arma.**~~ ✅ (v0.0.32, §25) `core`: `Health` + `DamageInfo` (+ caída del daño de la explosión). `game`:
    `HealthComponent`; `WeaponSpec.damage` (y `damage_edge` para explosiones); `ProjectileSystem` aplica daño;
    al morir → `LifeComponent` (pierde la vida, reaparece con 100). Bots: sin cambios de conducta.
    Visual: destello blanco del cuerpo al recibir golpe (0,08 s), números de daño flotantes (los del láser agrupados
@@ -135,7 +135,6 @@ Demo en itch.io · aliados · torneo con rondas · multijugador local · en lín
   Cada mecánica trae su `BotAction` para que los bots también la usen.
 - **Especificación propia de cada arma** (dueño): láser que se mantiene / se carga, daño propio de la bazuca, rebotes, etc. Cada una como opción nueva de `WeaponSpec`.
 - **Explosiones que rompen paredes** (Etapa 2.4): `ProjectileSystem.exploded` + `Maze.queue_passage_change`.
-- **Impacto de bala:** hoy elimina (para probar). En la Etapa 4 quitará salud: solo cambia quien escucha `participant_hit`.
 - **Balas con índice espacial:** con los vándalos (decenas de blancos) `ProjectileSystem` consultará `EntityIndex` por bala en vez de revisar todos.
 - **Feedback del disparo:** destello, retroceso, chispa al chocar con pared y sonido (Etapa 7; `WeaponComponent.fired` ya existe).
 - **Bots que esquivan balas** o se cubren detrás de paredes: una `BotAction` más cuando haga falta.

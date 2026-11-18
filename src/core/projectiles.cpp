@@ -85,6 +85,8 @@ void ProjectileWorld::step(float p_delta, const MazeGrid &p_grid, const std::vec
 		const float dy = p.dir_y * move;
 
 		ProjectileEvent event;
+		event.dir_x = p.dir_x;
+		event.dir_y = p.dir_y;
 		bool ended = false;
 		float best_t = 2.0f;
 		float wall_t = 0.0f;
@@ -169,7 +171,7 @@ BeamHit trace_beam(const MazeGrid &p_grid, float p_x, float p_y, float p_dir_x, 
 }
 
 void explosion_victims(const MazeGrid &p_grid, float p_x, float p_y, float p_radius,
-		const std::vector<ProjectileTarget> &p_targets, int p_owner, std::vector<int> &r_out) {
+		const std::vector<ProjectileTarget> &p_targets, int p_owner, std::vector<ExplosionVictim> &r_out) {
 	for (const ProjectileTarget &target : p_targets) {
 		if (target.id == p_owner) {
 			continue;
@@ -181,7 +183,8 @@ void explosion_victims(const MazeGrid &p_grid, float p_x, float p_y, float p_rad
 			continue;
 		}
 		if (has_line_of_sight(p_grid, { p_x, p_y }, { target.x, target.y })) {
-			r_out.push_back(target.id);
+			const float to_body = std::sqrt(dx * dx + dy * dy) - target.radius;
+			r_out.push_back({ target.id, to_body > 0.0f ? to_body : 0.0f });
 		}
 	}
 }

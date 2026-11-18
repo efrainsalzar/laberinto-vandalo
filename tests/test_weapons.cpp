@@ -354,11 +354,13 @@ TEST_SUITE("Catálogo de armas") {
 			{ 3, x + 4.0f, y, 0.4f }, // lejos
 			{ 4, -2.0f, y, 0.4f }, // fuera del mapa, detrás de la pared del borde
 		};
-		std::vector<int> victims;
+		std::vector<lv::core::ExplosionVictim> victims;
 		lv::core::explosion_victims(grid, x, y, 2.0f, targets, 0, victims);
 		REQUIRE(victims.size() == 2);
-		CHECK(victims[0] == 1);
-		CHECK(victims[1] == 2);
+		CHECK(victims[0].id == 1);
+		CHECK(victims[0].distance == doctest::Approx(1.1f)); // 1,5 al centro − 0,4 de cuerpo
+		CHECK(victims[1].id == 2);
+		CHECK(victims[1].distance == doctest::Approx(1.9f));
 	}
 
 	TEST_CASE("El choque contra una pared queda sobre el suelo (la explosión no nace dentro de la pared)") {

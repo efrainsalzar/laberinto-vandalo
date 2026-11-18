@@ -1,7 +1,7 @@
 class_name HUD
 extends CanvasLayer
-## HUD del jugador, todo flotante (sin barras): tarjeta del participante abajo a la izquierda (estado, stats,
-## efectos y armas), pastilla del reloj arriba al centro con la línea del trofeo, FPS opcional arriba a la derecha,
+## HUD del jugador, todo flotante (sin barras): tarjeta del participante abajo a la izquierda (estado, salud,
+## stats, efectos y armas), borde rojo de pantalla con poca salud, pastilla del reloj arriba al centro con la línea del trofeo, FPS opcional arriba a la derecha,
 ## pista F1 y panel de controles. El centro de la pantalla queda libre.
 ##
 ## Observer: escucha al participante y a Events; nunca modifica el juego.
@@ -30,7 +30,9 @@ const HINT_SECONDS := 5.0
 var _map_text := ""
 var _clock_warn := false
 const PLAYER_CARD := preload("res://scripts/ui/player_card/player_card.gd")
+const LOW_HEALTH_BORDER := preload("res://scripts/ui/low_health_border.gd")
 var _card: Control
+var _low_health: Control
 var _toast_tween: Tween
 
 var _participant: Participant
@@ -79,6 +81,11 @@ func bind(participant: Participant) -> void:
 		add_child(_card)
 		move_child(_card, 0)  # debajo de los carteles y del panel de controles
 	_card.bind(participant)
+	if _low_health == null:
+		_low_health = LOW_HEALTH_BORDER.new()
+		add_child(_low_health)
+		move_child(_low_health, 0)  # detrás de todo el HUD
+		_low_health.bind(participant)
 
 
 ## Conecta el indicador de objetivo al trofeo (y al laberinto, para medir distancias en casillas).

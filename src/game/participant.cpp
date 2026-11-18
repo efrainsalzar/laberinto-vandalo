@@ -18,6 +18,7 @@ void Participant::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_stats"), &Participant::get_stats);
 	ClassDB::bind_method(D_METHOD("get_life"), &Participant::get_life);
 	ClassDB::bind_method(D_METHOD("get_weapon"), &Participant::get_weapon);
+	ClassDB::bind_method(D_METHOD("get_health"), &Participant::get_health);
 	ClassDB::bind_method(D_METHOD("is_active"), &Participant::is_active);
 	ClassDB::bind_method(D_METHOD("is_vulnerable"), &Participant::is_vulnerable);
 	ClassDB::bind_method(D_METHOD("get_facing"), &Participant::get_facing);
@@ -39,6 +40,7 @@ void Participant::_ready() {
 	get_stats();
 	get_life();
 	get_weapon();
+	get_health();
 	if (life_ != nullptr && !Engine::get_singleton()->is_editor_hint()) {
 		life_->connect("eliminated", callable_mp(this, &Participant::on_eliminated));
 		life_->connect("respawned", callable_mp(this, &Participant::on_respawned));
@@ -126,6 +128,9 @@ void Participant::on_eliminated(Object *) {
 }
 
 void Participant::on_respawned() {
+	if (health_ != nullptr) {
+		health_->reset(); // vuelve con la salud llena
+	}
 	set_collision_layer(active_layer_);
 	set_collision_mask(active_mask_);
 	if (controller_.is_valid()) {

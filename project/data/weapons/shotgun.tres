@@ -12,4 +12,5 @@ range_from_vision = true
 range_vision_factor = 0.75
 projectile_speed = 45.0
 projectile_radius = 0.06
+damage = 12.0
 projectile_color = Color(1, 0.7, 0.3, 1)

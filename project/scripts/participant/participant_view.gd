@@ -3,6 +3,8 @@ extends Node2D
 ## Solo dibuja; no tiene lógica. Se reemplazará por un sprite en la pieza 8 (arte).
 ## Rendimiento (patrón Dirty flag): se redibuja SOLO cuando cambia la dirección o el color, no cada frame.
 ## Al ser eliminado: se desintegra en píxeles (shaders/dissolve.gdshader) y deja un death_effect (píxeles + marca).
+## Al recibir daño (HealthComponent.damaged, §25): destello blanco del cuerpo (0,08 s) y, si es un rival (no lo
+## controla una persona), una barrita de salud encima durante unos segundos.
 
 @onready var _participant: Participant = get_parent()
 
@@ -19,13 +21,22 @@ func _ready() -> void:
 		life.protection_ended.connect(func() -> void:
 			_blink = false
 			modulate.a = 1.0)
+	var health: HealthComponent = _participant.get_health()
+	if health:
+		health.damaged.connect(_on_damaged.unbind(4))
 
 
 const DEATH_EFFECT := preload("res://scripts/participant/death_effect.gd")
 const DISSOLVE := preload("res://shaders/dissolve.gdshader")
 const DISSOLVE_SECONDS := 0.5
 
+const FLASH_SECONDS := 0.08
+const BAR_SECONDS := 2.5
+const BAR_FADE := 0.4
+
 var _blink := false
+var _flash := 0.0  # segundos que le quedan al destello blanco
+var _bar := 0.0  # segundos que le quedan a la barrita de salud
 var _tween: Tween
 var _dissolve: ShaderMaterial
 
@@ -58,7 +69,16 @@ func _on_eliminated() -> void:
 		scale = Vector2.ONE)
 
 
+func _on_damaged() -> void:
+	_flash = FLASH_SECONDS
+	if not (_participant.get_controller() is HumanController):
+		_bar = BAR_SECONDS
+	queue_redraw()
+
+
 func _on_respawned() -> void:
+	_bar = 0.0
+	_flash = 0.0
 	if _tween:
 		_tween.kill()
 	material = null
@@ -73,7 +93,14 @@ func _on_respawned() -> void:
 var _last_facing := Vector2.ZERO
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	if _flash > 0.0:
+		_flash -= delta
+		if _flash <= 0.0:
+			queue_redraw()
+	if _bar > 0.0:
+		_bar -= delta
+		queue_redraw()  # se desvanece al final (pocos participantes con barra a la vez)
 	if _blink:
 		modulate.a = 0.35 if int(Time.get_ticks_msec() / 120) % 2 == 0 else 1.0
 	var facing := _participant.get_facing()
@@ -89,3 +116,21 @@ func _draw() -> void:
 	draw_arc(Vector2.ZERO, radius, 0.0, TAU, 24, color.darkened(0.5), 2.0)
 	var eye := maxf(1.5, radius * 0.27)
 	draw_circle(_participant.get_facing() * (radius - eye - 1.0), eye, Color.WHITE)
+	if _flash > 0.0:
+		draw_circle(Vector2.ZERO, radius + 1.0, Color(1, 1, 1, 0.9))
+	if _bar > 0.0:
+		_draw_health_bar(radius)
+
+
+## Barrita de salud sobre la cabeza (solo rivales, unos segundos después de un golpe).
+func _draw_health_bar(radius: float) -> void:
+	var health: HealthComponent = _participant.get_health()
+	if health == null:
+		return
+	var alpha := clampf(_bar / BAR_FADE, 0.0, 1.0)
+	var width := maxf(18.0, radius * 2.2)
+	var rect := Rect2(-width / 2.0, -radius - 8.0, width, 3.0)
+	var ratio := health.get_ratio()
+	draw_rect(rect.grow(1.0), Color(0.02, 0.01, 0.05, 0.8 * alpha))
+	var color := Color(1.0, 0.4, 0.35) if ratio < 0.3 else (Color(1.0, 0.82, 0.3) if ratio < 0.6 else Color(0.45, 0.9, 0.45))
+	draw_rect(Rect2(rect.position, Vector2(rect.size.x * ratio, rect.size.y)), Color(color, alpha))

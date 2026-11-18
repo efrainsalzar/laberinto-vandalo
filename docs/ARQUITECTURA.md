@@ -49,6 +49,7 @@
 | 7 | **Trofeo y bases** | `TrophyTracker` | `TrophyController` + vistas | **State**, Observer, Factory |
 | 8 | **Partida** | `MatchFlow`: reloj, fases, victoria/tiempo | `MatchController` + `MatchRules` (datos) | **State** (fases), Observer |
 | 9 | **Armas y disparo** | `WeaponState`, `ProjectileWorld`, `BotGunner`, `segment_hits_wall` | `WeaponType` (datos), `WeaponComponent`, `ProjectileSystem` | **Command**, Type Object, State, datos en bloque, Observer |
+| 10 | **Salud y daño** | `Health`, `DamageInfo`, `explosion_damage`, `DamageBatch` | `HealthComponent` | **Value Object**, Composición, datos |
 
 Fases siguientes (bots, combate, vándalos, director) se diseñan cuando lleguemos; ver [ROADMAP](ROADMAP.md).
 
@@ -92,6 +93,7 @@ Cada módulo tiene su archivo en [`arquitectura/`](arquitectura/). Los comentari
 | §22 | [Disparo + pistola inicial](arquitectura/22-armas-disparo.md) |
 | §23 | [Catálogo de armas: escopeta, láser y bazuca; armas en el mapa y HUD](arquitectura/23-catalogo-armas.md) |
 | §24 | [Tarjeta del participante (HUD)](arquitectura/24-tarjeta-participante.md) |
+| §25 | [Etapa 4.1 — Salud y daño por arma](arquitectura/25-salud-dano.md) |
 
 ## Patrones aplicados (índice)
 
@@ -104,7 +106,8 @@ Cada módulo tiene su archivo en [`arquitectura/`](arquitectura/). Los comentari
 | Fichas de ataque | `TokenPool` en `BotCoordinator` | ✅ |
 | A* (búsqueda de caminos) | `find_path` | ✅ |
 | Command | `ParticipantCommand` (moverse, apuntar, disparar) | ✅ |
-| Composición / separación lógica-vista | `Participant` + `View` + `StatsComponent` + `Vision`; `core` vs `game`; `line_of_sight` vs luz | ✅ |
+| Value Object | `DamageInfo` (un golpe como dato; luego pasa por los escudos) | ✅ |
+| Composición / separación lógica-vista | `Participant` + `View` + `StatsComponent` + `Vision` + `HealthComponent`; `core` vs `game`; `line_of_sight` vs luz | ✅ |
 | Decorator / modificadores | `Stats` + `StatModifier` | ✅ |
 | Observer / señales | `StatsComponent` → `HUD`, `Vision`; `Pickup` → `PickupFactory` → `Events` → UI; `pickup_spawned`; `MatchController` → `Events.match_*` → HUD | ✅ |
 | State | `TrophyTracker` (estados del trofeo); `App` (flujo del juego); `MazeShifter` (laberinto vivo); `MatchFlow` (fases de la partida); luego estados del participante | ✅ (parcial) |
@@ -119,4 +122,4 @@ Cada módulo tiene su archivo en [`arquitectura/`](arquitectura/). Los comentari
 | Instrumentación / observabilidad | `Perf`, `PerfScope`, panel F3, monitores | ✅ |
 | Object Pool | `FloatingTextLayer` | ✅ |
 | Decorator en tiempo de ejecución | `UiFx` (efectos y descripciones en todos los controles) | ✅ |
-| Composite (interfaz) | Tarjeta del participante: contenedor + secciones (cabecera, stats, efectos, armas; luego vida) | ✅ |
+| Composite (interfaz) | Tarjeta del participante: contenedor + secciones (cabecera, salud, stats, efectos, armas) | ✅ |

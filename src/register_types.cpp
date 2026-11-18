@@ -5,6 +5,7 @@
 #include "game/bot_controller.h"
 #include "game/bot_coordinator.h"
 #include "game/entity_index.h"
+#include "game/health_component.h"
 #include "game/life_component.h"
 #include "game/match_controller.h"
 #include "game/maze.h"
@@ -53,6 +54,7 @@ void initialize_laberinto_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(StatsProfile);
 	GDREGISTER_CLASS(StatsComponent);
 	GDREGISTER_CLASS(LifeComponent);
+	GDREGISTER_CLASS(HealthComponent);
 
 	// Armas y balas (antes que Participant, que tiene un WeaponComponent)
 	GDREGISTER_CLASS(WeaponType);

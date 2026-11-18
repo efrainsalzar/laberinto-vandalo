@@ -43,6 +43,11 @@ struct WeaponSpec {
 	float explosion_radius = 0.0f; // casillas; 0 = impacto directo. >0: explota al terminar (bazuca)
 	int ammo = 0; // disparos en total; 0 = infinitos. Al gastarse, el arma queda vacía (armas temporales)
 	float energy = 0.0f; // segundos de batería (modos sostenidos); 0 = infinita. Al gastarse, queda vacía
+
+	// Daño (Etapa 4, §25). Balas: por bala o perdigón. Rayo: por segundo de contacto (se aplica daño × delta).
+	// Explosión: `damage` en el centro, bajando hasta `damage_edge` en el borde del radio.
+	float damage = 20.0f;
+	float damage_edge = 0.0f;
 };
 
 struct Direction {

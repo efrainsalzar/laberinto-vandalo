@@ -56,6 +56,11 @@ public:
 	void set_explosion_radius(float p_value) { spec_.explosion_radius = p_value; }
 	float get_explosion_radius() const { return spec_.explosion_radius; }
 
+	void set_damage(float p_value) { spec_.damage = p_value; }
+	float get_damage() const { return spec_.damage; }
+	void set_damage_edge(float p_value) { spec_.damage_edge = p_value; }
+	float get_damage_edge() const { return spec_.damage_edge; }
+
 	void set_projectile_color(const Color &p_value) { projectile_color_ = p_value; }
 	Color get_projectile_color() const { return projectile_color_; }
 

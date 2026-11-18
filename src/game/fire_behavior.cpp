@@ -28,6 +28,6 @@ bool HeldBeamFire::update(const FireContext &p_context, lv::core::Trigger p_trig
 	if (!lv::core::is_trigger_down(p_trigger) || !p_context.state->drain(p_context.delta)) {
 		return false; // suelto o sin batería: el rayo se apaga solo (ProjectileSystem lo quita si no se renueva)
 	}
-	p_context.projectiles->hold_beam(p_context.shooter, p_context.from, p_context.direction, p_context.weapon, p_context.range);
+	p_context.projectiles->hold_beam(p_context.shooter, p_context.from, p_context.direction, p_context.weapon, p_context.range, p_context.delta);
 	return true;
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/participant_command.h"
+#include "game/health_component.h"
 #include "game/life_component.h"
 #include "game/participant_controller.h"
 #include "game/stats_component.h"
@@ -19,6 +20,7 @@ using namespace godot;
 // - No se dibuja a sí mismo: la parte visual vive en su escena (participant.tscn).
 // - Sus stats (velocidad, visión...) están en un StatsComponent hijo (composición).
 // - Si tiene un WeaponComponent hijo, la orden de disparo (fire + aim) va a esa arma (§22).
+// - Su salud está en un HealthComponent hijo (§25); al reaparecer vuelve a la salud máxima.
 // Ver docs/ARQUITECTURA.md §5.
 class Participant : public CharacterBody2D {
 	GDCLASS(Participant, CharacterBody2D)
@@ -47,6 +49,8 @@ public:
 	LifeComponent *get_life() const { return find_component(life_); }
 	bool is_active() const { return get_life() == nullptr || get_life()->is_active(); }
 	bool is_vulnerable() const { return get_life() == nullptr || get_life()->is_vulnerable(); }
+	// Salud (primer hijo HealthComponent, §25). Puede ser nullptr: entonces un golpe elimina directo.
+	HealthComponent *get_health() const { return find_component(health_); }
 	// Arma (primer hijo WeaponComponent). Puede ser nullptr: entonces no dispara.
 	WeaponComponent *get_weapon() const { return find_component(weapon_); }
 
@@ -68,6 +72,7 @@ private:
 	Color color_ = Color(0.35f, 0.75f, 1.0f);
 	mutable StatsComponent *stats_ = nullptr;
 	mutable LifeComponent *life_ = nullptr;
+	mutable HealthComponent *health_ = nullptr;
 	mutable WeaponComponent *weapon_ = nullptr;
 
 	// Primer hijo del tipo T (se recuerda en r_cache). nullptr si no hay.
