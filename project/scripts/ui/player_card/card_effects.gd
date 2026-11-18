@@ -1,5 +1,5 @@
 extends HFlowContainer
-## Sección efectos (flota ENCIMA de la tarjeta, fuera del panel): cada efecto temporal (power-up, impulso, aturdimiento) como una ficha con un
+## Sección efectos de la tarjeta: cada efecto temporal (power-up, impulso, aturdimiento) como una ficha con un
 ## anillo que se vacía y los segundos que le quedan. Solo se ve si hay efectos (los permanentes ya se ven en
 ## la stat). Escucha StatsComponent (se consulta cada frame: pocos modificadores, es barato).
 
@@ -13,7 +13,7 @@ class TimerRing extends Control:
 	var fraction := 1.0
 
 	func _init() -> void:
-		custom_minimum_size = Vector2(13, 13)
+		custom_minimum_size = Vector2(16, 16)
 		size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 
@@ -68,7 +68,7 @@ func _make_chip(m: Dictionary) -> Dictionary:
 	var panel := PanelContainer.new()
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var style := StyleBoxFlat.new()
-	style.bg_color = CardStyle.PANEL
+	style.bg_color = Color(1, 1, 1, 0.05)
 	style.border_color = CardStyle.LINE_SOFT
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(99)
@@ -82,8 +82,8 @@ func _make_chip(m: Dictionary) -> Dictionary:
 	var ring := TimerRing.new()
 	ring.color = color
 	row.add_child(ring)
-	row.add_child(CardStyle.label(EffectText.format(m.stat, m.op, m.value), 11, color))
-	var time := CardStyle.label("", 11, CardStyle.INK_DIM)
+	row.add_child(CardStyle.label(EffectText.format(m.stat, m.op, m.value), 12, color))
+	var time := CardStyle.label("", 12, CardStyle.INK_DIM)
 	row.add_child(time)
 	panel.add_child(row)
 	add_child(panel)

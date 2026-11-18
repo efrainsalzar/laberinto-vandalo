@@ -2,7 +2,7 @@ extends RefCounted
 ## Colores, tamaños y piezas comunes de la tarjeta del participante (para que todas las secciones se vean igual).
 ## Paleta del juego (ui/theme.tres): paneles violeta oscuro, bordes lavanda, dorado del trofeo.
 
-const WIDTH := 224.0
+const WIDTH := 296.0
 const PANEL := Color(0.05, 0.04, 0.09, 0.86)
 const LINE := Color(0.45, 0.4, 0.65, 0.45)
 const LINE_SOFT := Color(0.45, 0.4, 0.65, 0.22)

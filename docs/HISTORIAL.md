@@ -3,6 +3,10 @@
 > Lo ya terminado, de lo más nuevo a lo más viejo. El estado actual y lo que sigue están en
 > [ROADMAP.md](ROADMAP.md). Al cerrar una pieza se agrega su bloque **arriba**.
 
+### v0.0.33 — Tarjeta del boceto arriba a la izquierda ✅
+- [x] Vuelve el diseño del boceto (avatar grande, píldoras, dos ranuras de arma BASE / ESPECIAL, efectos dentro), ahora arriba a la izquierda.
+- [x] Sección SAL con barra redondeada; el anillo del avatar muestra la salud. Sigue volviéndose transparente si hay alguien detrás.
+
 ### v0.0.32 — Etapa 4.1: salud y daño por arma ✅
 - [x] Salud 100 (`HealthComponent` + `lv::core::Health`). Una bala ya no elimina: quita salud; con 0 se pierde la vida, se suelta el trofeo y se reaparece con la salud llena.
 - [x] Daño como dato en cada arma: pistola 20, escopeta 12 por perdigón, láser 70/s, bazuca 80 en el centro → 30 en el borde.

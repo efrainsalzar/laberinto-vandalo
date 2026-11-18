@@ -22,18 +22,26 @@ class HealthBar extends Control:
 	var trail := 1.0  # >= fill mientras se vacía el rastro
 
 	func _init() -> void:
-		custom_minimum_size = Vector2(0, 6)
+		custom_minimum_size = Vector2(0, 8)
 		size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	func _draw() -> void:
-		draw_rect(Rect2(Vector2.ZERO, size), TRACK)
+		var r := size.y / 2.0  # extremos redondeados (como en el boceto)
+		_pill(Rect2(Vector2.ZERO, size), TRACK, r)
 		var f := clampf(fill, 0.0, 1.0)
 		var t := clampf(trail, f, 1.0)
 		if t > f:
-			draw_rect(Rect2(size.x * f, 0, size.x * (t - f), size.y), Color(1, 1, 1, 0.75))
-		draw_rect(Rect2(0, 0, size.x * f, size.y), color_for(f))
+			_pill(Rect2(0, 0, size.x * t, size.y), Color(1, 1, 1, 0.75), r)
+		if f > 0.0:
+			_pill(Rect2(0, 0, size.x * f, size.y), color_for(f), r)
+
+	func _pill(rect: Rect2, color: Color, r: float) -> void:
+		var box := StyleBoxFlat.new()
+		box.bg_color = color
+		box.set_corner_radius_all(int(r))
+		draw_style_box(box, rect)
 
 	static func color_for(ratio: float) -> Color:
 		if ratio < LOW_RATIO:
@@ -52,23 +60,23 @@ var _flash_tween: Tween
 
 
 func _init() -> void:
-	add_theme_constant_override("separation", 8)
+	add_theme_constant_override("separation", 10)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
 func bind(participant: Participant) -> void:
 	_health = participant.get_health()
 	var key := CardStyle.caption("SAL", CardStyle.INK_DIM)
-	key.custom_minimum_size.x = 24
+	key.custom_minimum_size.x = 30
 	add_child(key)
 	_bar = HealthBar.new()
 	add_child(_bar)
-	_value = CardStyle.label("", 13)
-	_value.custom_minimum_size.x = 34
+	_value = CardStyle.label("", 16)
+	_value.custom_minimum_size.x = 52
 	_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	add_child(_value)
 	var spacer := Control.new()  # alinea el número con los de VEL y VIS (que tienen columna de multiplicador)
-	spacer.custom_minimum_size.x = 32
+	spacer.custom_minimum_size.x = 40
 	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(spacer)
 	if _health == null:

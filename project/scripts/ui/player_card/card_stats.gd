@@ -23,7 +23,7 @@ class StatBar extends Control:
 	var extra := 0.0
 
 	func _init() -> void:
-		custom_minimum_size = Vector2(0, 4)
+		custom_minimum_size = Vector2(0, 6)
 		size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -45,7 +45,7 @@ var _rows := {}  # stat -> {bar, value, mult, shown, tween, decimals}
 
 
 func _init() -> void:
-	add_theme_constant_override("separation", 3)
+	add_theme_constant_override("separation", 6)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
@@ -53,19 +53,19 @@ func bind(participant: Participant) -> void:
 	_stats = participant.get_stats()
 	for row: Dictionary in ROWS:
 		var line := HBoxContainer.new()
-		line.add_theme_constant_override("separation", 8)
+		line.add_theme_constant_override("separation", 10)
 		var key := CardStyle.caption(row.key, CardStyle.INK_DIM)
-		key.custom_minimum_size.x = 24
+		key.custom_minimum_size.x = 30
 		line.add_child(key)
 		var bar := StatBar.new()
 		bar.color = row.color
 		line.add_child(bar)
-		var value := CardStyle.label("", 13)
-		value.custom_minimum_size.x = 34
+		var value := CardStyle.label("", 16)
+		value.custom_minimum_size.x = 52
 		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		line.add_child(value)
-		var mult := CardStyle.label("", 11, CardStyle.INK_FAINT)
-		mult.custom_minimum_size.x = 32
+		var mult := CardStyle.label("", 12, CardStyle.INK_FAINT)
+		mult.custom_minimum_size.x = 40
 		line.add_child(mult)
 		add_child(line)
 		_rows[row.stat] = {"bar": bar, "value": value, "mult": mult, "shown": 0.0, "tween": null, "decimals": row.decimals}

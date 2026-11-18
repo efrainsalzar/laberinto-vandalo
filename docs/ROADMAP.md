@@ -5,8 +5,8 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 
 ## Estado actual
 
-**v0.0.32** · 151 tests · Etapa 1 completa y Etapa 3 (bots) adelantada. Últimas piezas: tarjeta del participante
-(v0.0.29), HUD flotante (v0.0.31) y **Etapa 4.1 — salud y daño por arma (v0.0.32, en prueba en vivo)**.
+**v0.0.33** · 151 tests · Etapa 1 completa y Etapa 3 (bots) adelantada. Últimas piezas: HUD flotante (v0.0.31),
+**Etapa 4.1 — salud y daño por arma (v0.0.32, en prueba en vivo)** y tarjeta del boceto arriba a la izquierda (v0.0.33).
 **Siguiente: Etapa 4 — Pieza 2 (pociones y efectos de objeto como Strategy). Diseño ya aprobado: ver abajo.** Todo lo terminado, versión por versión: [HISTORIAL.md](HISTORIAL.md).
 
 ## Plan acordado (etapas, una pieza a la vez)
