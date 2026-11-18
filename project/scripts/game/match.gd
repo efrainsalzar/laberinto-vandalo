@@ -308,7 +308,7 @@ func _on_match_ended(outcome: int, winner: Participant) -> void:
 	add_child(results)
 	var elapsed := _match.get_elapsed()
 	var time := "%d:%02d" % [int(elapsed) / 60, int(elapsed) % 60]
-	var collected: String = _hud.get_node("TopBar/Row/Collected").text
+	var collected: String = _hud.get_collected_text()
 	var map := "mapa %s · semilla %d" % [_maze.profile.get_display_name() if _maze.profile else "", _maze.get_last_seed()]
 	if outcome == MatchController.OUTCOME_VICTORY and winner == _participant:
 		results.show_result("¡VICTORIA!", Color(1.0, 0.82, 0.25),

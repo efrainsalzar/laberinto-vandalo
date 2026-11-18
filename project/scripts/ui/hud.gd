@@ -1,7 +1,8 @@
 class_name HUD
 extends CanvasLayer
-## HUD del jugador: tarjeta del participante (arriba a la izquierda: estado, stats, efectos y armas), barra
-## superior delgada (reloj, objetos, FPS), pista F1 y panel de controles. El centro de la pantalla queda libre.
+## HUD del jugador, todo flotante (sin barras): tarjeta del participante abajo a la izquierda (estado, stats,
+## efectos y armas), pastilla del reloj arriba al centro con la línea del trofeo, FPS opcional arriba a la derecha,
+## pista F1 y panel de controles. El centro de la pantalla queda libre.
 ##
 ## Observer: escucha al participante y a Events; nunca modifica el juego.
 ## Ver docs/ARQUITECTURA.md §10 y docs/arquitectura/24-tarjeta-participante.md.
@@ -11,7 +12,6 @@ const HINT_SECONDS := 5.0
 ## Texto del panel de controles (cada escena puede poner el suyo).
 @export_multiline var controls_text := "WASD / flechas · moverse\nF1 · mostrar u ocultar esta ayuda"
 
-@onready var _collected: Label = $TopBar/Row/Collected
 @onready var _hint: Label = $HintF1
 @onready var _controls: PanelContainer = $Controls
 @onready var _controls_list: Label = $Controls/Rows/List
@@ -20,13 +20,17 @@ const HINT_SECONDS := 5.0
 @onready var _banner_title: Label = $Banner/Rows/Title
 @onready var _banner_subtitle: Label = $Banner/Rows/Subtitle
 @onready var _map_info: Label = $MapInfo
-@onready var _fps: Label = $TopBar/Row/Fps
+@onready var _fps: Label = $Fps
 @onready var _toast: Label = $Toast
 @onready var _clock: Control = $Clock
-@onready var _clock_time: Label = $Clock/Time
-@onready var _clock_phase: Label = $Clock/Phase
+@onready var _clock_pill: PanelContainer = $Clock/Pill
+@onready var _clock_time: Label = $Clock/Pill/Row/Time
+@onready var _clock_phase: Label = $Clock/Pill/Row/Phase
+@onready var _trophy_line: Label = $Clock/Trophy
+var _map_text := ""
+var _clock_warn := false
 const PLAYER_CARD := preload("res://scripts/ui/player_card/player_card.gd")
-var _card: PanelContainer
+var _card: Control
 var _toast_tween: Tween
 
 var _participant: Participant
@@ -49,6 +53,11 @@ const TROPHY_COLOR := Color(1.0, 0.82, 0.25)
 func _ready() -> void:
 	_controls_list.text = controls_text
 	Events.pickup_collected.connect(_on_pickup_collected)
+	# Línea del trofeo debajo del reloj: dónde está o quién lo lleva.
+	Events.trophy_taken.connect(func(p: Participant) -> void: _set_trophy_line(p, "taken"))
+	Events.trophy_stolen.connect(func(thief: Participant, _v: Participant) -> void: _set_trophy_line(thief, "taken"))
+	Events.trophy_dropped.connect(func(_p: Participant, _pos: Vector2) -> void: _set_trophy_line(null, "floor"))
+	Events.trophy_delivered.connect(func(p: Participant) -> void: _set_trophy_line(p, "delivered"))
 	Events.match_phase_changed.connect(_on_phase_changed)
 	Events.match_time_warning.connect(func(seconds_left: float) -> void:
 		var text := "¡QUEDA 1 MINUTO!" if seconds_left >= 60.0 else "¡QUEDAN %d SEGUNDOS!" % roundi(seconds_left)
@@ -76,6 +85,7 @@ func bind(participant: Participant) -> void:
 func bind_objective(trophy: TrophyController, maze: Maze) -> void:
 	_trophy = trophy
 	_maze = maze
+	_set_trophy_line(null, "vault")
 	if _card != null:
 		_card.set_trophy(trophy)
 
@@ -101,11 +111,11 @@ func show_banner(title: String, subtitle: String, color: Color) -> void:
 	t.tween_property(_banner, "scale", Vector2.ONE, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
-## Información del mapa (abajo a la izquierda, discreta). Destella al cambiar.
+## Información del mapa: ya no ocupa la pantalla; se muestra al pie de la ayuda (F1) y en los resultados.
 func set_map_info(text: String) -> void:
+	_map_text = text
 	_map_info.text = text
-	_map_info.modulate = Color(1.6, 1.5, 1.0)
-	create_tween().tween_property(_map_info, "modulate", Color.WHITE, 0.8)
+	_refresh_controls_text()
 
 
 ## Aviso breve arriba al centro (debajo de la barra): entra, late y se va. No tapa el centro.
@@ -132,13 +142,21 @@ func hide_banner() -> void:
 
 func reset_collected() -> void:
 	_collected_count = 0
-	_collected.text = "OBJ 0"
+
+
+## Objetos recogidos en la partida (para la pantalla de resultados).
+func get_collected_text() -> String:
+	return "%d objetos" % _collected_count
 
 
 func set_controls_text(text: String) -> void:
 	controls_text = text
+	_refresh_controls_text()
+
+
+func _refresh_controls_text() -> void:
 	if is_node_ready():
-		_controls_list.text = text
+		_controls_list.text = controls_text + ("\n\n" + _map_text if not _map_text.is_empty() else "")
 
 
 func is_controls_open() -> bool:
@@ -194,15 +212,52 @@ func _update_clock() -> void:
 		return
 	_clock_shown = shown
 	_clock_time.text = "%d:%02d" % [shown / 60, shown % 60]
-	if left <= 60.0:
-		_clock_time.add_theme_color_override("font_color", CLOCK_WARN)
-	else:
-		_clock_time.remove_theme_color_override("font_color")
+	_set_clock_warn(left <= 60.0)
 	if left <= 10.0 and _match.is_running():
 		# Últimos segundos: cada segundo late.
 		_clock_time.pivot_offset = _clock_time.size / 2.0
 		_clock_time.scale = Vector2(1.35, 1.35)
 		create_tween().tween_property(_clock_time, "scale", Vector2.ONE, 0.4).set_trans(Tween.TRANS_BACK)
+
+
+## Último minuto: la pastilla se pone roja y un poco más grande.
+func _set_clock_warn(warn: bool) -> void:
+	if warn == _clock_warn:
+		return
+	_clock_warn = warn
+	if warn:
+		_clock_time.add_theme_color_override("font_color", CLOCK_WARN)
+		var style: StyleBoxFlat = _clock_pill.get_theme_stylebox("panel").duplicate()
+		style.border_color = CLOCK_WARN
+		style.bg_color = Color(0.2, 0.04, 0.05, 0.85)
+		_clock_pill.add_theme_stylebox_override("panel", style)
+		_clock_pill.pivot_offset = _clock_pill.size / 2.0
+		create_tween().tween_property(_clock_pill, "scale", Vector2(1.12, 1.12), 0.3).set_trans(Tween.TRANS_BACK)
+	else:
+		_clock_time.remove_theme_color_override("font_color")
+		_clock_pill.scale = Vector2.ONE
+
+
+## Línea del trofeo: "en la bóveda", "en el piso", "lo lleva ROJO", "¡LO LLEVAS TÚ!".
+func _set_trophy_line(carrier: Participant, state: String) -> void:
+	var color := TROPHY_COLOR
+	var text := "♛ en la bóveda"
+	match state:
+		"floor":
+			text = "♛ en el piso · ¡tómalo!"
+		"delivered":
+			text = "♛ entregado"
+		"taken":
+			if carrier == _participant:
+				text = "♛ ¡LO LLEVAS TÚ! · a tu base"
+			elif carrier:
+				text = "♛ lo lleva %s" % carrier.display_name.to_upper()
+				color = carrier.color
+	_trophy_line.text = text
+	_trophy_line.add_theme_color_override("font_color", color)
+	_trophy_line.pivot_offset = _trophy_line.size / 2.0
+	_trophy_line.scale = Vector2(1.15, 1.15)
+	create_tween().tween_property(_trophy_line, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_BACK)
 
 
 func _on_phase_changed(phase: int, phase_name: String) -> void:
@@ -244,7 +299,3 @@ func _on_pickup_collected(_type: PickupType, participant: Participant, _pos: Vec
 	if participant != _participant:
 		return
 	_collected_count += 1
-	_collected.text = "OBJ %d" % _collected_count
-	_collected.pivot_offset = _collected.size / 2.0
-	_collected.scale = Vector2(1.2, 1.2)
-	create_tween().tween_property(_collected, "scale", Vector2.ONE, 0.2).set_trans(Tween.TRANS_BACK)

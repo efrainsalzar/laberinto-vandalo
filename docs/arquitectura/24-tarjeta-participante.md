@@ -6,19 +6,26 @@ La información del jugador estaba repartida: VEL, VIS, efectos y "llevas el tro
 armas en un panel abajo al centro. Con la salud y las vidas (Etapa 4) la barra de arriba no daba para más. El dueño
 pidió un panel propio, pequeño y moderno, que crezca sin rehacerlo.
 
-### Solución: una tarjeta con secciones (arriba a la izquierda)
+### Solución (v0.0.31): HUD todo flotante, sin barras
 ```
-┌───────────────────────────────┐
-│ (◉) TÚ                         │  cabecera: avatar con anillo de estado + píldoras
-│      [EN JUEGO] [♛ TROFEO]     │
-│ VEL ▬▬▬▬▬▬▬▬▬▬░░░  120  ×0,85  │  stats: barra hasta el tope (sólido = permanente, rayado = temporal)
-│ VIS ▬▬▬▬▬▬▬░░░░░░  5.0          │
-│ (◔ ×1.5 VEL 4 s)               │  efectos: anillo que se vacía (solo si hay)
-│ ───────────────────────────── │
-│ [BASE PISTOLA ∞][ESPECIAL LÁSER 2,3 s ▬▬▬] │  armas: la activa con el color del arma
-└───────────────────────────────┘
+                       ⟨ 6:42 · ASALTO ⟩                 60 FPS (opcional)
+                        ♛ lo lleva ROJO
+                       (avisos debajo)
+
+╭───────────────────────────╮
+│ (◉) TÚ [EN JUEGO]       ♛ │  cabecera en una línea: avatar con anillo de estado
+│ VEL ▬▬▬▬▬▬░░  120  ×0,85  │  stats: sólido = permanente, rayado = temporal
+│ VIS ▬▬▬▬░░░░  5.0         │
+│ ✦ ESCOPETA ▮▮▮▮▮▯▯▯  5/8  │  solo el arma activa (sin especial: PISTOLA ∞ tenue)
+╰───────────────────────────╯                                   F1 · controles
 ```
-La barra superior queda solo para la partida (reloj, objetos, FPS). Maqueta aprobada por el dueño.
+- **Tarjeta** flotante y compacta (224 px) abajo a la izquierda, pegada a la esquina. Los efectos temporales flotan
+  como fichitas **encima**, solo mientras duran. Si un participante pasa por detrás, se vuelve semitransparente.
+- **Arriba al centro**, una pastilla con el reloj y la fase (en el último minuto se pone roja y crece) y, debajo, la
+  **línea del trofeo**: en la bóveda / en el piso / lo lleva ROJO / ¡LO LLEVAS TÚ!
+- **FPS** solo si está activado en Opciones (arriba a la derecha). **Objetos recogidos** e **info del mapa** salen
+  de la pantalla: van en los resultados y al pie de la ayuda (F1).
+- v0.0.29 tenía una tarjeta grande arriba a la izquierda y una barra superior; el dueño pidió todo flotante y más chico.
 
 | Pieza | Patrón | Por qué |
 |---|---|---|
@@ -35,10 +42,10 @@ la espera (eliminado). Mientras estás eliminado, stats, efectos y armas se apag
 | Archivo | Qué es |
 |---|---|
 | `project/scripts/ui/player_card/*.gd` | La tarjeta y sus secciones |
-| `project/scripts/ui/hud.gd`, `project/scenes/ui/hud.tscn` | Crea la tarjeta; la barra de arriba queda con FPS y OBJ |
+| `project/scripts/ui/hud.gd`, `project/scenes/ui/hud.tscn` | Crea la tarjeta; pastilla del reloj + línea del trofeo; FPS opcional; sin barra superior |
 | (borrado) `project/scripts/ui/weapon_panel.gd` | Reemplazado por la sección de armas |
 
 ### Decisiones
 - Solo interfaz (GDScript): no hizo falta C++ (el `StatsProfile` ya expone base y tope).
 - Cabecera, stats y armas se consultan por señales; efectos y estado de vida se consultan cada frame (pocos datos).
-- Verificado en Godot: carga sin errores; captura con la tarjeta en estado normal. Estados en partida: prueba del dueño.
+- Verificado en Godot: carga sin errores; capturas en estado normal y eliminado (con la desintegración).

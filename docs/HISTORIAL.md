@@ -3,6 +3,11 @@
 > Lo ya terminado, de lo más nuevo a lo más viejo. El estado actual y lo que sigue están en
 > [ROADMAP.md](ROADMAP.md). Al cerrar una pieza se agrega su bloque **arriba**.
 
+### v0.0.31 — HUD flotante ✅
+- [x] Sin barra superior: pastilla del reloj (roja en el último minuto) con la línea del trofeo debajo; FPS solo si está activado.
+- [x] Tarjeta compacta y flotante abajo a la izquierda (cabecera en una línea, solo el arma activa); efectos encima; se vuelve transparente si hay alguien detrás.
+- [x] Objetos recogidos e info del mapa salen de la pantalla (resultados y ayuda F1).
+
 ### v0.0.30 — Arreglo: la muerte por fin se ve ✅
 - [x] Causa: la vista pedía el `LifeComponent` antes de que el participante lo buscara (los hijos hacen `_ready` antes que el padre). Ahora los componentes se buscan al pedirlos.
 - [x] Arregla también el parpadeo de protección al reaparecer y perder el arma especial al morir.
