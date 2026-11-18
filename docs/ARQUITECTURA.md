@@ -98,7 +98,7 @@ Cada módulo tiene su archivo en [`arquitectura/`](arquitectura/). Los comentari
 |---|---|---|
 | Builder (pasos de generación) | `MazeGrid::generate` | ✅ |
 | Strategy (algoritmos) | `carve_maze` + `MazeAlgorithm`; `MazeProfile` | ✅ |
-| Strategy | `ParticipantController` (Human, Wander, Bot); `PickupSpawnPolicy`; `BotAction` | ✅ |
+| Strategy | `ParticipantController` (Human, Wander, Bot); `PickupSpawnPolicy`; `BotAction`; `FireBehavior` (cómo dispara cada arma) | ✅ |
 | Utility AI (puntajes) | `BotBrain` | ✅ |
 | Fichas de ataque | `TokenPool` en `BotCoordinator` | ✅ |
 | A* (búsqueda de caminos) | `find_path` | ✅ |

@@ -376,3 +376,54 @@ TEST_SUITE("Catálogo de armas") {
 		CHECK_FALSE(grid.is_wall({ static_cast<int>(std::floor(events[0].x)), static_cast<int>(std::floor(events[0].y)) }));
 	}
 }
+
+TEST_SUITE("Disparo sostenido") {
+	TEST_CASE("Estado del gatillo: apretar, mantener, soltar") {
+		using lv::core::Trigger;
+		CHECK(lv::core::next_trigger(false, false) == Trigger::Idle);
+		CHECK(lv::core::next_trigger(false, true) == Trigger::Pressed);
+		CHECK(lv::core::next_trigger(true, true) == Trigger::Held);
+		CHECK(lv::core::next_trigger(true, false) == Trigger::Released);
+		CHECK(lv::core::is_trigger_down(Trigger::Pressed));
+		CHECK(lv::core::is_trigger_down(Trigger::Held));
+		CHECK_FALSE(lv::core::is_trigger_down(Trigger::Released));
+	}
+
+	TEST_CASE("Batería: se gasta solo mientras se dispara y al acabarse queda vacía") {
+		WeaponSpec spec;
+		spec.fire_mode = lv::core::FireMode::HeldBeam;
+		spec.energy = 1.0f;
+		WeaponState laser;
+		laser.setup(spec);
+		CHECK(laser.energy() == doctest::Approx(1.0f));
+		for (int i = 0; i < 6; i++) {
+			REQUIRE(laser.drain(0.1f));
+		}
+		laser.tick(5.0f); // el tiempo sin disparar no gasta batería
+		CHECK(laser.energy() == doctest::Approx(0.4f));
+		for (int i = 0; i < 4; i++) {
+			laser.drain(0.1f);
+		}
+		CHECK(laser.is_depleted());
+		CHECK_FALSE(laser.drain(0.1f));
+		WeaponState infinite;
+		infinite.setup(WeaponSpec());
+		CHECK(infinite.drain(100.0f)); // sin batería configurada: infinita
+		CHECK(infinite.energy() < 0.0f);
+	}
+
+	TEST_CASE("Bot: el error de puntería se mantiene un rato (un rayo no tiembla en cada frame)") {
+		BotGunner gunner;
+		BotGunner::Tuning tuning;
+		tuning.reaction_time = 0.0f;
+		tuning.aim_error_deg = 20.0f;
+		tuning.max_range = 20.0f;
+		tuning.error_hold = 0.25f;
+		gunner.setup(tuning);
+		Rng rng(7);
+		const std::vector<GunTarget> targets = { { 1, 5.0f, 0.0f } };
+		const GunDecision a = gunner.update(0.05f, 0.0f, 0.0f, targets, rng);
+		const GunDecision b = gunner.update(0.05f, 0.0f, 0.0f, targets, rng);
+		CHECK(a.aim_y == doctest::Approx(b.aim_y)); // mismo error dentro de error_hold
+	}
+}

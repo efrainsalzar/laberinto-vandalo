@@ -18,7 +18,7 @@ class WeaponType : public Resource {
 public:
 	enum FireMode {
 		FIRE_PROJECTILE = static_cast<int>(lv::core::FireMode::Projectile),
-		FIRE_BEAM = static_cast<int>(lv::core::FireMode::Beam),
+		FIRE_HELD_BEAM = static_cast<int>(lv::core::FireMode::HeldBeam),
 	};
 
 	void set_display_name(const String &p_value) { display_name_ = p_value; }
@@ -30,6 +30,8 @@ public:
 	FireMode get_fire_mode() const { return static_cast<FireMode>(spec_.fire_mode); }
 	void set_fire_interval(float p_value) { spec_.fire_interval = p_value; }
 	float get_fire_interval() const { return spec_.fire_interval; }
+	void set_energy(float p_value) { spec_.energy = p_value; }
+	float get_energy() const { return spec_.energy; }
 	void set_ammo(int p_value) { spec_.ammo = p_value; }
 	int get_ammo() const { return spec_.ammo; }
 	void set_magazine_size(int p_value) { spec_.magazine_size = p_value; }

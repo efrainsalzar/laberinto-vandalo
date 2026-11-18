@@ -9,10 +9,10 @@ especifica más adelante. Hacía falta una base que escale sin reescribir.
 ### Solución: cada arma es una combinación de piezas de datos
 | Pieza (`WeaponSpec` / `WeaponType`) | Opciones | Uso |
 |---|---|---|
-| **Cómo dispara** (`fire_mode`, Strategy elegida por dato) | `Proyectil` · `Rayo` | pistola, escopeta y bazuca vuelan; el láser es instantáneo |
+| **Cómo dispara** (`fire_mode` → `FireBehavior`, Strategy) | `Proyectil` · `Rayo sostenido` | pistola, escopeta y bazuca vuelan; el láser es un rayo continuo |
 | **Perdigones** (`pellets`, `spread_deg`) | 1..24 en un cono, repartidos parejos (sin azar) | escopeta: 7 en 30° |
 | **Impacto** (`explosion_radius`) | 0 = directo · >0 = explosión | bazuca: radio 2 casillas |
-| **Munición** (`ammo`) | 0 = infinita · N disparos | pistola infinita; especiales con munición |
+| **Munición** (`ammo`) o **batería** (`energy`, segundos) | 0 = infinita | pistola infinita; escopeta 8 y bazuca 4 tiros; láser 4 s |
 | **Alcance** (`range_from_vision` + factor) | visión × factor, o fijo | escopeta 0,75 × visión |
 
 Un arma nueva que combine estas piezas = **un .tres, sin código** (ametralladora, francotirador, granada...).
@@ -40,12 +40,18 @@ classDiagram
 | Pieza | Patrón | Por qué |
 |---|---|---|
 | `WeaponType` con `fire_mode`, perdigones, explosión, munición | **Type Object** + armas por composición de datos | Escala a un catálogo grande sin clases nuevas. |
-| `fire_mode` (Proyectil / Rayo) | **Strategy** (elegida por dato) | Solo dos maneras de disparar; un `switch` en un lugar basta. Si crecen, pasarían a clases. |
+| `FireBehavior` (`ProjectileFire`, `HeldBeamFire`) | **Strategy** + Factory (`FireBehavior::create(mode)`) | Cada manera de disparar es una clase que recibe el gatillo (apretado, mantenido, soltado). Un arma de carga, ráfaga o cuerpo a cuerpo = una clase nueva; `WeaponComponent` no cambia. |
 | Ranura especial en `WeaponComponent` | **Composición** + State por arma | Cada arma lleva su propio `WeaponState` (cadencia y munición independientes). |
 | `trace_beam`, `explosion_victims`, `spread_directions` | Funciones puras en `core` | Se prueban sin Godot; reutilizan el DDA de la visión. |
 
-**Láser:** rayo instantáneo hasta la primera pared o el primer blanco, cada 0,15 s mientras se mantiene el clic
-(30 disparos). **Bazuca:** cohete a 22 casillas/s que explota al chocar o al llegar a su alcance; la explosión le pega
+**Láser (v0.0.28): rayo sostenido.** Mientras se mantiene el clic hay **un solo rayo continuo** (antes eran rayos
+sueltos cada 0,15 s que parpadeaban). El arma lo renueva cada frame con `ProjectileSystem.hold_beam` (sigue la
+puntería y le pega en el acto al primer blanco que toca); si un frame no se renueva (gatillo suelto, sin batería,
+tirador eliminado) se apaga. Gasta 4 s de batería solo mientras dispara.
+**Gatillo:** `Participant` pasa cada frame si el gatillo está abajo; `WeaponComponent` calcula `Trigger`
+(`Pressed`, `Held`, `Released`, `Idle`) y se lo da al comportamiento del arma activa.
+**Bots con láser:** el error de puntería se sortea cada 0,25 s (`BotGunner.error_hold`), así el rayo barre con
+suavidad en vez de temblar en cada frame. **Bazuca:** cohete a 22 casillas/s que explota al chocar o al llegar a su alcance; la explosión le pega
 a todos los que estén en el radio y tengan línea de visión con el centro (las paredes protegen). No hay daño propio
 (decisión del dueño, por ahora). El punto de choque contra una pared se retrocede 0,05 casillas para que la explosión
 no nazca dentro de la pared.
@@ -77,7 +83,8 @@ Escopeta: 7 balas por disparo; con 8 participantes con escopeta son ~70 balas po
 | `src/core/weapon.{h,cpp}` | `FireMode`, perdigones, explosión, munición total; `spread_directions` |
 | `src/core/projectiles.{h,cpp}` | `trace_beam`, `explosion_victims`; balas con explosión |
 | `tests/test_weapons.cpp` | +5 tests: cono parejo, munición que se gasta, rayo (primer blanco, tirador, paredes), explosión (radio, borde, paredes, tirador), choque sobre suelo |
-| `src/game/weapon_type.*`, `weapon_component.*`, `projectile_system.*` | Datos, ranura especial, rayos y explosiones |
+| `src/game/weapon_type.*`, `weapon_component.*`, `projectile_system.*` | Datos, ranura especial, rayos sostenidos y explosiones |
+| `src/game/fire_behavior.{h,cpp}` | Comportamientos de disparo (Strategy): `ProjectileFire`, `HeldBeamFire` |
 | `project/data/weapons/{pistol,shotgun,laser,bazooka}.tres` | El catálogo |
 | `project/scripts/game/match.gd` | Teclas de prueba 4/5/6 (equipar) y 7 (volver a la pistola) |
 | `src/game/pickup_type.*`, `pickup.cpp` | `PickupType.weapon` y símbolos de armas; equipar al recoger |

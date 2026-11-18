@@ -18,7 +18,8 @@ class Participant;
 // Todas las balas, rayos y explosiones de la partida en UN nodo (no un nodo por bala). Adapta
 // lv::core::ProjectileWorld, lv::core::trace_beam y lv::core::explosion_victims:
 // - spawn(): una bala (WeaponComponent llama una vez por perdigón).
-// - fire_beam(): rayo instantáneo (láser): le pega en el acto al primer blanco.
+// - hold_beam(): rayo sostenido (láser): el arma lo renueva cada frame mientras se mantiene el gatillo; le pega
+//   en el acto al primer blanco que toca. Si un frame no se renueva, se apaga.
 // - Cada frame de física: avanza las balas contra las paredes del Maze y contra los participantes que son
 //   blanco ahora (en juego y sin protección; nunca quien disparó). Si la bala explota (bazuca), le pega a todos
 //   los del radio con línea de visión. Emite participant_hit(victim, by) por cada uno; qué hace el impacto lo
@@ -40,7 +41,7 @@ public:
 	void setup(Maze *p_maze);
 	// p_range: alcance real en casillas (WeaponComponent lo calcula; puede depender de la visión).
 	void spawn(Participant *p_owner, const Vector2 &p_from, const Vector2 &p_direction, const Ref<WeaponType> &p_weapon, float p_range);
-	void fire_beam(Participant *p_owner, const Vector2 &p_from, const Vector2 &p_direction, const Ref<WeaponType> &p_weapon, float p_range);
+	void hold_beam(Participant *p_owner, const Vector2 &p_from, const Vector2 &p_direction, const Ref<WeaponType> &p_weapon, float p_range);
 	void clear();
 	int get_projectile_count() const { return world_.size(); }
 
@@ -52,18 +53,25 @@ protected:
 
 private:
 	static constexpr float TRAIL_SECONDS = 0.03f; // largo de la estela = lo que la bala recorre en este tiempo
-	static constexpr float BEAM_SECONDS = 0.12f;
 	static constexpr float EXPLOSION_SECONDS = 0.35f;
 
-	// Efecto visual que se apaga solo (rayo o explosión). En coordenadas locales.
+	// Explosión que se apaga sola. En coordenadas locales.
 	struct Flash {
 		Vector2 from;
-		Vector2 to; // rayo: fin; explosión: sin uso
-		float radius = 0.0f; // explosión: radio en px
+		float radius = 0.0f; // px
 		Color color;
 		float time = 0.0f;
 		float duration = 0.1f;
-		bool beam = false;
+	};
+
+	// Rayo sostenido de un tirador. Vive mientras su arma lo renueve cada frame.
+	struct HeldBeam {
+		int owner = -1;
+		Vector2 from; // local
+		Vector2 to; // local: pared, blanco o alcance
+		Color color;
+		float width = 2.0f; // px
+		bool refreshed = false;
 	};
 
 	Maze *maze_ = nullptr;
@@ -74,6 +82,7 @@ private:
 	std::vector<Participant *> bodies_; // bodies_[i] es el participante de id i (o nullptr)
 	std::vector<int> victims_;
 	std::vector<Flash> flashes_;
+	std::vector<HeldBeam> held_beams_;
 
 	int weapon_tag(const Ref<WeaponType> &p_weapon);
 	Color weapon_color(int p_tag) const;

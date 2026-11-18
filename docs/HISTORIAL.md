@@ -3,6 +3,12 @@
 > Lo ya terminado, de lo más nuevo a lo más viejo. El estado actual y lo que sigue están en
 > [ROADMAP.md](ROADMAP.md). Al cerrar una pieza se agrega su bloque **arriba**.
 
+### v0.0.28 — Láser sostenido y comportamientos de disparo ✅
+- [x] El láser es un rayo continuo mientras se mantiene el clic (sin parpadeo), con 4 s de batería.
+- [x] Comportamientos de disparo como Strategy (`FireBehavior`): el arma recibe el gatillo apretado / mantenido / soltado.
+- [x] Bots: el error de puntería se mantiene 0,25 s (el rayo barre suave).
+- [x] 3 tests (138 en total).
+
 ### v0.0.27 — Muerte con desintegración ✅
 - [x] Corregido: el efecto de muerte quedaba debajo del piso y no se veía (parecía que el participante se congelaba).
 - [x] El cuerpo se desintegra en píxeles en su lugar (shader) mientras salen fragmentos de su color; marca en el piso.

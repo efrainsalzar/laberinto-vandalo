@@ -77,9 +77,10 @@ void Participant::execute_command(const lv::core::ParticipantCommand &p_command)
 	set_velocity(direction * speed);
 	move_and_slide();
 
-	if (p_command.fire && weapon_ != nullptr) {
+	// El gatillo va al arma cada frame (abajo o arriba): así sabe si se apretó, se mantiene o se soltó.
+	if (weapon_ != nullptr) {
 		const Vector2 aim = p_command.has_aim() ? Vector2(p_command.aim_x, p_command.aim_y) : facing_;
-		weapon_->try_fire(this, aim);
+		weapon_->update_trigger(this, p_command.fire, aim, static_cast<float>(get_physics_process_delta_time()));
 	}
 }
 

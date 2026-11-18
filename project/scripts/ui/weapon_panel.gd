@@ -15,7 +15,6 @@ var _special_ammo: Label
 var _special_bar: ProgressBar
 var _special_box: VBoxContainer
 var _base_box: VBoxContainer
-var _max_ammo := 1
 
 
 func _ready() -> void:
@@ -74,7 +73,7 @@ func bind(weapon: WeaponComponent) -> void:
 		visible = false
 		return
 	_weapon.weapon_changed.connect(_on_weapon_changed.unbind(1))
-	_weapon.ammo_changed.connect(_on_ammo_changed)
+	_weapon.charge_changed.connect(_on_charge_changed)
 	_on_weapon_changed()
 
 
@@ -85,11 +84,11 @@ func _on_weapon_changed() -> void:
 	if special:
 		_special_name.text = special.get_short_name()
 		_special_name.add_theme_color_override("font_color", special.projectile_color)
-		_max_ammo = maxi(1, special.ammo)
-		_special_bar.max_value = _max_ammo
+		_special_bar.max_value = 1.0
+		_special_bar.step = 0.0
 		_special_bar.modulate = special.projectile_color
-		_special_bar.visible = special.ammo > 0
-		_on_ammo_changed(_weapon.get_special_ammo())
+		_special_bar.visible = special.ammo > 0 or special.energy > 0.0
+		_on_charge_changed(_weapon.get_special_charge())
 		_special_box.modulate = Color.WHITE
 		_base_box.modulate = DIM
 		_pulse(_special_box)
@@ -104,12 +103,17 @@ func _on_weapon_changed() -> void:
 			_base_name.add_theme_color_override("font_color", base.projectile_color)
 
 
-func _on_ammo_changed(ammo: int) -> void:
+func _on_charge_changed(fraction: float) -> void:
 	if _weapon == null or not _weapon.has_special():
 		return
-	_special_ammo.text = "∞" if ammo < 0 else str(ammo)
-	_special_bar.value = ammo
-	_special_ammo.add_theme_color_override("font_color", Color(1.0, 0.4, 0.35) if ammo >= 0 and ammo <= 2 else Color.WHITE)
+	var energy := _weapon.get_special_energy()
+	var ammo := _weapon.get_special_ammo()
+	if energy >= 0.0:
+		_special_ammo.text = "%.1f s" % energy
+	else:
+		_special_ammo.text = "∞" if ammo < 0 else str(ammo)
+	_special_bar.value = fraction
+	_special_ammo.add_theme_color_override("font_color", Color(1.0, 0.4, 0.35) if fraction <= 0.25 else Color.WHITE)
 
 
 func _pulse(control: Control) -> void:

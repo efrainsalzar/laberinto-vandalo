@@ -49,6 +49,7 @@ void ProjectileSystem::setup(Maze *p_maze) {
 void ProjectileSystem::clear() {
 	world_.clear();
 	flashes_.clear();
+	held_beams_.clear();
 	queue_redraw();
 }
 
@@ -80,25 +81,35 @@ void ProjectileSystem::spawn(Participant *p_owner, const Vector2 &p_from, const 
 	world_.spawn(from.x, from.y, p_direction.x, p_direction.y, spec, p_owner->get_participant_id(), weapon_tag(p_weapon));
 }
 
-void ProjectileSystem::fire_beam(Participant *p_owner, const Vector2 &p_from, const Vector2 &p_direction, const Ref<WeaponType> &p_weapon, float p_range) {
+void ProjectileSystem::hold_beam(Participant *p_owner, const Vector2 &p_from, const Vector2 &p_direction, const Ref<WeaponType> &p_weapon, float p_range) {
 	if (maze_ == nullptr || p_owner == nullptr || p_weapon.is_null()) {
 		return;
 	}
 	lv::core::PerfScope perf("weapons.beam");
 	gather_targets();
+	const int owner = p_owner->get_participant_id();
 	const lv::core::GridPoint from = maze_->world_to_grid_point(p_from);
-	const lv::core::BeamHit result = lv::core::trace_beam(maze_->get_grid(), from.x, from.y, p_direction.x, p_direction.y, p_range, targets_, p_owner->get_participant_id());
-	Flash flash;
-	flash.beam = true;
-	flash.from = grid_to_local(from.x, from.y);
-	flash.to = grid_to_local(result.end_x, result.end_y);
-	flash.color = p_weapon->get_projectile_color();
-	flash.duration = BEAM_SECONDS;
-	flash.radius = std::max(1.5f, p_weapon->get_projectile_radius() * maze_->get_tile_px());
-	flashes_.push_back(flash);
+	const lv::core::BeamHit result = lv::core::trace_beam(maze_->get_grid(), from.x, from.y, p_direction.x, p_direction.y, p_range, targets_, owner);
+	HeldBeam *beam = nullptr;
+	for (HeldBeam &b : held_beams_) {
+		if (b.owner == owner) {
+			beam = &b;
+			break;
+		}
+	}
+	if (beam == nullptr) {
+		held_beams_.push_back(HeldBeam());
+		beam = &held_beams_.back();
+		beam->owner = owner;
+	}
+	beam->from = grid_to_local(from.x, from.y);
+	beam->to = grid_to_local(result.end_x, result.end_y);
+	beam->color = p_weapon->get_projectile_color();
+	beam->width = std::max(1.5f, p_weapon->get_projectile_radius() * maze_->get_tile_px());
+	beam->refreshed = true;
 	queue_redraw();
 	if (result.target >= 0) {
-		hit(result.target, p_owner->get_participant_id());
+		hit(result.target, owner);
 	}
 }
 
@@ -140,11 +151,18 @@ void ProjectileSystem::gather_targets() {
 }
 
 void ProjectileSystem::_physics_process(double p_delta) {
-	if (maze_ == nullptr || (world_.size() == 0 && flashes_.empty())) {
+	if (maze_ == nullptr || (world_.size() == 0 && flashes_.empty() && held_beams_.empty())) {
 		return; // nada que mover ni dibujar (el último frame ya se redibujó vacío)
 	}
 	lv::core::PerfScope perf("weapons.projectiles");
 	const float dt = static_cast<float>(p_delta);
+
+	// Rayos sostenidos: se apagan los que su arma no renovó desde la última vez (gatillo suelto, sin batería,
+	// tirador eliminado). Los que quedan deben renovarse de nuevo antes de la próxima.
+	held_beams_.erase(std::remove_if(held_beams_.begin(), held_beams_.end(), [](const HeldBeam &b) { return !b.refreshed; }), held_beams_.end());
+	for (HeldBeam &beam : held_beams_) {
+		beam.refreshed = false;
+	}
 
 	// Efectos que se apagan.
 	for (Flash &flash : flashes_) {
@@ -203,13 +221,16 @@ void ProjectileSystem::_draw() {
 	}
 	for (const Flash &flash : flashes_) {
 		const float fade = 1.0f - flash.time / flash.duration;
-		if (flash.beam) {
-			draw_line(flash.from, flash.to, Color(flash.color, 0.35f * fade), flash.radius * 3.0f);
-			draw_line(flash.from, flash.to, Color(1, 1, 1, fade), flash.radius);
-		} else {
-			const float grow = 0.4f + 0.6f * (1.0f - fade * fade); // crece rápido al principio
-			draw_circle(flash.from, flash.radius * grow, Color(flash.color, 0.35f * fade));
-			draw_arc(flash.from, flash.radius * grow, 0.0f, 6.2831853f, 40, Color(1, 1, 1, 0.8f * fade), 2.0f);
-		}
+		const float grow = 0.4f + 0.6f * (1.0f - fade * fade); // crece rápido al principio
+		draw_circle(flash.from, flash.radius * grow, Color(flash.color, 0.35f * fade));
+		draw_arc(flash.from, flash.radius * grow, 0.0f, 6.2831853f, 40, Color(1, 1, 1, 0.8f * fade), 2.0f);
+	}
+	// Rayos sostenidos: un halo ancho del color del arma, el cuerpo del color y un núcleo blanco; brillo en la punta.
+	for (const HeldBeam &beam : held_beams_) {
+		draw_line(beam.from, beam.to, Color(beam.color, 0.22f), beam.width * 4.0f);
+		draw_line(beam.from, beam.to, Color(beam.color, 0.85f), beam.width * 1.8f);
+		draw_line(beam.from, beam.to, Color(1, 1, 1, 0.95f), beam.width * 0.7f);
+		draw_circle(beam.to, beam.width * 2.2f, Color(beam.color, 0.5f));
+		draw_circle(beam.to, beam.width * 1.1f, Color(1, 1, 1, 0.9f));
 	}
 }

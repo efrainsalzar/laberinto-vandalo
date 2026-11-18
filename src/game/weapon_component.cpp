@@ -14,6 +14,8 @@ void WeaponComponent::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_special"), &WeaponComponent::get_special);
 	ClassDB::bind_method(D_METHOD("has_special"), &WeaponComponent::has_special);
 	ClassDB::bind_method(D_METHOD("get_special_ammo"), &WeaponComponent::get_special_ammo);
+	ClassDB::bind_method(D_METHOD("get_special_energy"), &WeaponComponent::get_special_energy);
+	ClassDB::bind_method(D_METHOD("get_special_charge"), &WeaponComponent::get_special_charge);
 	ClassDB::bind_method(D_METHOD("get_active_weapon"), &WeaponComponent::get_active_weapon);
 	ClassDB::bind_method(D_METHOD("is_ready"), &WeaponComponent::is_ready);
 
@@ -21,7 +23,7 @@ void WeaponComponent::_bind_methods() {
 
 	ADD_SIGNAL(MethodInfo("fired", PropertyInfo(Variant::VECTOR2, "direction")));
 	ADD_SIGNAL(MethodInfo("weapon_changed", PropertyInfo(Variant::OBJECT, "weapon", PROPERTY_HINT_RESOURCE_TYPE, "WeaponType")));
-	ADD_SIGNAL(MethodInfo("ammo_changed", PropertyInfo(Variant::INT, "ammo")));
+	ADD_SIGNAL(MethodInfo("charge_changed", PropertyInfo(Variant::FLOAT, "fraction")));
 }
 
 void WeaponComponent::_ready() {
@@ -47,7 +49,9 @@ void WeaponComponent::_physics_process(double p_delta) {
 
 void WeaponComponent::set_weapon(const Ref<WeaponType> &p_value) {
 	weapon_ = p_value;
-	base_state_.setup(weapon_.is_valid() ? weapon_->spec() : lv::core::WeaponSpec());
+	const lv::core::WeaponSpec spec = weapon_.is_valid() ? weapon_->spec() : lv::core::WeaponSpec();
+	base_state_.setup(spec);
+	base_behavior_ = FireBehavior::create(spec.fire_mode);
 	if (special_.is_null()) {
 		emit_signal("weapon_changed", weapon_);
 	}
@@ -60,8 +64,9 @@ void WeaponComponent::equip_special(const Ref<WeaponType> &p_value) {
 	}
 	special_ = p_value;
 	special_state_.setup(special_->spec());
+	special_behavior_ = FireBehavior::create(special_->spec().fire_mode);
 	emit_signal("weapon_changed", special_);
-	emit_signal("ammo_changed", get_special_ammo());
+	emit_signal("charge_changed", get_special_charge());
 }
 
 void WeaponComponent::clear_special() {
@@ -69,15 +74,35 @@ void WeaponComponent::clear_special() {
 		return;
 	}
 	special_.unref();
+	special_behavior_.reset();
 	emit_signal("weapon_changed", weapon_);
-	emit_signal("ammo_changed", 0);
+	emit_signal("charge_changed", 0.0f);
 }
 
 int WeaponComponent::get_special_ammo() const {
 	return special_.is_valid() ? special_state_.total_ammo() : 0;
 }
 
+float WeaponComponent::get_special_energy() const {
+	return special_.is_valid() ? special_state_.energy() : -1.0f;
+}
+
+float WeaponComponent::get_special_charge() const {
+	if (special_.is_null()) {
+		return 0.0f;
+	}
+	const lv::core::WeaponSpec &spec = special_->spec();
+	if (spec.energy > 0.0f) {
+		return special_state_.energy() / spec.energy;
+	}
+	if (spec.ammo > 0) {
+		return static_cast<float>(special_state_.total_ammo()) / static_cast<float>(spec.ammo);
+	}
+	return 1.0f;
+}
+
 void WeaponComponent::on_owner_eliminated(Object *) {
+	trigger_down_ = false;
 	clear_special();
 }
 
@@ -90,36 +115,35 @@ float WeaponComponent::get_effective_range(const Participant *p_participant) con
 	return lv::core::effective_range(weapon->spec(), stats != nullptr ? stats->get_vision() : 5.0f);
 }
 
-bool WeaponComponent::try_fire(Participant *p_participant, const Vector2 &p_direction) {
-	const Ref<WeaponType> weapon = get_active_weapon();
-	if (weapon.is_null() || p_participant == nullptr || p_direction.is_zero_approx() || !active_state().is_ready()) {
+bool WeaponComponent::update_trigger(Participant *p_participant, bool p_down, const Vector2 &p_aim, float p_delta) {
+	const lv::core::Trigger trigger = lv::core::next_trigger(trigger_down_, p_down);
+	trigger_down_ = p_down;
+	const bool special = special_.is_valid();
+	FireBehavior *behavior = special ? special_behavior_.get() : base_behavior_.get();
+	if (behavior == nullptr || p_participant == nullptr || p_aim.is_zero_approx() || trigger == lv::core::Trigger::Idle) {
 		return false;
 	}
 	ProjectileSystem *projectiles = ProjectileSystem::find(get_tree());
 	if (projectiles == nullptr) {
 		return false; // escena sin sistema de balas (p. ej. un sandbox): no se gasta el disparo
 	}
-	if (!active_state().try_fire()) {
+	FireContext context;
+	context.shooter = p_participant;
+	context.projectiles = projectiles;
+	context.weapon = get_active_weapon();
+	context.state = special ? &special_state_ : &base_state_;
+	context.from = p_participant->get_global_position();
+	context.direction = p_aim.normalized();
+	context.range = get_effective_range(p_participant);
+	context.delta = p_delta;
+	if (!behavior->update(context, trigger)) {
 		return false;
 	}
-	const Vector2 direction = p_direction.normalized();
-	const Vector2 from = p_participant->get_global_position();
-	const float range = get_effective_range(p_participant);
-	const lv::core::WeaponSpec &spec = weapon->spec();
-	if (spec.fire_mode == lv::core::FireMode::Beam) {
-		projectiles->fire_beam(p_participant, from, direction, weapon, range);
-	} else {
-		lv::core::spread_directions(direction.x, direction.y, spec.pellets, spec.spread_deg, directions_);
-		for (const lv::core::Direction &d : directions_) {
-			projectiles->spawn(p_participant, from, Vector2(d.x, d.y), weapon, range);
-		}
-	}
-	emit_signal("fired", direction);
-
-	if (special_.is_valid()) {
-		emit_signal("ammo_changed", get_special_ammo());
+	emit_signal("fired", context.direction);
+	if (special) {
+		emit_signal("charge_changed", get_special_charge());
 		if (special_state_.is_depleted()) {
-			clear_special(); // sin munición: vuelve a la pistola
+			clear_special(); // sin munición o batería: vuelve a la pistola
 		}
 	}
 	return true;

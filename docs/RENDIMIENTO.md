@@ -43,7 +43,7 @@ Escenario de referencia para medir: **mapa Gigante, Difícil, laberinto vivo Ca�
 | `bots.tokens` | Reparto de fichas de ataque (cada 0,25 s) | `game/bot_coordinator.cpp` |
 | `bots.aim` | Gatillo de cada bot: rivales visibles (cada 0,15 s) y puntería | `game/bot_controller.cpp` |
 | `weapons.projectiles` | Avance y choques de todas las balas + rayos y explosiones que se apagan (máx. 256 balas; no corre sin nada) | `game/projectile_system.cpp` |
-| `weapons.beam` | Un rayo de láser (al disparar) | `game/projectile_system.cpp` |
+| `weapons.beam` | Rayo sostenido de un láser (cada frame mientras se dispara) | `game/projectile_system.cpp` |
 
 **Agregar una medición** (C++): `#include "core/perf.h"` y al inicio del bloque `lv::core::PerfScope perf("sistema.tarea");`.
 Aparece sola en el panel F3 y en los monitores. Nombre: `<sistema>.<tarea>` en minúsculas.

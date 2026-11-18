@@ -25,7 +25,8 @@ struct GunDecision {
 //
 // - Elige al rival visible más cercano.
 // - Tiempo de reacción: al ver a un rival nuevo espera `reaction_time` antes del primer disparo.
-// - Puntería imperfecta: cada disparo se desvía un ángulo al azar de ±`aim_error_deg` (dificultad).
+// - Puntería imperfecta: se desvía un ángulo al azar de ±`aim_error_deg` (dificultad), que se vuelve a sortear
+//   cada `error_hold` segundos (así un rayo sostenido barre con suavidad en vez de temblar en cada frame).
 // - Solo dispara dentro de `max_range` casillas (no gasta balas en blancos que no alcanza).
 // La cadencia y la munición las controla el arma (WeaponState), no el bot. Ver docs/ARQUITECTURA.md §22.
 class BotGunner {
@@ -34,6 +35,7 @@ public:
 		float reaction_time = 0.5f;
 		float aim_error_deg = 12.0f;
 		float max_range = 10.0f;
+		float error_hold = 0.25f;
 	};
 
 	void setup(const Tuning &p_tuning);
@@ -51,6 +53,8 @@ private:
 	Tuning tuning_;
 	int target_ = -1;
 	float wait_ = 0.0f;
+	float error_angle_ = 0.0f;
+	float error_timer_ = 0.0f; // <= 0: hay que sortear un error nuevo
 };
 
 } // namespace lv::core

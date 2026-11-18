@@ -34,6 +34,27 @@ void WeaponState::setup(const WeaponSpec &p_spec) {
 	timer_ = 0.0f;
 	ammo_ = has_infinite_ammo() ? -1 : spec_.magazine_size;
 	total_ammo_ = spec_.ammo > 0 ? spec_.ammo : -1;
+	energy_ = spec_.energy > 0.0f ? spec_.energy : -1.0f;
+}
+
+bool WeaponState::drain(float p_delta) {
+	if (is_depleted()) {
+		return false;
+	}
+	if (energy_ > 0.0f) {
+		energy_ -= p_delta;
+		if (energy_ <= 0.0f) {
+			energy_ = 0.0f; // el último tramo sí dispara; desde el siguiente frame queda vacía
+		}
+	}
+	return true;
+}
+
+Trigger next_trigger(bool p_was_down, bool p_is_down) {
+	if (p_is_down) {
+		return p_was_down ? Trigger::Held : Trigger::Pressed;
+	}
+	return p_was_down ? Trigger::Released : Trigger::Idle;
 }
 
 void WeaponState::tick(float p_delta) {

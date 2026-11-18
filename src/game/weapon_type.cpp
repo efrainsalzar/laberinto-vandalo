@@ -17,9 +17,10 @@ void WeaponType::_bind_methods() {
 
 	ADD_GROUP("Disparo", "");
 	LV_BIND_RAW(fire_mode)
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "fire_mode", PROPERTY_HINT_ENUM, "Proyectil,Rayo"), "set_fire_mode", "get_fire_mode");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "fire_mode", PROPERTY_HINT_ENUM, "Proyectil,Rayo sostenido"), "set_fire_mode", "get_fire_mode");
 	LV_BIND(fire_interval, FLOAT, "0,3,0.01,suffix:s")
 	LV_BIND(ammo, INT, "0,500,1") // 0 = infinita
+	LV_BIND(energy, FLOAT, "0,60,0.1,suffix:s") // batería de los modos sostenidos; 0 = infinita
 	LV_BIND(magazine_size, INT, "0,200,1") // 0 = sin cargador
 	LV_BIND(reload_time, FLOAT, "0,10,0.05,suffix:s")
 	LV_BIND(pellets, INT, "1,24,1")
@@ -41,5 +42,5 @@ void WeaponType::_bind_methods() {
 #undef LV_BIND_RAW
 
 	BIND_ENUM_CONSTANT(FIRE_PROJECTILE);
-	BIND_ENUM_CONSTANT(FIRE_BEAM);
+	BIND_ENUM_CONSTANT(FIRE_HELD_BEAM);
 }

@@ -12,6 +12,7 @@ void BotGunner::setup(const Tuning &p_tuning) {
 void BotGunner::reset() {
 	target_ = -1;
 	wait_ = 0.0f;
+	error_timer_ = 0.0f;
 }
 
 GunDecision BotGunner::update(float p_delta, float p_self_x, float p_self_y, const std::vector<GunTarget> &p_targets, Rng &r_rng) {
@@ -46,11 +47,15 @@ GunDecision BotGunner::update(float p_delta, float p_self_x, float p_self_y, con
 		wait_ -= p_delta;
 		return decision; // ya apunta, pero todavía no dispara
 	}
-	// Desvío al azar en [-error, +error] (se sortea en cada disparo).
-	const float error = tuning_.aim_error_deg * 3.14159265f / 180.0f;
-	const float angle = (r_rng.unit() * 2.0f - 1.0f) * error;
-	const float c = std::cos(angle);
-	const float s = std::sin(angle);
+	// Desvío al azar en [-error, +error]; se mantiene error_hold segundos.
+	error_timer_ -= p_delta;
+	if (error_timer_ <= 0.0f) {
+		const float error = tuning_.aim_error_deg * 3.14159265f / 180.0f;
+		error_angle_ = (r_rng.unit() * 2.0f - 1.0f) * error;
+		error_timer_ = tuning_.error_hold;
+	}
+	const float c = std::cos(error_angle_);
+	const float s = std::sin(error_angle_);
 	decision.aim_x = dx * c - dy * s;
 	decision.aim_y = dx * s + dy * c;
 	decision.fire = true;
