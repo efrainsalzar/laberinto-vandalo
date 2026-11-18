@@ -1,0 +1,19 @@
+[gd_resource type="PickupCategory" load_steps=5 format=3]
+
+[ext_resource type="PickupType" path="res://data/pickups/escudo_burbuja.tres" id="1_bu"]
+[ext_resource type="PickupType" path="res://data/pickups/escudo_frontal.tres" id="2_fr"]
+[ext_resource type="PickupType" path="res://data/pickups/escudo_espejo.tres" id="3_es"]
+
+[sub_resource type="KeepDensityPolicy" id="pol"]
+
+[resource]
+id = "escudos"
+types = Array[PickupType]([ExtResource("1_bu"), ExtResource("2_fr"), ExtResource("3_es")])
+policy = SubResource("pol")
+share = 0.04
+min_count = 1
+max_count = 8
+refill_time = 40.0
+initial_fill = 0.5
+lifetime = 30.0
+warn_time = 5.0

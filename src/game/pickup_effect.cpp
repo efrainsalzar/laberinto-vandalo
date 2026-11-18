@@ -57,3 +57,18 @@ void WeaponEffect::apply(Participant *p_participant, const String &p_source) con
 		weapon->equip_special(weapon_);
 	}
 }
+
+void ShieldEffect::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("set_kind", "value"), &ShieldEffect::set_kind);
+	ClassDB::bind_method(D_METHOD("get_kind"), &ShieldEffect::get_kind);
+	ClassDB::bind_method(D_METHOD("set_duration", "value"), &ShieldEffect::set_duration);
+	ClassDB::bind_method(D_METHOD("get_duration"), &ShieldEffect::get_duration);
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "kind", PROPERTY_HINT_ENUM, "Burbuja,Frontal,Espejo"), "set_kind", "get_kind");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "duration", PROPERTY_HINT_RANGE, "0,120,0.5,suffix:s"), "set_duration", "get_duration"); // 0 = por defecto
+}
+
+void ShieldEffect::apply(Participant *p_participant, const String &p_source) const {
+	if (ShieldComponent *shields = p_participant != nullptr ? p_participant->get_shields() : nullptr) {
+		shields->add_shield(kind_, duration_);
+	}
+}

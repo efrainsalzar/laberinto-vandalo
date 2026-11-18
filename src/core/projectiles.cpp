@@ -40,7 +40,7 @@ void ProjectileWorld::set_max(int p_max) {
 	}
 }
 
-bool ProjectileWorld::spawn(float p_x, float p_y, float p_dir_x, float p_dir_y, const WeaponSpec &p_spec, int p_owner, int p_tag) {
+bool ProjectileWorld::spawn(float p_x, float p_y, float p_dir_x, float p_dir_y, const WeaponSpec &p_spec, int p_owner, int p_tag, bool p_reflected) {
 	const float len = std::sqrt(p_dir_x * p_dir_x + p_dir_y * p_dir_y);
 	if (len <= 0.0f) {
 		return false;
@@ -56,6 +56,7 @@ bool ProjectileWorld::spawn(float p_x, float p_y, float p_dir_x, float p_dir_y, 
 	p.explosion_radius = p_spec.explosion_radius > 0.0f ? p_spec.explosion_radius : 0.0f;
 	p.owner = p_owner;
 	p.tag = p_tag;
+	p.reflected = p_reflected;
 	p.seq = next_seq_++;
 
 	if (static_cast<int>(items_.size()) < max_) {
@@ -87,6 +88,7 @@ void ProjectileWorld::step(float p_delta, const MazeGrid &p_grid, const std::vec
 		ProjectileEvent event;
 		event.dir_x = p.dir_x;
 		event.dir_y = p.dir_y;
+		event.reflected = p.reflected;
 		bool ended = false;
 		float best_t = 2.0f;
 		float wall_t = 0.0f;

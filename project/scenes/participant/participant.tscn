@@ -1,8 +1,9 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/participant/participant_view.gd" id="1_view"]
 [ext_resource type="StatsProfile" path="res://data/stats/default_participant.tres" id="2_prof"]
 [ext_resource type="WeaponType" path="res://data/weapons/pistol.tres" id="3_pistol"]
+[ext_resource type="Script" path="res://scripts/participant/shield_view.gd" id="4_shield"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 11.0
@@ -20,6 +21,8 @@ profile = ExtResource("2_prof")
 
 [node name="Health" type="HealthComponent" parent="."]
 
+[node name="Shields" type="ShieldComponent" parent="."]
+
 [node name="Weapon" type="WeaponComponent" parent="."]
 weapon = ExtResource("3_pistol")
 
@@ -28,5 +31,9 @@ shape = SubResource("CircleShape2D_body")
 
 [node name="View" type="Node2D" parent="."]
 script = ExtResource("1_view")
+
+[node name="ShieldView" type="Node2D" parent="."]
+z_index = 2
+script = ExtResource("4_shield")
 
 [node name="Vision" type="Vision" parent="."]

@@ -1,0 +1,15 @@
+[gd_resource type="PickupType" load_steps=2 format=3]
+
+[sub_resource type="ShieldEffect" id="shield"]
+kind = 0
+
+[resource]
+id = "escudo_burbuja"
+display_name = "Escudo burbuja"
+popup_title = "¡BURBUJA!"
+color = Color(0.55, 0.85, 1, 1)
+radius = 8
+shape = 1
+symbol = 8
+weight = 3
+effects = Array[PickupEffect]([SubResource("shield")])

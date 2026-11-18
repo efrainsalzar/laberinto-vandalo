@@ -50,6 +50,7 @@
 | 8 | **Partida** | `MatchFlow`: reloj, fases, victoria/tiempo | `MatchController` + `MatchRules` (datos) | **State** (fases), Observer |
 | 9 | **Armas y disparo** | `WeaponState`, `ProjectileWorld`, `BotGunner`, `segment_hits_wall` | `WeaponType` (datos), `WeaponComponent`, `ProjectileSystem` | **Command**, Type Object, State, datos en bloque, Observer |
 | 10 | **Salud y daño** | `Health`, `DamageInfo`, `explosion_damage`, `DamageBatch` | `HealthComponent` | **Value Object**, Composición, datos |
+| 11 | **Escudos** | `Shield` (Bubble/Frontal/Mirror), `ShieldChain` | `ShieldComponent`, `ShieldEffect` | **Chain of Responsibility**, Composición |
 
 Fases siguientes (bots, combate, vándalos, director) se diseñan cuando lleguemos; ver [ROADMAP](ROADMAP.md).
 
@@ -95,6 +96,7 @@ Cada módulo tiene su archivo en [`arquitectura/`](arquitectura/). Los comentari
 | §24 | [Tarjeta del participante (HUD)](arquitectura/24-tarjeta-participante.md) |
 | §25 | [Etapa 4.1 — Salud y daño por arma](arquitectura/25-salud-dano.md) |
 | §26 | [Etapa 4.2 — Pociones y efectos de objeto (Strategy)](arquitectura/26-pociones-efectos.md) |
+| §27 | [Etapa 4.3 — Escudos (cadena de modificadores)](arquitectura/27-escudos.md) |
 
 ## Patrones aplicados (índice)
 
@@ -107,7 +109,8 @@ Cada módulo tiene su archivo en [`arquitectura/`](arquitectura/). Los comentari
 | Fichas de ataque | `TokenPool` en `BotCoordinator` | ✅ |
 | A* (búsqueda de caminos) | `find_path` | ✅ |
 | Command | `ParticipantCommand` (moverse, apuntar, disparar) | ✅ |
-| Value Object | `DamageInfo` (un golpe como dato; luego pasa por los escudos) | ✅ |
+| Value Object | `DamageInfo` (un golpe como dato; pasa por los escudos) | ✅ |
+| Chain of Responsibility | `ShieldChain`: burbuja → frontal → espejo antes de la salud | ✅ |
 | Composición / separación lógica-vista | `Participant` + `View` + `StatsComponent` + `Vision` + `HealthComponent`; `core` vs `game`; `line_of_sight` vs luz | ✅ |
 | Decorator / modificadores | `Stats` + `StatModifier` | ✅ |
 | Observer / señales | `StatsComponent` → `HUD`, `Vision`; `Pickup` → `PickupFactory` → `Events` → UI; `pickup_spawned`; `MatchController` → `Events.match_*` → HUD | ✅ |

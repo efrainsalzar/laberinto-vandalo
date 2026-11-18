@@ -2,6 +2,7 @@ extends HFlowContainer
 ## Sección efectos de la tarjeta: cada efecto temporal (power-up, impulso, aturdimiento) como una ficha con un
 ## anillo que se vacía y los segundos que le quedan. Solo se ve si hay efectos (los permanentes ya se ven en
 ## la stat). Escucha StatsComponent (se consulta cada frame: pocos modificadores, es barato).
+## También los escudos (§27): BURBUJA / FRONTAL / ESPEJO con su tiempo (ShieldComponent.get_shields()).
 
 const CardStyle := preload("res://scripts/ui/player_card/card_style.gd")
 
@@ -24,7 +25,14 @@ class TimerRing extends Control:
 		draw_arc(c, r, -PI / 2.0, -PI / 2.0 + TAU * clampf(fraction, 0.0, 1.0), 24, color, 2.5, true)
 
 
+const SHIELD_CHIPS := {
+	ShieldComponent.SHIELD_BUBBLE: ["BURBUJA", Color(0.55, 0.85, 1.0)],
+	ShieldComponent.SHIELD_FRONTAL: ["FRONTAL", Color(0.45, 0.62, 1.0)],
+	ShieldComponent.SHIELD_MIRROR: ["ESPEJO", Color(0.88, 0.9, 0.97)],
+}
+
 var _stats: StatsComponent
+var _shields: ShieldComponent
 var _chips := {}  # id de modificador -> {panel, ring, time, duration}
 
 
@@ -37,6 +45,7 @@ func _init() -> void:
 
 func bind(participant: Participant) -> void:
 	_stats = participant.get_stats()
+	_shields = participant.get_shields()
 
 
 func _process(_delta: float) -> void:
@@ -53,6 +62,18 @@ func _process(_delta: float) -> void:
 		chip.ring.fraction = m.remaining / chip.duration
 		chip.ring.queue_redraw()
 		chip.time.text = "%d s" % ceili(m.remaining)
+	if _shields:
+		for s: Dictionary in _shields.get_shields():
+			var id := "shield:%d" % s.kind
+			alive[id] = true
+			if not _chips.has(id):
+				var info: Array = SHIELD_CHIPS.get(s.kind, ["ESCUDO", Color.WHITE])
+				_chips[id] = _make_chip_with(info[0], info[1], s.duration)
+			var schip: Dictionary = _chips[id]
+			schip.duration = maxf(s.duration, 0.001)
+			schip.ring.fraction = s.remaining / schip.duration
+			schip.ring.queue_redraw()
+			schip.time.text = "%d s" % ceili(s.remaining)
 	for id in _chips.keys():
 		if not alive.has(id):
 			var panel: Control = _chips[id].panel
@@ -65,6 +86,10 @@ func _process(_delta: float) -> void:
 
 func _make_chip(m: Dictionary) -> Dictionary:
 	var color: Color = EffectText.STAT_COLORS.get(m.stat, Color.WHITE)
+	return _make_chip_with(EffectText.format(m.stat, m.op, m.value), color, m.duration)
+
+
+func _make_chip_with(text: String, color: Color, duration: float) -> Dictionary:
 	var panel := PanelContainer.new()
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var style := StyleBoxFlat.new()
@@ -82,11 +107,11 @@ func _make_chip(m: Dictionary) -> Dictionary:
 	var ring := TimerRing.new()
 	ring.color = color
 	row.add_child(ring)
-	row.add_child(CardStyle.label(EffectText.format(m.stat, m.op, m.value), 12, color))
+	row.add_child(CardStyle.label(text, 12, color))
 	var time := CardStyle.label("", 12, CardStyle.INK_DIM)
 	row.add_child(time)
 	panel.add_child(row)
 	add_child(panel)
 	panel.modulate.a = 0.0
 	create_tween().tween_property(panel, "modulate:a", 1.0, 0.2)
-	return {"panel": panel, "ring": ring, "time": time, "duration": maxf(m.duration, 0.001)}
+	return {"panel": panel, "ring": ring, "time": time, "duration": maxf(duration, 0.001)}

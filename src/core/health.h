@@ -19,6 +19,7 @@ struct DamageInfo {
 	float dir_y = 0.0f;
 	float x = 0.0f; // dónde pegó
 	float y = 0.0f;
+	bool reflected = false; // ya lo devolvió un espejo (otro espejo no lo vuelve a devolver: sin ping-pong)
 };
 
 // Qué pasó al aplicar un golpe.

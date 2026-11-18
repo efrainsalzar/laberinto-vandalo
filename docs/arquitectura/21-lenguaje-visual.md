@@ -10,7 +10,7 @@ la pantalla se volvería ilegible: hay que saber **qué es** un objeto de un vis
 | Forma (`shape`) | Categoría | Hoy |
 |---|---|---|
 | Círculo | Mejora de stat | Punto verde (» velocidad), punto amarillo (ojo, visión) |
-| Rombo | Power-up temporal | Rapidez (rayo) |
+| Rombo | Power-up temporal | Rapidez (rayo); escudos: burbuja (círculo), frontal (arco), espejo (flecha que rebota) (§27) |
 | Cuadrado | Arma | Reservado (pieza de armas) |
 | Hexágono | Objeto que cambia el mapa | Reservado (Etapa 2.4) |
 | Anillo | Portal | Reservado (Etapa 2.2) |

@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3]
+[gd_scene load_steps=20 format=3]
 
 [ext_resource type="Script" path="res://scripts/game/match.gd" id="1_sbx"]
 [ext_resource type="PackedScene" path="res://scenes/participant/participant.tscn" id="2_part"]
@@ -11,6 +11,7 @@
 [ext_resource type="PickupCategory" path="res://data/spawning/powerups.tres" id="8_cat_pow"]
 [ext_resource type="PickupCategory" path="res://data/spawning/armas.tres" id="8_cat_arm"]
 [ext_resource type="PickupCategory" path="res://data/spawning/pociones.tres" id="8_cat_poc"]
+[ext_resource type="PickupCategory" path="res://data/spawning/escudos.tres" id="8_cat_esc"]
 [ext_resource type="Script" path="res://scripts/ui/floating_text_layer.gd" id="9_ft"]
 [ext_resource type="PackedScene" path="res://scenes/trophy/trophy.tscn" id="10_trophy"]
 [ext_resource type="MatchRules" path="res://data/match/default_rules.tres" id="20_rules"]
@@ -49,7 +50,7 @@ types = Array[PickupType]([ExtResource("5_pv"), ExtResource("6_pvi"), ExtResourc
 
 [node name="PickupSpawner" type="PickupSpawner" parent="."]
 factory_path = NodePath("../Pickups")
-categories = Array[PickupCategory]([ExtResource("8_cat_pts"), ExtResource("8_cat_pow"), ExtResource("8_cat_arm"), ExtResource("8_cat_poc")])
+categories = Array[PickupCategory]([ExtResource("8_cat_pts"), ExtResource("8_cat_pow"), ExtResource("8_cat_arm"), ExtResource("8_cat_poc"), ExtResource("8_cat_esc")])
 
 [node name="Projectiles" type="ProjectileSystem" parent="."]
 

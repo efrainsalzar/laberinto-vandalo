@@ -16,7 +16,8 @@ class Participant;
 //   StatEffect   → modificador de stat (mejoras permanentes y power-ups)
 //   HealEffect   → cura (pociones)
 //   WeaponEffect → da un arma especial (escopeta, láser, bazuca)
-// Luego: dar escudo (pieza 3), dar bomba o mina (pieza 4).
+//   ShieldEffect → da un escudo (burbuja, frontal, espejo; §27)
+// Luego: dar bomba o mina (pieza 4).
 // Ver docs/ARQUITECTURA.md §26.
 class PickupEffect : public Resource {
 	GDCLASS(PickupEffect, Resource)
@@ -91,4 +92,24 @@ protected:
 
 private:
 	Ref<WeaponType> weapon_;
+};
+
+// Da un escudo (ShieldComponent::Kind). duration <= 0 = la duración por defecto de ese escudo. §27.
+class ShieldEffect : public PickupEffect {
+	GDCLASS(ShieldEffect, PickupEffect)
+
+public:
+	void apply(Participant *p_participant, const String &p_source) const override;
+
+	void set_kind(int p_value) { kind_ = p_value; }
+	int get_kind() const { return kind_; }
+	void set_duration(float p_value) { duration_ = p_value; }
+	float get_duration() const { return duration_; }
+
+protected:
+	static void _bind_methods();
+
+private:
+	int kind_ = 0;
+	float duration_ = 0.0f;
 };

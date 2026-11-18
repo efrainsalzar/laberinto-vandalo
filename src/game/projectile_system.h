@@ -27,6 +27,8 @@ class Participant;
 //   bala/perdigón = damage; láser = damage × delta por frame; explosión = de damage (centro) a damage_edge (borde).
 //   Se aplica directo al HealthComponent de la víctima en C++ (§25), sin pasar por GDScript; si el participante
 //   no tiene salud, emite participant_hit(victim, by) y quien escucha decide. exploded(...) para la vista.
+// - Antes de la salud, el golpe pasa por los escudos de la víctima (ShieldComponent, §27). Si un espejo lo
+//   devuelve: la bala vuelve como bala nueva de la víctima; el láser quema directo a quien lo disparó.
 // - Dibuja todo en un solo _draw (arte provisional): balas con estela, rayos y explosiones que se apagan.
 // - Tope `max_projectiles`: al superarlo, la bala nueva reemplaza a la más vieja.
 // Hay uno por nivel; WeaponComponent lo encuentra con ProjectileSystem::find (grupo "projectile_system").
@@ -58,6 +60,7 @@ protected:
 private:
 	static constexpr float TRAIL_SECONDS = 0.03f; // largo de la estela = lo que la bala recorre en este tiempo
 	static constexpr float EXPLOSION_SECONDS = 0.35f;
+	static constexpr float REFLECT_RANGE = 12.0f; // casillas que recorre una bala devuelta
 
 	// Explosión que se apaga sola. En coordenadas locales.
 	struct Flash {
@@ -92,7 +95,9 @@ private:
 	Color weapon_color(int p_tag) const;
 	void gather_targets();
 	const lv::core::WeaponSpec *weapon_spec(int p_tag) const;
-	void hit(int p_victim, const lv::core::DamageInfo &p_info);
+	// p_tag: arma de la bala (para devolverla con un espejo); -1 = no es una bala.
+	void hit(int p_victim, const lv::core::DamageInfo &p_info, int p_tag = -1);
+	void reflect(Participant *p_mirror, const lv::core::DamageInfo &p_info, int p_tag);
 	Participant *body(int p_id) const;
 	Vector2 grid_to_local(float p_x, float p_y) const;
 };

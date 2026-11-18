@@ -4,6 +4,7 @@
 #include "game/health_component.h"
 #include "game/life_component.h"
 #include "game/participant_controller.h"
+#include "game/shield_component.h"
 #include "game/stats_component.h"
 #include "game/weapon_component.h"
 
@@ -21,6 +22,7 @@ using namespace godot;
 // - Sus stats (velocidad, visión...) están en un StatsComponent hijo (composición).
 // - Si tiene un WeaponComponent hijo, la orden de disparo (fire + aim) va a esa arma (§22).
 // - Su salud está en un HealthComponent hijo (§25); al reaparecer vuelve a la salud máxima.
+// - Sus escudos, en un ShieldComponent hijo (§27); se pierden al perder la vida.
 // Ver docs/ARQUITECTURA.md §5.
 class Participant : public CharacterBody2D {
 	GDCLASS(Participant, CharacterBody2D)
@@ -51,6 +53,8 @@ public:
 	bool is_vulnerable() const { return get_life() == nullptr || get_life()->is_vulnerable(); }
 	// Salud (primer hijo HealthComponent, §25). Puede ser nullptr: entonces un golpe elimina directo.
 	HealthComponent *get_health() const { return find_component(health_); }
+	// Escudos (primer hijo ShieldComponent, §27). Puede ser nullptr: entonces no tiene escudos.
+	ShieldComponent *get_shields() const { return find_component(shields_); }
 	// Arma (primer hijo WeaponComponent). Puede ser nullptr: entonces no dispara.
 	WeaponComponent *get_weapon() const { return find_component(weapon_); }
 
@@ -61,6 +65,8 @@ public:
 
 	// Última dirección en la que se movió (para orientar sprites o la visión).
 	Vector2 get_facing() const { return facing_; }
+	// Hacia dónde apunta (la mira del mouse/stick o, si no hay, hacia donde se mueve). La usa el escudo frontal.
+	Vector2 get_aim() const { return aim_; }
 
 protected:
 	static void _bind_methods();
@@ -73,6 +79,7 @@ private:
 	mutable StatsComponent *stats_ = nullptr;
 	mutable LifeComponent *life_ = nullptr;
 	mutable HealthComponent *health_ = nullptr;
+	mutable ShieldComponent *shields_ = nullptr;
 	mutable WeaponComponent *weapon_ = nullptr;
 
 	// Primer hijo del tipo T (se recuerda en r_cache). nullptr si no hay.
@@ -91,6 +98,7 @@ private:
 	void on_eliminated(Object *p_by);
 	void on_respawned();
 	Vector2 facing_ = Vector2(0, 1);
+	Vector2 aim_ = Vector2(0, 1);
 	float body_radius_ = 11.0f;
 
 	void apply_body_radius();

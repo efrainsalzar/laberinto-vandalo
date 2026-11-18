@@ -3,7 +3,7 @@ extends Node2D
 ## - La FORMA dice la categoría: círculo = mejora de stat, rombo = power-up, cuadrado = arma,
 ##   hexágono = objeto que cambia el mapa, anillo = portal, frasco = poción.
 ## - El SÍMBOLO de adentro dice qué hace: » velocidad, ojo visión, rayo rapidez; armas: abanico (escopeta),
-##   haz (láser), estrella (bazuca); cruz = cura.
+##   haz (láser), estrella (bazuca); cruz = cura; escudos (rombo): círculo burbuja, arco frontal, flecha espejo.
 ## - Halo suave del color del tipo y borde oscuro para que se lea sobre cualquier suelo.
 ## Rendimiento: se dibuja UNA vez (no cada frame); con cientos de objetos en mapas gigantes importa.
 ## Si el tipo tiene `icon`, se dibuja la textura en lugar del símbolo (arte de la Etapa 7).
@@ -103,6 +103,15 @@ func _draw_symbol(symbol: int, s: float, ink: Color) -> void:
 			var c := Vector2(0, s * 0.25)
 			draw_line(c + Vector2(-s * 0.6, 0), c + Vector2(s * 0.6, 0), ink, w * 1.2)
 			draw_line(c + Vector2(0, -s * 0.6), c + Vector2(0, s * 0.6), ink, w * 1.2)
+		PickupType.SYMBOL_BUBBLE:  # burbuja: círculo hueco
+			draw_arc(Vector2.ZERO, s * 0.65, 0.0, TAU, 20, ink, w, true)
+		PickupType.SYMBOL_ARC:  # escudo frontal: arco hacia arriba
+			draw_arc(Vector2(0, s * 0.35), s * 0.85, -PI * 0.85, -PI * 0.15, 14, ink, w * 1.1, true)
+		PickupType.SYMBOL_MIRROR:  # espejo: línea vertical y flecha que rebota
+			draw_line(Vector2(s * 0.45, -s * 0.75), Vector2(s * 0.45, s * 0.75), ink, w, true)
+			draw_polyline(PackedVector2Array([Vector2(-s * 0.7, -s * 0.5), Vector2(s * 0.25, 0), Vector2(-s * 0.7, s * 0.5)]), ink, w * 0.8, true)
+			var tip := Vector2(-s * 0.7, s * 0.5)  # punta de flecha: el disparo vuelve
+			draw_colored_polygon(PackedVector2Array([tip, tip + Vector2(s * 0.45, s * 0.05), tip + Vector2(s * 0.2, -s * 0.38)]), ink)
 		PickupType.SYMBOL_BOLT:  # rayo
 			draw_colored_polygon(PackedVector2Array([
 				Vector2(s * 0.2, -s), Vector2(-s * 0.55, s * 0.12), Vector2(-s * 0.02, s * 0.12),

@@ -22,6 +22,7 @@ struct Projectile {
 	int owner = -1; // quien la disparó (nunca le pega a él)
 	int tag = 0; // dato libre para quien la usa (p. ej. qué arma, para dibujarla)
 	uint32_t seq = 0; // orden de creación (para reemplazar la más vieja)
+	bool reflected = false; // la devolvió un espejo (§27): otro espejo ya no la devuelve
 };
 
 // Algo a lo que una bala le puede pegar (un círculo). Quien llama solo pasa los que son blanco ahora
@@ -47,6 +48,7 @@ struct ProjectileEvent {
 	int tag = 0;
 	float dir_x = 0.0f; // hacia dónde iba la bala (para el daño: de dónde vino el golpe)
 	float dir_y = 0.0f;
+	bool reflected = false;
 	float explosion_radius = 0.0f; // >0: aquí hay una explosión (el punto siempre queda sobre suelo)
 };
 
@@ -88,7 +90,7 @@ public:
 	int max() const { return max_; }
 
 	// Dispara una bala desde (x, y) hacia (dir_x, dir_y). Devuelve false si la dirección es (0, 0).
-	bool spawn(float p_x, float p_y, float p_dir_x, float p_dir_y, const WeaponSpec &p_spec, int p_owner, int p_tag = 0);
+	bool spawn(float p_x, float p_y, float p_dir_x, float p_dir_y, const WeaponSpec &p_spec, int p_owner, int p_tag = 0, bool p_reflected = false);
 	// Avanza p_delta segundos. Agrega a r_events lo que terminó (en orden fijo: resultado reproducible).
 	void step(float p_delta, const MazeGrid &p_grid, const std::vector<ProjectileTarget> &p_targets, std::vector<ProjectileEvent> &r_events);
 	void clear() { items_.clear(); }

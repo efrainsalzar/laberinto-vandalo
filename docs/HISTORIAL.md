@@ -3,6 +3,12 @@
 > Lo ya terminado, de lo más nuevo a lo más viejo. El estado actual y lo que sigue están en
 > [ROADMAP.md](ROADMAP.md). Al cerrar una pieza se agrega su bloque **arriba**.
 
+### v0.0.35 — Etapa 4.3: escudos ✅
+- [x] Burbuja (absorbe un golpe; contra el láser medio segundo), frontal (para lo de delante, ±60°, 8 s) y espejo (devuelve balas y láser, 5 s).
+- [x] Cadena de modificadores (Chain of Responsibility) en `core`, antes de la salud: la salud no cambió. 9 tests (160 en total).
+- [x] Rombos azules en el mapa; anillo / arco / anillo plateado alrededor del cuerpo; fichas con tiempo en la tarjeta; "BLOQUEADO" / "¡DEVUELTO!".
+- [x] Se pierden al perder la vida. Tecla de prueba 9: los tres escudos.
+
 ### v0.0.34 — Etapa 4.2: pociones y efectos de objeto ✅
 - [x] Pociones: pequeña +25 (común) y grande +60 (rara), con forma de frasco y cruz. Se usan al recogerlas; con la salud llena quedan en el piso.
 - [x] Efectos de objeto como Strategy: `StatEffect`, `HealEffect`, `WeaponEffect` (cada uno sabe aplicarse). Los .tres existentes se migraron.

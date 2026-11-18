@@ -42,6 +42,9 @@ void PickupType::_bind_methods() {
 	BIND_ENUM_CONSTANT(SYMBOL_BEAM);
 	BIND_ENUM_CONSTANT(SYMBOL_BLAST);
 	BIND_ENUM_CONSTANT(SYMBOL_CROSS);
+	BIND_ENUM_CONSTANT(SYMBOL_BUBBLE);
+	BIND_ENUM_CONSTANT(SYMBOL_ARC);
+	BIND_ENUM_CONSTANT(SYMBOL_MIRROR);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "id"), "set_id", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "display_name"), "set_display_name", "get_display_name");
@@ -50,7 +53,7 @@ void PickupType::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "radius", PROPERTY_HINT_RANGE, "1,32,0.5,suffix:px"), "set_radius", "get_radius");
 	ADD_GROUP("Aspecto", "");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "shape", PROPERTY_HINT_ENUM, "Círculo (stat),Rombo (power-up),Cuadrado (arma),Hexágono (mapa),Anillo (portal),Frasco (poción)"), "set_shape", "get_shape");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "symbol", PROPERTY_HINT_ENUM, "Ninguno,Velocidad,Visión,Rayo,Abanico (escopeta),Haz (láser),Explosión (bazuca),Cruz (curar)"), "set_symbol", "get_symbol");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "symbol", PROPERTY_HINT_ENUM, "Ninguno,Velocidad,Visión,Rayo,Abanico (escopeta),Haz (láser),Explosión (bazuca),Cruz (curar),Burbuja (escudo),Arco (escudo frontal),Espejo (escudo)"), "set_symbol", "get_symbol");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "icon", PROPERTY_HINT_RESOURCE_TYPE, "Texture2D"), "set_icon", "get_icon");
 	ADD_GROUP("Reglas", "");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "weight", PROPERTY_HINT_RANGE, "0,100,0.1"), "set_weight", "get_weight");

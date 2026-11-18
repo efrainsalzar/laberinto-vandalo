@@ -19,6 +19,8 @@ void Participant::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_life"), &Participant::get_life);
 	ClassDB::bind_method(D_METHOD("get_weapon"), &Participant::get_weapon);
 	ClassDB::bind_method(D_METHOD("get_health"), &Participant::get_health);
+	ClassDB::bind_method(D_METHOD("get_shields"), &Participant::get_shields);
+	ClassDB::bind_method(D_METHOD("get_aim"), &Participant::get_aim);
 	ClassDB::bind_method(D_METHOD("is_active"), &Participant::is_active);
 	ClassDB::bind_method(D_METHOD("is_vulnerable"), &Participant::is_vulnerable);
 	ClassDB::bind_method(D_METHOD("get_facing"), &Participant::get_facing);
@@ -41,6 +43,7 @@ void Participant::_ready() {
 	get_life();
 	get_weapon();
 	get_health();
+	get_shields();
 	if (life_ != nullptr && !Engine::get_singleton()->is_editor_hint()) {
 		life_->connect("eliminated", callable_mp(this, &Participant::on_eliminated));
 		life_->connect("respawned", callable_mp(this, &Participant::on_respawned));
@@ -71,9 +74,12 @@ void Participant::execute_command(const lv::core::ParticipantCommand &p_command)
 	set_velocity(direction * speed);
 	move_and_slide();
 
+	const Vector2 aim = p_command.has_aim() ? Vector2(p_command.aim_x, p_command.aim_y) : facing_;
+	if (!aim.is_zero_approx()) {
+		aim_ = aim.normalized();
+	}
 	// El gatillo va al arma cada frame (abajo o arriba): así sabe si se apretó, se mantiene o se soltó.
 	if (weapon_ != nullptr) {
-		const Vector2 aim = p_command.has_aim() ? Vector2(p_command.aim_x, p_command.aim_y) : facing_;
 		weapon_->update_trigger(this, p_command.fire, aim, static_cast<float>(get_physics_process_delta_time()));
 	}
 }
@@ -121,6 +127,9 @@ void Participant::apply_body_radius() {
 
 // Eliminado: sin colisión (no toma objetos ni toca a nadie) hasta reaparecer.
 void Participant::on_eliminated(Object *) {
+	if (shields_ != nullptr) {
+		shields_->clear(); // al perder la vida se pierden los escudos
+	}
 	active_layer_ = get_collision_layer();
 	active_mask_ = get_collision_mask();
 	set_collision_layer(0);

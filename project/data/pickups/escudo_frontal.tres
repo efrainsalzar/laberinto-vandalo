@@ -1,0 +1,15 @@
+[gd_resource type="PickupType" load_steps=2 format=3]
+
+[sub_resource type="ShieldEffect" id="shield"]
+kind = 1
+
+[resource]
+id = "escudo_frontal"
+display_name = "Escudo frontal"
+popup_title = "¡ESCUDO FRONTAL!"
+color = Color(0.45, 0.62, 1, 1)
+radius = 8
+shape = 1
+symbol = 9
+weight = 2
+effects = Array[PickupEffect]([SubResource("shield")])

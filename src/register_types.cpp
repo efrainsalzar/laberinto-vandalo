@@ -21,6 +21,7 @@
 #include "game/pickup_spawner.h"
 #include "game/pickup_type.h"
 #include "game/projectile_system.h"
+#include "game/shield_component.h"
 #include "game/stats_component.h"
 #include "game/stats_profile.h"
 #include "game/trophy_controller.h"
@@ -55,6 +56,7 @@ void initialize_laberinto_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(StatsComponent);
 	GDREGISTER_CLASS(LifeComponent);
 	GDREGISTER_CLASS(HealthComponent);
+	GDREGISTER_CLASS(ShieldComponent);
 
 	// Armas y balas (antes que Participant, que tiene un WeaponComponent)
 	GDREGISTER_CLASS(WeaponType);
@@ -76,6 +78,7 @@ void initialize_laberinto_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(StatEffect);
 	GDREGISTER_CLASS(HealEffect);
 	GDREGISTER_CLASS(WeaponEffect);
+	GDREGISTER_CLASS(ShieldEffect);
 	GDREGISTER_CLASS(PickupType);
 	GDREGISTER_CLASS(Pickup);
 	GDREGISTER_CLASS(PickupFactory);

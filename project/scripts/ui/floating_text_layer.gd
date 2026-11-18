@@ -34,6 +34,9 @@ func _ready() -> void:
 	Events.trophy_dropped.connect(func(_p: Participant, pos: Vector2) -> void:
 		show_text(pos, "¡SE CAYÓ EL TROFEO!", Color(1.0, 0.5, 0.35), true))
 	Events.participant_damaged.connect(_on_participant_damaged)
+	Events.shield_blocked.connect(func(p: Participant, kind: int, reflected: bool) -> void:
+		var text := "¡DEVUELTO!" if reflected else ("¡PUM! BURBUJA" if kind == ShieldComponent.SHIELD_BUBBLE else "BLOQUEADO")
+		show_text(p.global_position + Vector2(0, -p.body_radius - 4.0), text, Color(0.7, 0.85, 1.0), false, 15))
 
 
 ## Muestra un texto en una posición del mundo. Devuelve su entrada (para poder actualizar el texto).

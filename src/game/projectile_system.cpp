@@ -129,16 +129,50 @@ const lv::core::WeaponSpec *ProjectileSystem::weapon_spec(int p_tag) const {
 	return (p_tag >= 0 && p_tag < static_cast<int>(weapons_.size())) ? &weapons_[p_tag]->spec() : nullptr;
 }
 
-void ProjectileSystem::hit(int p_victim, const lv::core::DamageInfo &p_info) {
+void ProjectileSystem::hit(int p_victim, const lv::core::DamageInfo &p_info, int p_tag) {
 	Participant *victim = body(p_victim);
 	if (victim == nullptr) {
 		return;
+	}
+	// Escudos primero (cadena: burbuja → frontal → espejo). La salud solo se entera si el golpe pasa.
+	if (ShieldComponent *shields = victim->get_shields()) {
+		const lv::core::ShieldResult shield = shields->filter(p_info);
+		if (shield.outcome == lv::core::ShieldOutcome::Reflected) {
+			reflect(victim, p_info, p_tag);
+			return;
+		}
+		if (shield.outcome == lv::core::ShieldOutcome::Absorbed) {
+			return;
+		}
 	}
 	if (HealthComponent *health = victim->get_health()) {
 		health->take_damage(p_info, body(p_info.source));
 	} else {
 		emit_signal("participant_hit", victim, body(p_info.source)); // sin salud: decide quien escucha
 	}
+}
+
+// Espejo: el golpe vuelve por donde vino, ahora de quien tenía el espejo (y marcado: otro espejo no lo devuelve).
+void ProjectileSystem::reflect(Participant *p_mirror, const lv::core::DamageInfo &p_info, int p_tag) {
+	lv::core::DamageInfo back = p_info;
+	back.source = p_mirror->get_participant_id();
+	back.dir_x = -p_info.dir_x;
+	back.dir_y = -p_info.dir_y;
+	back.reflected = true;
+	if (p_info.kind == lv::core::DamageKind::Beam) {
+		if (p_info.source >= 0 && p_info.source != back.source) {
+			hit(p_info.source, back); // el láser quema a quien lo dispara
+		}
+		return;
+	}
+	const lv::core::WeaponSpec *spec = weapon_spec(p_tag);
+	if (spec == nullptr) {
+		return;
+	}
+	lv::core::WeaponSpec copy = *spec;
+	copy.range = REFLECT_RANGE;
+	const lv::core::GridPoint at = maze_->world_to_grid_point(p_mirror->get_global_position());
+	world_.spawn(at.x, at.y, back.dir_x, back.dir_y, copy, back.source, p_tag, true);
 }
 
 // Blancos: participantes en juego y sin protección (en casillas). También arma bodies_ (id -> participante).
@@ -230,7 +264,8 @@ void ProjectileSystem::_physics_process(double p_delta) {
 				info.dir_y = event.dir_y;
 				info.x = event.x;
 				info.y = event.y;
-				hit(event.target, info);
+				info.reflected = event.reflected;
+				hit(event.target, info, event.tag);
 			}
 		}
 	}

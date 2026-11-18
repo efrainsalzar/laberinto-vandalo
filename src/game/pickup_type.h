@@ -35,6 +35,9 @@ public:
 		SYMBOL_BEAM, // línea con destello (láser)
 		SYMBOL_BLAST, // estrella de explosión (bazuca)
 		SYMBOL_CROSS, // cruz + (curar)
+		SYMBOL_BUBBLE, // círculo (escudo burbuja)
+		SYMBOL_ARC, // arco (escudo frontal)
+		SYMBOL_MIRROR, // flecha que rebota (escudo espejo)
 	};
 	void set_shape(Shape p_value) { shape_ = p_value; }
 	Shape get_shape() const { return shape_; }

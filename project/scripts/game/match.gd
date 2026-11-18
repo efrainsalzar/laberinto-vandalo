@@ -14,6 +14,8 @@ con la salud llena y, si llevabas el trofeo, se cae.
 Los CUADRADOS del mapa son armas (escopeta, láser, bazuca): se usan solas hasta gastar la munición.
 Los FRASCOS verdes son pociones: curan al tomarlas (+25 la chica, +60 la grande).
 Con la salud llena no se recogen: quedan para después.
+Los ROMBOS azules son escudos: BURBUJA (para un golpe), FRONTAL (para lo que viene
+por delante, hacia donde apuntas) y ESPEJO (devuelve balas y láser). Se pierden al perder la vida.
 Fases: Preparación → Asalto → Golpe de los vándalos (el laberinto se acelera).
 
 WASD / flechas · moverse
@@ -27,7 +29,7 @@ Teclas de prueba (Opciones › Teclas de prueba)
 3 · +2 VIS (5 s)   0 · quitar efectos
 4 · escopeta   5 · láser   6 · bazuca   7 · volver a la pistola
 T · soltar el trofeo   V · niebla sí / no
-8 · recibir 25 de daño   K · mover el laberinto ya   Tab · ver el mapa completo
+8 · recibir 25 de daño   9 · los tres escudos   K · mover el laberinto ya   Tab · ver el mapa completo
 N · saltar a la siguiente fase"""
 const PARTICIPANT_SCENE := preload("res://scenes/participant/participant.tscn")
 const BOT_NAMES := ["Rojo", "Verde", "Naranja", "Violeta", "Rosa", "Turquesa", "Blanco"]
@@ -160,6 +162,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			_participant.get_weapon().clear_special()
 		KEY_8:
 			_participant.get_health().apply_damage(25.0)
+		KEY_9:
+			for kind in [ShieldComponent.SHIELD_BUBBLE, ShieldComponent.SHIELD_FRONTAL, ShieldComponent.SHIELD_MIRROR]:
+				_participant.get_shields().add_shield(kind)
 		KEY_T:
 			_trophy.drop_trophy()
 		KEY_K:
@@ -270,6 +275,11 @@ func _setup_life(p: Participant, spawn: Vector2) -> void:
 	if health == null:
 		return
 	health.reset()
+	var shields: ShieldComponent = p.get_shields()
+	if shields:
+		shields.clear()
+		if not shields.blocked.is_connected(_on_shield_blocked):
+			shields.blocked.connect(_on_shield_blocked.bind(p))
 	if not health.died.is_connected(_on_participant_died):
 		health.died.connect(_on_participant_died.bind(p))
 		health.damaged.connect(func(amount: float, by: Object, kind: int, _dir: Vector2) -> void:
@@ -282,6 +292,10 @@ func _forward_eliminated(by: Object, victim: Participant) -> void:
 
 func _exit_tree() -> void:
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+
+
+func _on_shield_blocked(kind: int, reflected: bool, p: Participant) -> void:
+	Events.shield_blocked.emit(p, kind, reflected)
 
 
 ## Salud en 0 (§25): pierde la vida (vuelve a su base con LifeComponent) y, si llevaba el trofeo, lo suelta.

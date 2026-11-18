@@ -26,6 +26,10 @@ signal trophy_stolen(thief: Participant, victim: Participant)
 ## El láser llega agrupado (cada 0,25 s), no por frame. Si lo dejó en 0, después viene `participant_eliminated`.
 signal participant_damaged(victim: Participant, by: Participant, amount: float, kind: int)
 
+## Un escudo de `participant` paró un golpe (§27). kind = ShieldComponent.SHIELD_*; reflected = lo devolvió (espejo).
+## El láser contra un escudo se avisa como mucho cada 0,25 s.
+signal shield_blocked(participant: Participant, kind: int, reflected: bool)
+
 ## `victim` perdió la vida (lo atraparon llevando el trofeo o su salud llegó a 0). `by` = quién fue.
 signal participant_eliminated(victim: Participant, by: Participant)
 
