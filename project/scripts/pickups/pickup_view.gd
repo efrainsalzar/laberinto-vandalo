@@ -1,10 +1,13 @@
 extends Node2D
-## Vista provisional de un objeto recolectable: forma del color de su tipo.
+## Vista de un objeto recolectable con el lenguaje visual del juego (ARQUITECTURA §21):
+## - La FORMA dice la categoría: círculo = mejora de stat, rombo = power-up, cuadrado = arma,
+##   hexágono = objeto que cambia el mapa, anillo = portal.
+## - El SÍMBOLO de adentro dice qué hace: » velocidad, ojo visión, rayo rapidez.
+## - Halo suave del color del tipo y borde oscuro para que se lea sobre cualquier suelo.
 ## Rendimiento: se dibuja UNA vez (no cada frame); con cientos de objetos en mapas gigantes importa.
-## Los objetos raros (poco peso) se dibujan como rombo; los comunes, como círculo.
-## Si el tipo tiene `icon`, se dibuja la textura (pieza 8: arte).
+## Si el tipo tiene `icon`, se dibuja la textura en lugar del símbolo (arte de la Etapa 7).
 
-const RARE_WEIGHT := 3.0
+const OUTLINE := Color(0.05, 0.05, 0.08, 0.9)
 
 @onready var _pickup: Pickup = get_parent()
 
@@ -16,27 +19,80 @@ func _ready() -> void:
 	_pickup.expiring.connect(_on_expiring)
 
 
-## Va a desaparecer pronto: parpadea (cada vez más rápido) hasta que el spawner lo retire.
+## Va a desaparecer pronto: parpadea hasta que el spawner lo retire.
 func _on_expiring() -> void:
 	var tween := create_tween().set_loops()
 	tween.tween_property(self, "modulate:a", 0.25, 0.25)
 	tween.tween_property(self, "modulate:a", 1.0, 0.25)
 
 
-
 func _draw() -> void:
 	var type: PickupType = _pickup.type
 	if type == null:
 		return
-	if type.icon:
-		draw_texture(type.icon, -type.icon.get_size() / 2.0)
-		return
 	var r := type.radius
 	var color := type.color
-	if type.weight <= RARE_WEIGHT:
-		var points := PackedVector2Array([Vector2(0, -r * 1.3), Vector2(r, 0), Vector2(0, r * 1.3), Vector2(-r, 0)])
-		draw_colored_polygon(points, color)
-		draw_polyline(points + PackedVector2Array([points[0]]), color.lightened(0.5), 1.5)
+	# Halo: dos círculos translúcidos, más grandes que la forma.
+	draw_circle(Vector2.ZERO, r * 2.0, Color(color, 0.10))
+	draw_circle(Vector2.ZERO, r * 1.5, Color(color, 0.18))
+	_draw_shape(type.shape, r, color)
+	if type.icon:
+		var size := Vector2(r, r) * 1.4
+		draw_texture_rect(type.icon, Rect2(-size / 2.0, size), false)
 	else:
-		draw_circle(Vector2.ZERO, r, color)
-		draw_circle(Vector2.ZERO, r * 0.45, color.lightened(0.6))
+		_draw_symbol(type.symbol, r * 0.62, color.darkened(0.65))
+
+
+func _draw_shape(shape: int, r: float, color: Color) -> void:
+	match shape:
+		PickupType.SHAPE_DIAMOND:
+			_draw_polygon(_regular(4, r * 1.25, 0.0), color)
+		PickupType.SHAPE_SQUARE:
+			_draw_polygon(_regular(4, r * 1.25, PI / 4.0), color)
+		PickupType.SHAPE_HEXAGON:
+			_draw_polygon(_regular(6, r * 1.15, PI / 6.0), color)
+		PickupType.SHAPE_RING:
+			draw_arc(Vector2.ZERO, r, 0.0, TAU, 32, OUTLINE, r * 0.55 + 2.0, true)
+			draw_arc(Vector2.ZERO, r, 0.0, TAU, 32, color, r * 0.55, true)
+		_:
+			draw_circle(Vector2.ZERO, r + 1.2, OUTLINE)
+			draw_circle(Vector2.ZERO, r, color)
+			draw_circle(Vector2(-r * 0.3, -r * 0.3), r * 0.3, color.lightened(0.5))  # brillo
+
+
+func _draw_symbol(symbol: int, s: float, ink: Color) -> void:
+	var w := maxf(1.2, s * 0.32)
+	match symbol:
+		PickupType.SYMBOL_SPEED:  # »
+			for dx: float in [-s * 0.45, s * 0.25]:
+				draw_polyline(PackedVector2Array([Vector2(dx - s * 0.3, -s * 0.6), Vector2(dx + s * 0.3, 0), Vector2(dx - s * 0.3, s * 0.6)]), ink, w, true)
+		PickupType.SYMBOL_VISION:  # ojo
+			var lid := PackedVector2Array()
+			for i in 13:
+				var a := PI * i / 12.0
+				lid.append(Vector2(-cos(a) * s, -sin(a) * s * 0.55))
+			for i in range(1, 12):
+				var a := PI * i / 12.0
+				lid.append(Vector2(cos(a) * s, sin(a) * s * 0.55))
+			lid.append(lid[0])
+			draw_polyline(lid, ink, w * 0.8, true)
+			draw_circle(Vector2.ZERO, s * 0.32, ink)
+		PickupType.SYMBOL_BOLT:  # rayo
+			draw_colored_polygon(PackedVector2Array([
+				Vector2(s * 0.2, -s), Vector2(-s * 0.55, s * 0.12), Vector2(-s * 0.02, s * 0.12),
+				Vector2(-s * 0.2, s), Vector2(s * 0.55, -s * 0.12), Vector2(s * 0.02, -s * 0.12)]), ink)
+
+
+func _draw_polygon(points: PackedVector2Array, color: Color) -> void:
+	var closed := points + PackedVector2Array([points[0]])
+	draw_polyline(closed, OUTLINE, 3.0, true)
+	draw_colored_polygon(points, color)
+	draw_polyline(closed, color.lightened(0.45), 1.2, true)
+
+
+func _regular(sides: int, radius: float, rotation_offset: float) -> PackedVector2Array:
+	var points := PackedVector2Array()
+	for i in sides:
+		var a := rotation_offset + TAU * i / sides - PI / 2.0
+		points.append(Vector2(cos(a), sin(a)) * radius)
+	return points

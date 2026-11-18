@@ -87,6 +87,7 @@ Cada módulo tiene su archivo en [`arquitectura/`](arquitectura/). Los comentari
 | §18 | [Etapa 1.2 — Partida: reloj, fases y fin por tiempo](arquitectura/18-partida-fases.md) |
 | §19 | [Etapa 3 — Bots con dificultad](arquitectura/19-bots.md) |
 | §20 | [Economía de objetos: categorías, caducidad y topes](arquitectura/20-economia-objetos.md) |
+| §21 | [Lenguaje visual de objetos](arquitectura/21-lenguaje-visual.md) |
 
 ## Patrones aplicados (índice)
 

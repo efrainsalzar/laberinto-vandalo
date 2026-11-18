@@ -42,6 +42,25 @@ class PickupType : public Resource {
 	GDCLASS(PickupType, Resource)
 
 public:
+	// Lenguaje visual (§21): la FORMA dice la categoría y el SÍMBOLO dice qué hace.
+	enum Shape {
+		SHAPE_CIRCLE, // mejora de stat
+		SHAPE_DIAMOND, // power-up temporal
+		SHAPE_SQUARE, // arma
+		SHAPE_HEXAGON, // objeto que cambia el mapa
+		SHAPE_RING, // portal
+	};
+	enum Symbol {
+		SYMBOL_NONE,
+		SYMBOL_SPEED, // flechas »
+		SYMBOL_VISION, // ojo
+		SYMBOL_BOLT, // rayo
+	};
+	void set_shape(Shape p_value) { shape_ = p_value; }
+	Shape get_shape() const { return shape_; }
+	void set_symbol(Symbol p_value) { symbol_ = p_value; }
+	Symbol get_symbol() const { return symbol_; }
+
 	void set_id(const String &p_value) { id_ = p_value; }
 	String get_id() const { return id_; }
 	void set_display_name(const String &p_value) { display_name_ = p_value; }
@@ -72,4 +91,9 @@ private:
 	Ref<Texture2D> icon_; // arte (pieza 8); si no hay, la vista dibuja una forma de color
 	float weight_ = 1.0f; // rareza: más peso = sale más seguido
 	TypedArray<PickupEffect> effects_;
+	Shape shape_ = SHAPE_CIRCLE;
+	Symbol symbol_ = SYMBOL_NONE;
 };
+
+VARIANT_ENUM_CAST(PickupType::Shape);
+VARIANT_ENUM_CAST(PickupType::Symbol);

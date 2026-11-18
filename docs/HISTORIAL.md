@@ -3,6 +3,11 @@
 > Lo ya terminado, de lo más nuevo a lo más viejo. El estado actual y lo que sigue están en
 > [ROADMAP.md](ROADMAP.md). Al cerrar una pieza se agrega su bloque **arriba**.
 
+### v0.0.22 — Lenguaje visual de objetos ✅
+- [x] La forma dice la categoría (círculo = stat, rombo = power-up; reservados: cuadrado = arma, hexágono = mapa, anillo = portal).
+- [x] El símbolo dice el efecto (» velocidad, ojo visión, rayo rapidez). Halo y borde para leerse sobre cualquier suelo.
+- [x] Forma y símbolo como datos en `PickupType`; dibujo procedimental una sola vez.
+
 ### v0.0.21 — Economía de objetos: categorías, caducidad y topes ✅
 - [x] `PickupCategory` (.tres): puntos y power-ups con cupo propio que escala con el mapa (11 y 2 en Normal) y reposición propia.
 - [x] Los objetos caducan en el piso (puntos 30 s, power-ups 25 s) y parpadean antes (`ExpiryQueue`).

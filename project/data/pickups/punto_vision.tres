@@ -10,7 +10,9 @@ duration = -1.0
 id = "punto_vision"
 display_name = "Punto de visión"
 color = Color(1, 0.85, 0.3, 1)
-radius = 4
+radius = 7
+shape = 0
+symbol = 2
 weight = 10
 effects = Array[PickupEffect]([SubResource("e1")])
 

@@ -10,7 +10,9 @@ duration = -1.0
 id = "punto_velocidad"
 display_name = "Punto de velocidad"
 color = Color(0.3, 0.95, 0.55, 1)
-radius = 4
+radius = 7
+shape = 0
+symbol = 1
 weight = 10
 effects = Array[PickupEffect]([SubResource("e1")])
 

@@ -11,7 +11,9 @@ id = "powerup_rapidez"
 display_name = "Power-up de rapidez"
 popup_title = "¡RAPIDEZ!"
 color = Color(1, 0.35, 0.85, 1)
-radius = 6.5
+radius = 8
+shape = 1
+symbol = 3
 weight = 2
 effects = Array[PickupEffect]([SubResource("e1")])
 

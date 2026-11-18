@@ -5,8 +5,8 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 
 ## Estado actual
 
-**v0.0.21** · 114 tests · Etapa 1 completa y Etapa 3 (bots) adelantada. Última pieza: economía de objetos
-(categorías, caducidad en el piso, valores y topes más bajos). Todo lo terminado, versión por versión: [HISTORIAL.md](HISTORIAL.md).
+**v0.0.22** · 114 tests · Etapa 1 completa y Etapa 3 (bots) adelantada. Últimas piezas: economía de objetos (v0.0.21)
+y lenguaje visual de objetos (v0.0.22). Todo lo terminado, versión por versión: [HISTORIAL.md](HISTORIAL.md).
 
 ## Plan acordado (etapas, una pieza a la vez)
 
@@ -23,9 +23,8 @@ Ideas del mapa en detalle: [`DISENO_MAPA.md`](DISENO_MAPA.md).
 
 **Etapa 1 completa. Etapa 3 (bots) adelantada ✅.** Orden acordado (dueño del proyecto, 2026-11-18):
 1. ~~Economía de objetos~~ ✅ (v0.0.21)
-2. **Lenguaje visual de objetos** ← siguiente: forma por categoría (círculo = stat, rombo = power-up, cuadrado = arma,
-   hexágono = objeto de mapa, anillo = portal) en lugar de puntos. Arte final sigue en la Etapa 7.
-3. Disparo + pistola inicial (todos los participantes, humanos y bots).
+2. ~~Lenguaje visual de objetos~~ ✅ (v0.0.22)
+3. **Disparo + pistola inicial** ← siguiente (todos los participantes, humanos y bots).
 4. Armas temporales del mapa (categoría "armas"; ficha con tiempo restante en el HUD; bots que las buscan).
 5. Combate (Etapa 4) → objetos que cambian el mapa, paredes rompibles y portales (Etapa 2.2–2.4) → formas de mapa (Etapa 2.1).
 
