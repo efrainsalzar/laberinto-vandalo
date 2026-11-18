@@ -1,9 +1,9 @@
 extends Node2D
 ## Vista de un objeto recolectable con el lenguaje visual del juego (ARQUITECTURA §21):
 ## - La FORMA dice la categoría: círculo = mejora de stat, rombo = power-up, cuadrado = arma,
-##   hexágono = objeto que cambia el mapa, anillo = portal.
+##   hexágono = objeto que cambia el mapa, anillo = portal, frasco = poción.
 ## - El SÍMBOLO de adentro dice qué hace: » velocidad, ojo visión, rayo rapidez; armas: abanico (escopeta),
-##   haz (láser), estrella (bazuca).
+##   haz (láser), estrella (bazuca); cruz = cura.
 ## - Halo suave del color del tipo y borde oscuro para que se lea sobre cualquier suelo.
 ## Rendimiento: se dibuja UNA vez (no cada frame); con cientos de objetos en mapas gigantes importa.
 ## Si el tipo tiene `icon`, se dibuja la textura en lugar del símbolo (arte de la Etapa 7).
@@ -52,6 +52,14 @@ func _draw_shape(shape: int, r: float, color: Color) -> void:
 			_draw_polygon(_regular(4, r * 1.25, PI / 4.0), color)
 		PickupType.SHAPE_HEXAGON:
 			_draw_polygon(_regular(6, r * 1.15, PI / 6.0), color)
+		PickupType.SHAPE_FLASK:  # frasco: cuerpo redondo + cuello
+			var neck := Rect2(-r * 0.32, -r * 1.45, r * 0.64, r * 0.75)
+			draw_rect(neck.grow(1.2), OUTLINE)
+			draw_circle(Vector2(0, r * 0.15), r + 1.2, OUTLINE)
+			draw_rect(neck, color.lightened(0.25))
+			draw_rect(Rect2(-r * 0.42, -r * 1.55, r * 0.84, r * 0.22), color.darkened(0.35))  # tapón
+			draw_circle(Vector2(0, r * 0.15), r, color)
+			draw_circle(Vector2(-r * 0.32, -r * 0.15), r * 0.26, color.lightened(0.5))  # brillo
 		PickupType.SHAPE_RING:
 			draw_arc(Vector2.ZERO, r, 0.0, TAU, 32, OUTLINE, r * 0.55 + 2.0, true)
 			draw_arc(Vector2.ZERO, r, 0.0, TAU, 32, color, r * 0.55, true)
@@ -91,6 +99,10 @@ func _draw_symbol(symbol: int, s: float, ink: Color) -> void:
 				var rr := s if i % 2 == 0 else s * 0.45
 				star.append(Vector2.from_angle(TAU * i / 16.0) * rr)
 			draw_colored_polygon(star, ink)
+		PickupType.SYMBOL_CROSS:  # cruz +: cura (un poco más abajo, en el cuerpo del frasco)
+			var c := Vector2(0, s * 0.25)
+			draw_line(c + Vector2(-s * 0.6, 0), c + Vector2(s * 0.6, 0), ink, w * 1.2)
+			draw_line(c + Vector2(0, -s * 0.6), c + Vector2(0, s * 0.6), ink, w * 1.2)
 		PickupType.SYMBOL_BOLT:  # rayo
 			draw_colored_polygon(PackedVector2Array([
 				Vector2(s * 0.2, -s), Vector2(-s * 0.55, s * 0.12), Vector2(-s * 0.02, s * 0.12),

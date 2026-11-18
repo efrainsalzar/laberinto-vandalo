@@ -126,8 +126,8 @@ func _on_pickup_collected(type: PickupType, participant: Participant, world_posi
 	var info := EffectText.describe_pickup(type)
 	# Mejora permanente con el tope ya lleno: avisar "MÁX" en vez de un "+3" que no cambió nada.
 	var stats: StatsComponent = participant.get_stats() if participant else null
-	if stats and type.effects.size() == 1:
-		var effect: PickupEffect = type.effects[0]
+	if stats and type.effects.size() == 1 and type.effects[0] is StatEffect:
+		var effect: StatEffect = type.effects[0]
 		if effect.duration < 0 and stats.is_bonus_maxed(effect.stat):
 			info.text = "%s MÁX" % ("VEL" if effect.stat == StatsComponent.STAT_SPEED else "VIS")
 	show_text(world_position, info.text, info.color, info.highlight)

@@ -5,9 +5,9 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 
 ## Estado actual
 
-**v0.0.33** · 151 tests · Etapa 1 completa y Etapa 3 (bots) adelantada. Últimas piezas: HUD flotante (v0.0.31),
-**Etapa 4.1 — salud y daño por arma (v0.0.32, en prueba en vivo)** y tarjeta del boceto arriba a la izquierda (v0.0.33).
-**Siguiente: Etapa 4 — Pieza 2 (pociones y efectos de objeto como Strategy). Diseño ya aprobado: ver abajo.** Todo lo terminado, versión por versión: [HISTORIAL.md](HISTORIAL.md).
+**v0.0.34** · 151 tests · Etapa 1 completa y Etapa 3 (bots) adelantada. Últimas piezas: **Etapa 4.1 — salud y daño
+(v0.0.32)**, tarjeta del boceto arriba a la izquierda (v0.0.33) y **Etapa 4.2 — pociones (v0.0.34)**, en prueba en vivo.
+**Siguiente: Etapa 4 — Pieza 3 (escudos: cadena de modificadores). Diseño ya aprobado: ver abajo.** Todo lo terminado, versión por versión: [HISTORIAL.md](HISTORIAL.md).
 
 ## Plan acordado (etapas, una pieza a la vez)
 
@@ -91,7 +91,7 @@ recibe señales finales (`damaged`, `healed`, `died`) para la vista y el HUD. Me
    cada 0,25 s), barra de salud chica sobre los rivales solo unos segundos tras dañarlos, borde rojo de pantalla con
    salud < 30, sacudida leve de cámara con explosiones cercanas, y **sección de salud en la tarjeta** del participante
    (Composite: una sección nueva, prevista en §24; sin corazones mientras las vidas sean infinitas).
-2. **Pociones** (y efectos de objeto como Strategy): pequeña +25 (común), grande +60 (rara); destello verde y "+25".
+2. ~~**Pociones** (y efectos de objeto como Strategy)~~ ✅ (v0.0.34, §26): pequeña +25 (común), grande +60 (rara); destello verde y "+25".
 3. **Escudos** (cadena de modificadores): burbuja (absorbe 1 golpe), frontal (±60° hacia donde apuntas, X s), espejo
    (devuelve el disparo, X s). Visual: anillo / arco / anillo plateado; fichas con tiempo en la tarjeta. El escudo
    anti-robo es regla del trofeo → etapa de vándalos.
@@ -123,7 +123,8 @@ Demo en itch.io · aliados · torneo con rondas · multijugador local · en lín
 - **Historia dinámica:** el Director de IA tendrá una política propia por categoría de objetos (más armas en el Golpe, etc.).
 
 - **Política del Director para objetos:** el Director de IA (fase 5) tendrá su propia `PickupSpawnPolicy` (p. ej. más objetos cerca de quien va perdiendo).
-- **Más tipos de objeto** (pociones, escudos, bombas): solo nuevos .tres + los efectos que falten en la fase de combate.
+- **Más tipos de objeto** (escudos, bombas): un `PickupEffect` nuevo + sus .tres (las pociones ya usan este camino, §26).
+- **Recoger al quedar parado encima:** una poción con salud llena no se recoge; si después te dañan estando encima, hay que salir y volver a entrar. Se podría revisar los cuerpos superpuestos al cambiar la salud.
 
 - **Multijugador local y visión:** solo hay una luz/oscuridad por pantalla; con varios humanos en la misma máquina hará falta pantalla dividida u otra solución.
 - **Partes de cada fase en el menú:** hoy se ajustan en `data/match/default_rules.tres`; se podría exponer en "Personalizado".

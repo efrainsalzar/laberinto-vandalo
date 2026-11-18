@@ -1,7 +1,6 @@
 #pragma once
 
-#include "game/stats_component.h"
-#include "game/weapon_type.h"
+#include "game/pickup_effect.h"
 
 #include <godot_cpp/classes/resource.hpp>
 #include <godot_cpp/classes/texture2d.hpp>
@@ -11,33 +10,8 @@
 
 using namespace godot;
 
-// Un efecto de un objeto sobre las stats: se aplica como modificador del StatsComponent.
-// Ej.: stat = SPEED, op = ADD, value = 8, duration = -1 (permanente).
-class PickupEffect : public Resource {
-	GDCLASS(PickupEffect, Resource)
-
-public:
-	void set_stat(StatsComponent::Stat p_value) { stat_ = p_value; }
-	StatsComponent::Stat get_stat() const { return stat_; }
-	void set_op(StatsComponent::Op p_value) { op_ = p_value; }
-	StatsComponent::Op get_op() const { return op_; }
-	void set_value(float p_value) { value_ = p_value; }
-	float get_value() const { return value_; }
-	void set_duration(float p_value) { duration_ = p_value; }
-	float get_duration() const { return duration_; }
-
-protected:
-	static void _bind_methods();
-
-private:
-	StatsComponent::Stat stat_ = StatsComponent::STAT_SPEED;
-	StatsComponent::Op op_ = StatsComponent::OP_ADD;
-	float value_ = 0.0f;
-	float duration_ = -1.0f; // < 0 = permanente
-};
-
 // Tipo de objeto recolectable como DATOS (.tres): agregar un objeto nuevo = crear un archivo,
-// sin tocar código. Lo usa PickupFactory para crear los Pickup.
+// sin tocar código. Lo usa PickupFactory para crear los Pickup. Lo que hace al recogerlo = su lista de efectos.
 // Ejemplos: project/data/pickups/*.tres. Ver docs/ARQUITECTURA.md §8.
 class PickupType : public Resource {
 	GDCLASS(PickupType, Resource)
@@ -50,6 +24,7 @@ public:
 		SHAPE_SQUARE, // arma
 		SHAPE_HEXAGON, // objeto que cambia el mapa
 		SHAPE_RING, // portal
+		SHAPE_FLASK, // poción (curación, §26)
 	};
 	enum Symbol {
 		SYMBOL_NONE,
@@ -59,6 +34,7 @@ public:
 		SYMBOL_SPREAD, // abanico de 3 líneas (escopeta)
 		SYMBOL_BEAM, // línea con destello (láser)
 		SYMBOL_BLAST, // estrella de explosión (bazuca)
+		SYMBOL_CROSS, // cruz + (curar)
 	};
 	void set_shape(Shape p_value) { shape_ = p_value; }
 	Shape get_shape() const { return shape_; }
@@ -82,9 +58,10 @@ public:
 	float get_weight() const { return weight_; }
 	void set_effects(const TypedArray<PickupEffect> &p_value) { effects_ = p_value; }
 	TypedArray<PickupEffect> get_effects() const { return effects_; }
-	// Arma que entrega al recogerlo (va a la ranura especial del WeaponComponent). Null = no es un arma. §23.
-	void set_weapon(const Ref<WeaponType> &p_value) { weapon_ = p_value; }
-	Ref<WeaponType> get_weapon() const { return weapon_; }
+	// ¿Lo puede recoger ahora? Sí si algún efecto le sirve (una poción con la salud llena se queda en el piso).
+	bool is_useful_for(Participant *p_participant) const;
+	// Aplica todos sus efectos (Strategy: cada efecto sabe aplicarse). §26.
+	void apply_to(Participant *p_participant) const;
 
 protected:
 	static void _bind_methods();
@@ -98,7 +75,6 @@ private:
 	Ref<Texture2D> icon_; // arte (pieza 8); si no hay, la vista dibuja una forma de color
 	float weight_ = 1.0f; // rareza: más peso = sale más seguido
 	TypedArray<PickupEffect> effects_;
-	Ref<WeaponType> weapon_;
 	Shape shape_ = SHAPE_CIRCLE;
 	Symbol symbol_ = SYMBOL_NONE;
 };

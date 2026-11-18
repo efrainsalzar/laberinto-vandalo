@@ -72,7 +72,10 @@ void initialize_laberinto_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(Vision);
 
 	// Objetos recolectables
-	GDREGISTER_CLASS(PickupEffect);
+	GDREGISTER_ABSTRACT_CLASS(PickupEffect);
+	GDREGISTER_CLASS(StatEffect);
+	GDREGISTER_CLASS(HealEffect);
+	GDREGISTER_CLASS(WeaponEffect);
 	GDREGISTER_CLASS(PickupType);
 	GDREGISTER_CLASS(Pickup);
 	GDREGISTER_CLASS(PickupFactory);

@@ -36,25 +36,13 @@ bool Pickup::collect(Participant *p_participant) {
 	if (consumed_ || p_participant == nullptr) {
 		return false;
 	}
-	consumed_ = true;
-
-	StatsComponent *stats = p_participant->get_stats();
-	if (stats != nullptr && type_.is_valid()) {
-		const String source = "pickup:" + type_->get_id();
-		const TypedArray<PickupEffect> effects = type_->get_effects();
-		for (int i = 0; i < effects.size(); i++) {
-			Ref<PickupEffect> effect = effects[i];
-			if (effect.is_valid()) {
-				stats->add_modifier(effect->get_stat(), effect->get_op(), effect->get_value(), effect->get_duration(), source);
-			}
-		}
+	// Si no le sirve (p. ej. poción con la salud llena), se queda en el piso para otro.
+	if (type_.is_valid() && !type_->is_useful_for(p_participant)) {
+		return false;
 	}
-
-	// Arma: va a la ranura especial y se equipa sola (reemplaza a la anterior). §23.
-	if (type_.is_valid() && type_->get_weapon().is_valid()) {
-		if (WeaponComponent *weapon = p_participant->get_weapon()) {
-			weapon->equip_special(type_->get_weapon());
-		}
+	consumed_ = true;
+	if (type_.is_valid()) {
+		type_->apply_to(p_participant); // cada efecto sabe aplicarse (Strategy, §26)
 	}
 
 	emit_signal("collected", p_participant);

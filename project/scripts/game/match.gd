@@ -12,6 +12,8 @@ Si te atrapan a ti, reapareces en tu base a los pocos segundos.
 Todos tienen 100 de salud y pistola (20 por bala). Con 0 pierdes la vida: vuelves a tu base
 con la salud llena y, si llevabas el trofeo, se cae.
 Los CUADRADOS del mapa son armas (escopeta, láser, bazuca): se usan solas hasta gastar la munición.
+Los FRASCOS verdes son pociones: curan al tomarlas (+25 la chica, +60 la grande).
+Con la salud llena no se recogen: quedan para después.
 Fases: Preparación → Asalto → Golpe de los vándalos (el laberinto se acelera).
 
 WASD / flechas · moverse

@@ -3,6 +3,11 @@
 > Lo ya terminado, de lo más nuevo a lo más viejo. El estado actual y lo que sigue están en
 > [ROADMAP.md](ROADMAP.md). Al cerrar una pieza se agrega su bloque **arriba**.
 
+### v0.0.34 — Etapa 4.2: pociones y efectos de objeto ✅
+- [x] Pociones: pequeña +25 (común) y grande +60 (rara), con forma de frasco y cruz. Se usan al recogerlas; con la salud llena quedan en el piso.
+- [x] Efectos de objeto como Strategy: `StatEffect`, `HealEffect`, `WeaponEffect` (cada uno sabe aplicarse). Los .tres existentes se migraron.
+- [x] Al curarse: destello verde, "+25 SAL" flotante y la barra SAL destella verde.
+
 ### v0.0.33 — Tarjeta del boceto arriba a la izquierda ✅
 - [x] Vuelve el diseño del boceto (avatar grande, píldoras, dos ranuras de arma BASE / ESPECIAL, efectos dentro), ahora arriba a la izquierda.
 - [x] Sección SAL con barra redondeada; el anillo del avatar muestra la salud. Sigue volviéndose transparente si hay alguien detrás.

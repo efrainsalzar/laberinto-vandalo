@@ -4,7 +4,7 @@ extends Node2D
 ## Rendimiento (patrón Dirty flag): se redibuja SOLO cuando cambia la dirección o el color, no cada frame.
 ## Al ser eliminado: se desintegra en píxeles (shaders/dissolve.gdshader) y deja un death_effect (píxeles + marca).
 ## Al recibir daño (HealthComponent.damaged, §25): destello blanco del cuerpo (0,08 s) y, si es un rival (no lo
-## controla una persona), una barrita de salud encima durante unos segundos.
+## controla una persona), una barrita de salud encima durante unos segundos. Al curarse (poción, §26): destello verde.
 
 @onready var _participant: Participant = get_parent()
 
@@ -24,6 +24,7 @@ func _ready() -> void:
 	var health: HealthComponent = _participant.get_health()
 	if health:
 		health.damaged.connect(_on_damaged.unbind(4))
+		health.healed.connect(_on_healed.unbind(1))
 
 
 const DEATH_EFFECT := preload("res://scripts/participant/death_effect.gd")
@@ -35,7 +36,10 @@ const BAR_SECONDS := 2.5
 const BAR_FADE := 0.4
 
 var _blink := false
-var _flash := 0.0  # segundos que le quedan al destello blanco
+var _flash := 0.0  # segundos que le quedan al destello (blanco = golpe, verde = cura)
+var _flash_color := Color(1, 1, 1, 0.9)
+var _flash_fades := false  # el verde se desvanece; el blanco es un golpe seco
+const HEAL_FLASH_SECONDS := 0.3
 var _bar := 0.0  # segundos que le quedan a la barrita de salud
 var _tween: Tween
 var _dissolve: ShaderMaterial
@@ -69,8 +73,17 @@ func _on_eliminated() -> void:
 		scale = Vector2.ONE)
 
 
+func _on_healed() -> void:
+	_flash = HEAL_FLASH_SECONDS
+	_flash_color = Color(0.4, 1.0, 0.55, 0.75)
+	_flash_fades = true
+	queue_redraw()
+
+
 func _on_damaged() -> void:
 	_flash = FLASH_SECONDS
+	_flash_color = Color(1, 1, 1, 0.9)
+	_flash_fades = false
 	if not (_participant.get_controller() is HumanController):
 		_bar = BAR_SECONDS
 	queue_redraw()
@@ -96,8 +109,7 @@ var _last_facing := Vector2.ZERO
 func _process(delta: float) -> void:
 	if _flash > 0.0:
 		_flash -= delta
-		if _flash <= 0.0:
-			queue_redraw()
+		queue_redraw()  # el verde se desvanece; el blanco dura 0,08 s
 	if _bar > 0.0:
 		_bar -= delta
 		queue_redraw()  # se desvanece al final (pocos participantes con barra a la vez)
@@ -117,7 +129,8 @@ func _draw() -> void:
 	var eye := maxf(1.5, radius * 0.27)
 	draw_circle(_participant.get_facing() * (radius - eye - 1.0), eye, Color.WHITE)
 	if _flash > 0.0:
-		draw_circle(Vector2.ZERO, radius + 1.0, Color(1, 1, 1, 0.9))
+		var fade := clampf(_flash / HEAL_FLASH_SECONDS, 0.0, 1.0) if _flash_fades else 1.0
+		draw_circle(Vector2.ZERO, radius + 1.0, Color(_flash_color, _flash_color.a * fade))
 	if _bar > 0.0:
 		_draw_health_bar(radius)
 

@@ -1,9 +1,10 @@
 class_name EffectText
 extends RefCounted
 ## Convierte datos de efectos en texto para la interfaz: "+8 VEL", "×1.5 VEL", "¡RAPIDEZ! ×1.5 VEL".
-## Así un objeto nuevo (otro .tres) muestra su texto sin programar nada.
+## Así un objeto nuevo (otro .tres) muestra su texto sin programar nada. Curación: "+25 SAL" (§26).
 
 const STAT_SHORT := {StatsComponent.STAT_SPEED: "VEL", StatsComponent.STAT_VISION: "VIS"}
+const HEAL_COLOR := Color(0.4, 1.0, 0.55)
 const STAT_COLORS := {
 	StatsComponent.STAT_SPEED: Color(0.35, 1.0, 0.6),
 	StatsComponent.STAT_VISION: Color(1.0, 0.88, 0.35),
@@ -22,16 +23,26 @@ static func format(stat: int, op: int, value: float) -> String:
 ## Texto, color y si es "destacado" para el texto flotante de un tipo de objeto.
 static func describe_pickup(type: PickupType) -> Dictionary:
 	var parts: PackedStringArray = []
-	var main_stat := -1
+	var main_color := type.color
+	var found := false
 	for effect: PickupEffect in type.effects:
-		parts.append(format(effect.stat, effect.op, effect.value))
-		if main_stat < 0:
-			main_stat = effect.stat
+		var effect_color := type.color
+		if effect is StatEffect:
+			parts.append(format(effect.stat, effect.op, effect.value))
+			effect_color = STAT_COLORS.get(effect.stat, type.color)
+		elif effect is HealEffect:
+			parts.append("+%d SAL" % roundi(effect.amount))
+			effect_color = HEAL_COLOR
+		else:
+			continue  # armas: solo el título
+		if not found:
+			main_color = effect_color
+			found = true
 	var text := "  ".join(parts)
 	var highlight := not type.popup_title.is_empty()
 	if highlight:
-		text = "%s %s" % [type.popup_title, text]
-	var color: Color = type.color if highlight else STAT_COLORS.get(main_stat, type.color)
+		text = ("%s %s" % [type.popup_title, text]).strip_edges()
+	var color: Color = type.color if highlight else main_color
 	return {"text": text, "color": color, "highlight": highlight}
 
 

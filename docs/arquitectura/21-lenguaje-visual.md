@@ -14,6 +14,7 @@ la pantalla se volvería ilegible: hay que saber **qué es** un objeto de un vis
 | Cuadrado | Arma | Reservado (pieza de armas) |
 | Hexágono | Objeto que cambia el mapa | Reservado (Etapa 2.4) |
 | Anillo | Portal | Reservado (Etapa 2.2) |
+| Frasco | Poción (curación) | Pequeña y grande, con cruz (§26) |
 
 - `PickupType.shape` y `PickupType.symbol` son enums editables en el inspector (grupo "Aspecto").
 - La vista (`scripts/pickups/pickup_view.gd`) dibuja halo + forma con borde oscuro + símbolo, **una sola vez**

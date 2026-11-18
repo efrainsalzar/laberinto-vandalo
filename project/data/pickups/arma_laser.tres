@@ -1,6 +1,9 @@
-[gd_resource type="PickupType" load_steps=2 format=3]
+[gd_resource type="PickupType" load_steps=3 format=3]
 
 [ext_resource type="WeaponType" path="res://data/weapons/laser.tres" id="1_w"]
+
+[sub_resource type="WeaponEffect" id="eff"]
+weapon = ExtResource("1_w")
 
 [resource]
 id = "arma_laser"
@@ -11,4 +14,4 @@ radius = 8
 shape = 2
 symbol = 5
 weight = 2
-weapon = ExtResource("1_w")
+effects = Array[PickupEffect]([SubResource("eff")])

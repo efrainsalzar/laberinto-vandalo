@@ -1,6 +1,6 @@
 [gd_resource type="PickupType" load_steps=2 format=3]
 
-[sub_resource type="PickupEffect" id="e1"]
+[sub_resource type="StatEffect" id="e1"]
 stat = 1
 op = 0
 value = 0.25

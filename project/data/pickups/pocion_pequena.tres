@@ -1,0 +1,14 @@
+[gd_resource type="PickupType" load_steps=2 format=3]
+
+[sub_resource type="HealEffect" id="heal"]
+amount = 25.0
+
+[resource]
+id = "pocion_pequena"
+display_name = "Poción pequeña"
+color = Color(0.4, 0.95, 0.55, 1)
+radius = 7
+shape = 5
+symbol = 7
+weight = 3
+effects = Array[PickupEffect]([SubResource("heal")])

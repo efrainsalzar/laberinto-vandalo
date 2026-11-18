@@ -45,7 +45,7 @@
 | 3 | **Controladores** | `BotBrain` (Utility AI), `find_path` (A*) | `ParticipantController` → `HumanController`, `WanderController`, `BotController`; `BotCoordinator`, `BotProfile` | **Strategy**, Utility AI |
 | 4 | **Stats** | `Stats`: valores base + modificadores | expuesto como recurso del participante | **Decorator / modificadores** |
 | 5 | **Visión** | `line_of_sight`: radio + línea de visión | `Vision` (`PointLight2D` con sombras) | Composición, Observer |
-| 6 | **Objetos** | `place_pickups`, `pick_spawn_cell`, `ExpiryQueue`, `Rng` | `PickupType` y `PickupCategory` (datos), `Pickup`, `PickupFactory`, `PickupSpawner` | **Factory + datos**, Strategy, Observer |
+| 6 | **Objetos** | `place_pickups`, `pick_spawn_cell`, `ExpiryQueue`, `Rng` | `PickupType` y `PickupCategory` (datos), `PickupEffect` (Stat/Heal/Weapon), `Pickup`, `PickupFactory`, `PickupSpawner` | **Factory + datos**, Strategy, Observer |
 | 7 | **Trofeo y bases** | `TrophyTracker` | `TrophyController` + vistas | **State**, Observer, Factory |
 | 8 | **Partida** | `MatchFlow`: reloj, fases, victoria/tiempo | `MatchController` + `MatchRules` (datos) | **State** (fases), Observer |
 | 9 | **Armas y disparo** | `WeaponState`, `ProjectileWorld`, `BotGunner`, `segment_hits_wall` | `WeaponType` (datos), `WeaponComponent`, `ProjectileSystem` | **Command**, Type Object, State, datos en bloque, Observer |
@@ -94,6 +94,7 @@ Cada módulo tiene su archivo en [`arquitectura/`](arquitectura/). Los comentari
 | §23 | [Catálogo de armas: escopeta, láser y bazuca; armas en el mapa y HUD](arquitectura/23-catalogo-armas.md) |
 | §24 | [Tarjeta del participante (HUD)](arquitectura/24-tarjeta-participante.md) |
 | §25 | [Etapa 4.1 — Salud y daño por arma](arquitectura/25-salud-dano.md) |
+| §26 | [Etapa 4.2 — Pociones y efectos de objeto (Strategy)](arquitectura/26-pociones-efectos.md) |
 
 ## Patrones aplicados (índice)
 
@@ -101,7 +102,7 @@ Cada módulo tiene su archivo en [`arquitectura/`](arquitectura/). Los comentari
 |---|---|---|
 | Builder (pasos de generación) | `MazeGrid::generate` | ✅ |
 | Strategy (algoritmos) | `carve_maze` + `MazeAlgorithm`; `MazeProfile` | ✅ |
-| Strategy | `ParticipantController` (Human, Wander, Bot); `PickupSpawnPolicy`; `BotAction`; `FireBehavior` (cómo dispara cada arma) | ✅ |
+| Strategy | `ParticipantController` (Human, Wander, Bot); `PickupSpawnPolicy`; `BotAction`; `FireBehavior` (cómo dispara cada arma); `PickupEffect` (qué hace cada objeto) | ✅ |
 | Utility AI (puntajes) | `BotBrain` | ✅ |
 | Fichas de ataque | `TokenPool` en `BotCoordinator` | ✅ |
 | A* (búsqueda de caminos) | `find_path` | ✅ |
