@@ -121,7 +121,7 @@ TEST_SUITE("Balas") {
 		REQUIRE(events.size() == 1);
 		CHECK(events[0].kind == ProjectileEvent::Kind::HitWall);
 		CHECK(events[0].x <= grid.width()); // se quedó dentro del mapa
-		const int tile_x = static_cast<int>(std::floor(events[0].x + 0.01f)); // el choque es justo en el borde
+		const int tile_x = static_cast<int>(std::floor(events[0].x + 0.1f)); // el choque queda 0,05 antes del borde
 		CHECK(grid.is_wall({ tile_x, c.y })); // terminó justo en el borde de una pared
 		CHECK_FALSE(grid.is_wall({ tile_x - 1, c.y }));
 	}
@@ -276,5 +276,103 @@ TEST_SUITE("Alcance") {
 		std::vector<ProjectileEvent> events;
 		world.step(0.2f, grid, NO_TARGETS, events);
 		CHECK(world.projectiles()[0].traveled == doctest::Approx(2.0f));
+	}
+}
+
+TEST_SUITE("Catálogo de armas") {
+	TEST_CASE("Escopeta: perdigones repartidos parejos dentro del cono") {
+		std::vector<lv::core::Direction> dirs;
+		lv::core::spread_directions(1.0f, 0.0f, 5, 40.0f, dirs);
+		REQUIRE(dirs.size() == 5);
+		const float half = 20.0f * 3.14159265f / 180.0f;
+		CHECK(std::atan2(dirs[0].y, dirs[0].x) == doctest::Approx(-half));
+		CHECK(std::atan2(dirs[2].y, dirs[2].x) == doctest::Approx(0.0f));
+		CHECK(std::atan2(dirs[4].y, dirs[4].x) == doctest::Approx(half));
+		for (const auto &d : dirs) {
+			CHECK(d.x * d.x + d.y * d.y == doctest::Approx(1.0f));
+		}
+		lv::core::spread_directions(0.0f, 3.0f, 1, 40.0f, dirs); // un perdigón: derecho
+		REQUIRE(dirs.size() == 1);
+		CHECK(dirs[0].y == doctest::Approx(1.0f));
+	}
+
+	TEST_CASE("Arma temporal: al gastar su munición queda vacía") {
+		WeaponSpec spec = pistol();
+		spec.ammo = 3;
+		spec.fire_interval = 0.0f;
+		WeaponState weapon;
+		weapon.setup(spec);
+		CHECK(weapon.total_ammo() == 3);
+		CHECK(weapon.try_fire());
+		CHECK(weapon.try_fire());
+		CHECK(weapon.try_fire());
+		CHECK(weapon.is_depleted());
+		CHECK_FALSE(weapon.try_fire());
+		WeaponState pistol_state;
+		pistol_state.setup(pistol());
+		CHECK(pistol_state.total_ammo() == -1); // la pistola nunca se vacía
+		CHECK_FALSE(pistol_state.is_depleted());
+	}
+
+	TEST_CASE("Láser: el rayo le pega al primer blanco, nunca al tirador, y lo frenan las paredes") {
+		const MazeGrid grid = open_room();
+		const auto c = grid.center();
+		const float x = c.x + 0.5f;
+		const float y = c.y + 0.5f;
+		const std::vector<ProjectileTarget> targets = { { 0, x, y, 0.4f }, { 5, x + 4.0f, y, 0.4f }, { 6, x + 2.0f, y, 0.4f } };
+		const lv::core::BeamHit hit = lv::core::trace_beam(grid, x, y, 1.0f, 0.0f, 8.0f, targets, 0);
+		CHECK(hit.target == 6);
+		CHECK(hit.end_x == doctest::Approx(x + 1.6f));
+		const lv::core::BeamHit miss = lv::core::trace_beam(grid, x, y, 0.0f, 1.0f, 3.0f, targets, 0);
+		CHECK(miss.target == -1);
+		CHECK(miss.end_y == doctest::Approx(y + 3.0f)); // llega a su alcance
+		const lv::core::BeamHit wall = lv::core::trace_beam(grid, x, y, -1.0f, 0.0f, 100.0f, targets, 0);
+		CHECK(wall.target == -1);
+		CHECK(wall.end_x > 0.0f); // se detuvo en una pared, no salió del mapa
+	}
+
+	TEST_CASE("Bazuca: la bala explota y la explosión respeta radio, paredes y tirador") {
+		const MazeGrid grid = open_room();
+		const auto c = grid.center();
+		const float x = c.x + 0.5f;
+		const float y = c.y + 0.5f;
+		WeaponSpec spec = pistol();
+		spec.explosion_radius = 2.0f;
+		ProjectileWorld world;
+		REQUIRE(world.spawn(x, y, 1.0f, 0.0f, spec, 0));
+		std::vector<ProjectileEvent> events;
+		for (int i = 0; i < 10 && events.empty(); i++) {
+			world.step(0.1f, grid, NO_TARGETS, events);
+		}
+		REQUIRE(events.size() == 1);
+		CHECK(events[0].explosion_radius == doctest::Approx(2.0f));
+
+		const std::vector<ProjectileTarget> targets = {
+			{ 0, x - 1.0f, y, 0.4f }, // el tirador, cerca: no le pasa nada
+			{ 1, x + 1.5f, y, 0.4f }, // dentro del radio
+			{ 2, x, y + 2.3f, 0.4f }, // justo en el borde (radio + cuerpo)
+			{ 3, x + 4.0f, y, 0.4f }, // lejos
+			{ 4, -2.0f, y, 0.4f }, // fuera del mapa, detrás de la pared del borde
+		};
+		std::vector<int> victims;
+		lv::core::explosion_victims(grid, x, y, 2.0f, targets, 0, victims);
+		REQUIRE(victims.size() == 2);
+		CHECK(victims[0] == 1);
+		CHECK(victims[1] == 2);
+	}
+
+	TEST_CASE("El choque contra una pared queda sobre el suelo (la explosión no nace dentro de la pared)") {
+		const MazeGrid grid = open_room();
+		const auto c = grid.center();
+		WeaponSpec spec = pistol();
+		spec.range = 100.0f;
+		spec.projectile_speed = 100.0f;
+		ProjectileWorld world;
+		REQUIRE(world.spawn(c.x + 0.5f, c.y + 0.5f, 1.0f, 0.0f, spec, 0));
+		std::vector<ProjectileEvent> events;
+		world.step(1.0f, grid, NO_TARGETS, events);
+		REQUIRE(events.size() == 1);
+		REQUIRE(events[0].kind == ProjectileEvent::Kind::HitWall);
+		CHECK_FALSE(grid.is_wall({ static_cast<int>(std::floor(events[0].x)), static_cast<int>(std::floor(events[0].y)) }));
 	}
 }

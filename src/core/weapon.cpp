@@ -1,5 +1,7 @@
 #include "core/weapon.h"
 
+#include <cmath>
+
 namespace lv::core {
 
 float effective_range(const WeaponSpec &p_spec, float p_vision) {
@@ -10,11 +12,28 @@ float effective_range(const WeaponSpec &p_spec, float p_vision) {
 	return range > 0.5f ? range : 0.5f;
 }
 
+void spread_directions(float p_dir_x, float p_dir_y, int p_pellets, float p_spread_deg, std::vector<Direction> &r_out) {
+	r_out.clear();
+	const float len = std::sqrt(p_dir_x * p_dir_x + p_dir_y * p_dir_y);
+	if (len <= 0.0f) {
+		return;
+	}
+	const float base = std::atan2(p_dir_y, p_dir_x);
+	const int count = p_pellets < 1 ? 1 : p_pellets;
+	const float spread = (count > 1 ? p_spread_deg : 0.0f) * 3.14159265f / 180.0f;
+	for (int i = 0; i < count; i++) {
+		const float k = count > 1 ? static_cast<float>(i) / static_cast<float>(count - 1) - 0.5f : 0.0f;
+		const float angle = base + k * spread;
+		r_out.push_back({ std::cos(angle), std::sin(angle) });
+	}
+}
+
 void WeaponState::setup(const WeaponSpec &p_spec) {
 	spec_ = p_spec;
 	state_ = State::Ready;
 	timer_ = 0.0f;
 	ammo_ = has_infinite_ammo() ? -1 : spec_.magazine_size;
+	total_ammo_ = spec_.ammo > 0 ? spec_.ammo : -1;
 }
 
 void WeaponState::tick(float p_delta) {
@@ -33,8 +52,11 @@ void WeaponState::tick(float p_delta) {
 }
 
 bool WeaponState::try_fire() {
-	if (state_ != State::Ready) {
+	if (state_ != State::Ready || is_depleted()) {
 		return false;
+	}
+	if (total_ammo_ > 0) {
+		total_ammo_--;
 	}
 	if (!has_infinite_ammo()) {
 		ammo_--;

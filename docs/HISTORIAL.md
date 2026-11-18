@@ -3,6 +3,12 @@
 > Lo ya terminado, de lo más nuevo a lo más viejo. El estado actual y lo que sigue están en
 > [ROADMAP.md](ROADMAP.md). Al cerrar una pieza se agrega su bloque **arriba**.
 
+### v0.0.25 — Catálogo de armas: escopeta, láser y bazuca ✅
+- [x] Arma = combinación de datos: modo (proyectil / rayo), perdigones en cono, explosión, munición. Un arma nueva = un .tres.
+- [x] Escopeta (7 perdigones en 30°, 8 tiros), láser (rayo instantáneo, 30 tiros) y bazuca (explosión de radio 2, 4 tiros).
+- [x] Pistola fija + 1 ranura especial; sin munición o al ser eliminado se vuelve a la pistola.
+- [x] Teclas de prueba 4/5/6/7. 5 tests (135 en total).
+
 ### v0.0.24 — Disparo más real y animación de muerte ✅
 - [x] Alcance del arma = visión de quien dispara (dato `range_from_vision`); con power-up de visión se dispara más lejos.
 - [x] Balas a 50 casillas/s (antes 16) con estela de bala trazadora.

@@ -85,7 +85,7 @@ lv::core::ParticipantCommand BotController::compute_command(const Participant &p
 // Gatillo (BotGunner): a quién ve se revisa cada AIM_SCAN_INTERVAL; la puntería sigue la posición actual.
 void BotController::aim(const Participant &p_participant, float p_delta, lv::core::ParticipantCommand &r_command) {
 	const WeaponComponent *weapon = p_participant.get_weapon();
-	if (weapon == nullptr || weapon->get_weapon().is_null()) {
+	if (weapon == nullptr || weapon->get_active_weapon().is_null()) {
 		return;
 	}
 	lv::core::PerfScope perf("bots.aim");

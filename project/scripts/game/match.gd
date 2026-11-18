@@ -21,6 +21,7 @@ const DEBUG_CONTROLS := """
 Teclas de prueba (Opciones › Teclas de prueba)
 1 · power-up ×1.5 VEL (5 s)   2 · +10 VEL
 3 · +2 VIS (5 s)   0 · quitar efectos
+4 · escopeta   5 · láser   6 · bazuca   7 · volver a la pistola
 T · soltar el trofeo   V · niebla sí / no
 K · mover el laberinto ya   Tab · ver el mapa completo
 N · saltar a la siguiente fase"""
@@ -31,6 +32,11 @@ const BOT_COLORS := [
 	Color(1.0, 0.55, 0.8), Color(0.35, 0.9, 0.85), Color(0.92, 0.92, 0.92),
 ]
 const PAUSE_MENU := preload("res://scenes/menus/pause_menu.tscn")
+const DEBUG_WEAPONS := {
+	KEY_4: preload("res://data/weapons/shotgun.tres"),
+	KEY_5: preload("res://data/weapons/laser.tres"),
+	KEY_6: preload("res://data/weapons/bazooka.tres"),
+}
 const RESULTS_SCREEN := preload("res://scenes/menus/results_screen.tscn")
 
 @onready var _maze: Maze = $Maze
@@ -126,6 +132,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			stats.add_modifier(StatsComponent.STAT_VISION, StatsComponent.OP_ADD, 2.0, 5.0, DEBUG_SOURCE)
 		KEY_0:
 			stats.remove_modifiers_from(DEBUG_SOURCE)
+		KEY_4, KEY_5, KEY_6:
+			_participant.get_weapon().equip_special(DEBUG_WEAPONS[event.keycode])
+		KEY_7:
+			_participant.get_weapon().clear_special()
 		KEY_T:
 			_trophy.drop_trophy()
 		KEY_K:

@@ -8,6 +8,8 @@ namespace lv::core {
 
 namespace {
 
+constexpr float WALL_BACKOFF = 0.05f; // casillas
+
 // Primera fracción t (0..1) del segmento from→from+d que toca el círculo (c, r). -1 si no lo toca.
 float segment_circle(float p_fx, float p_fy, float p_dx, float p_dy, float p_cx, float p_cy, float p_r) {
 	const float ox = p_fx - p_cx;
@@ -51,6 +53,7 @@ bool ProjectileWorld::spawn(float p_x, float p_y, float p_dir_x, float p_dir_y, 
 	p.speed = p_spec.projectile_speed > 0.0f ? p_spec.projectile_speed : 0.0f;
 	p.distance_left = p_spec.range > 0.0f ? p_spec.range : 0.0f;
 	p.radius = p_spec.projectile_radius > 0.0f ? p_spec.projectile_radius : 0.0f;
+	p.explosion_radius = p_spec.explosion_radius > 0.0f ? p_spec.explosion_radius : 0.0f;
 	p.owner = p_owner;
 	p.tag = p_tag;
 	p.seq = next_seq_++;
@@ -120,11 +123,66 @@ void ProjectileWorld::step(float p_delta, const MazeGrid &p_grid, const std::vec
 		}
 		event.x = (ended ? p.x + dx * best_t : p.x);
 		event.y = (ended ? p.y + dy * best_t : p.y);
+		if (event.kind == ProjectileEvent::Kind::HitWall) {
+			// El choque es justo en el borde de la pared: se retrocede un poco para quedar sobre el suelo.
+			event.x -= p.dir_x * WALL_BACKOFF;
+			event.y -= p.dir_y * WALL_BACKOFF;
+		}
 		event.owner = p.owner;
 		event.tag = p.tag;
+		event.explosion_radius = p.explosion_radius;
 		r_events.push_back(event);
 		items_[i] = items_.back(); // swap-remove (sin avanzar i: ahora hay otra en esta posición)
 		items_.pop_back();
+	}
+}
+
+BeamHit trace_beam(const MazeGrid &p_grid, float p_x, float p_y, float p_dir_x, float p_dir_y, float p_range,
+		const std::vector<ProjectileTarget> &p_targets, int p_owner) {
+	BeamHit hit;
+	hit.end_x = p_x;
+	hit.end_y = p_y;
+	const float len = std::sqrt(p_dir_x * p_dir_x + p_dir_y * p_dir_y);
+	if (len <= 0.0f || p_range <= 0.0f) {
+		return hit;
+	}
+	const float dx = p_dir_x / len * p_range;
+	const float dy = p_dir_y / len * p_range;
+	float best_t = 1.0f;
+	float wall_t = 0.0f;
+	if (segment_hits_wall(p_grid, { p_x, p_y }, { p_x + dx, p_y + dy }, wall_t)) {
+		best_t = wall_t;
+	}
+	for (const ProjectileTarget &target : p_targets) {
+		if (target.id == p_owner) {
+			continue;
+		}
+		const float t = segment_circle(p_x, p_y, dx, dy, target.x, target.y, target.radius);
+		if (t >= 0.0f && t < best_t) {
+			best_t = t;
+			hit.target = target.id;
+		}
+	}
+	hit.end_x = p_x + dx * best_t;
+	hit.end_y = p_y + dy * best_t;
+	return hit;
+}
+
+void explosion_victims(const MazeGrid &p_grid, float p_x, float p_y, float p_radius,
+		const std::vector<ProjectileTarget> &p_targets, int p_owner, std::vector<int> &r_out) {
+	for (const ProjectileTarget &target : p_targets) {
+		if (target.id == p_owner) {
+			continue;
+		}
+		const float dx = target.x - p_x;
+		const float dy = target.y - p_y;
+		const float reach = p_radius + target.radius;
+		if (dx * dx + dy * dy > reach * reach) {
+			continue;
+		}
+		if (has_line_of_sight(p_grid, { p_x, p_y }, { target.x, target.y })) {
+			r_out.push_back(target.id);
+		}
 	}
 }
 

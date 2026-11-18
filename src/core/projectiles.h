@@ -18,6 +18,7 @@ struct Projectile {
 	float distance_left = 0.0f; // casillas que le quedan antes de desaparecer
 	float traveled = 0.0f; // casillas recorridas (para dibujar la estela sin que salga del tirador)
 	float radius = 0.1f;
+	float explosion_radius = 0.0f; // >0: al terminar explota (ver explosion_victims)
 	int owner = -1; // quien la disparó (nunca le pega a él)
 	int tag = 0; // dato libre para quien la usa (p. ej. qué arma, para dibujarla)
 	uint32_t seq = 0; // orden de creación (para reemplazar la más vieja)
@@ -44,7 +45,25 @@ struct ProjectileEvent {
 	int owner = -1;
 	int target = -1; // solo HitTarget
 	int tag = 0;
+	float explosion_radius = 0.0f; // >0: aquí hay una explosión (el punto siempre queda sobre suelo)
 };
+
+// Resultado de un rayo instantáneo (láser).
+struct BeamHit {
+	float end_x = 0.0f; // dónde termina el rayo (pared, blanco o alcance)
+	float end_y = 0.0f;
+	int target = -1; // a quién le pegó (-1 = a nadie)
+};
+
+// Rayo instantáneo desde `p_from` hacia `p_dir` hasta `p_range` casillas: se detiene en la primera pared o en el
+// primer blanco (nunca en `p_owner`). Mismo choque que las balas, pero en un solo paso.
+BeamHit trace_beam(const MazeGrid &p_grid, float p_x, float p_y, float p_dir_x, float p_dir_y, float p_range,
+		const std::vector<ProjectileTarget> &p_targets, int p_owner);
+
+// Blancos alcanzados por una explosión en (x, y): dentro del radio (contando su cuerpo) y con línea de visión
+// desde el centro (las paredes protegen). Nunca `p_owner` (no hay daño propio, por ahora). Añade ids a r_out.
+void explosion_victims(const MazeGrid &p_grid, float p_x, float p_y, float p_radius,
+		const std::vector<ProjectileTarget> &p_targets, int p_owner, std::vector<int> &r_out);
 
 // Todas las balas del mapa como datos en bloque (un std::vector de structs), no un nodo por bala.
 // - spawn(): si se llegó al tope, la bala nueva reemplaza a la más vieja (nunca crece sin límite).

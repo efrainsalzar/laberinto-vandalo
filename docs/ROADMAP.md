@@ -5,8 +5,8 @@ Aquí se lleva el **estado real** y el **siguiente paso**.
 
 ## Estado actual
 
-**v0.0.24** · 130 tests · Etapa 1 completa y Etapa 3 (bots) adelantada. Últimas piezas: lenguaje visual de objetos
-(v0.0.22) disparo + pistola inicial (v0.0.23) y disparo más real + animación de muerte (v0.0.24). Todo lo terminado, versión por versión: [HISTORIAL.md](HISTORIAL.md).
+**v0.0.25** · 135 tests · Etapa 1 completa y Etapa 3 (bots) adelantada. Últimas piezas: lenguaje visual de objetos
+(v0.0.22) disparo más real + animación de muerte (v0.0.24) y catálogo de armas (v0.0.25). Todo lo terminado, versión por versión: [HISTORIAL.md](HISTORIAL.md).
 
 ## Plan acordado (etapas, una pieza a la vez)
 
@@ -73,6 +73,8 @@ Demo en itch.io · aliados · torneo con rondas · multijugador local · en lín
   usar objeto) como nuevos campos de `ParticipantCommand`; power-ups nuevos (.tres); romper paredes; portales
   (puertas de la Etapa 2.2); objetos que al comerlos cambian el mapa y los caminos (usan `Maze.queue_passage_change`).
   Cada mecánica trae su `BotAction` para que los bots también la usen.
+- **Especificación propia de cada arma** (dueño): láser que se mantiene / se carga, daño propio de la bazuca, rebotes, etc. Cada una como opción nueva de `WeaponSpec`.
+- **Explosiones que rompen paredes** (Etapa 2.4): `ProjectileSystem.exploded` + `Maze.queue_passage_change`.
 - **Impacto de bala:** hoy elimina (para probar). En la Etapa 4 quitará salud: solo cambia quien escucha `participant_hit`.
 - **Balas con índice espacial:** con los vándalos (decenas de blancos) `ProjectileSystem` consultará `EntityIndex` por bala en vez de revisar todos.
 - **Feedback del disparo:** destello, retroceso, chispa al chocar con pared y sonido (Etapa 7; `WeaponComponent.fired` ya existe).

@@ -1,0 +1,15 @@
+[gd_resource type="WeaponType" format=3]
+
+[resource]
+display_name = "Escopeta"
+short_name = "ESCOPETA"
+fire_mode = 0
+fire_interval = 0.8
+ammo = 8
+pellets = 7
+spread_deg = 30.0
+range_from_vision = true
+range_vision_factor = 0.75
+projectile_speed = 45.0
+projectile_radius = 0.06
+projectile_color = Color(1, 0.7, 0.3, 1)

@@ -90,6 +90,7 @@ Cada módulo tiene su archivo en [`arquitectura/`](arquitectura/). Los comentari
 | §20 | [Economía de objetos: categorías, caducidad y topes](arquitectura/20-economia-objetos.md) |
 | §21 | [Lenguaje visual de objetos](arquitectura/21-lenguaje-visual.md) |
 | §22 | [Disparo + pistola inicial](arquitectura/22-armas-disparo.md) |
+| §23 | [Catálogo de armas: escopeta, láser y bazuca](arquitectura/23-catalogo-armas.md) |
 
 ## Patrones aplicados (índice)
 
@@ -107,7 +108,7 @@ Cada módulo tiene su archivo en [`arquitectura/`](arquitectura/). Los comentari
 | Observer / señales | `StatsComponent` → `HUD`, `Vision`; `Pickup` → `PickupFactory` → `Events` → UI; `pickup_spawned`; `MatchController` → `Events.match_*` → HUD | ✅ |
 | State | `TrophyTracker` (estados del trofeo); `App` (flujo del juego); `MazeShifter` (laberinto vivo); `MatchFlow` (fases de la partida); luego estados del participante | ✅ (parcial) |
 | Datos fuera del código | `StatsProfile`, `MatchRules`, `BotProfile`, `TrophyRules`, `PickupCategory` (.tres) | ✅ |
-| Type Object (armas como datos) | `WeaponType` (`pistol.tres`) + `WeaponState` | ✅ |
+| Type Object (armas como datos) | `WeaponType` (catálogo en `data/weapons/`) + `WeaponState`; modo de disparo, perdigones, explosión y munición por dato | ✅ |
 | Datos en bloque (pool "de juegos") | `ProjectileWorld`: todas las balas en un arreglo, swap-remove, tope | ✅ |
 | Cola de prioridad (caducidad) | `ExpiryQueue` en `PickupSpawner` | ✅ |
 | Factory + datos | `PickupFactory` + `PickupType` (.tres); vistas de trofeo/bases en `TrophyController` | ✅ |

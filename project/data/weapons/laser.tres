@@ -1,0 +1,12 @@
+[gd_resource type="WeaponType" format=3]
+
+[resource]
+display_name = "Láser"
+short_name = "LÁSER"
+fire_mode = 1
+fire_interval = 0.15
+ammo = 30
+range_from_vision = true
+range_vision_factor = 1.0
+projectile_radius = 0.06
+projectile_color = Color(1, 0.25, 0.35, 1)
